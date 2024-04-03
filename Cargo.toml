@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/ring-project-graph"]
+resolver = "2"
