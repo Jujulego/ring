@@ -41,3 +41,50 @@ jobs:
         with:
           sarif_file: results.sarif
           wait-for-processing: true
+
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo llvm-cov --all-features --workspace --codecov --output-path codecov-unit.json
+
+      - name: Test docs
+        run: cargo test --doc
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: codecov-unit
+          path: codecov-unit.json
+
+  codecov:
+    if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download unit coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: codecov-unit
+
+      - name: Upload unit coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: codecov-unit.json
+          flags: unit
+          fail_ci_if_error: true
