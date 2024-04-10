@@ -1,0 +1,43 @@
+name: Rust
+
+on:
+  push:
+    branches: [ 'latest' ]
+
+  pull_request:
+    branches: [ 'latest' ]
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: rustup toolchain install stable --profile minimal --component clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install SARIF utils
+        run: cargo install clippy-sarif sarif-fmt
+
+      - name: Run clippy
+        run: cargo clippy --all-features --message-format=json | clippy-sarif | tee results.sarif | sarif-fmt
+
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          wait-for-processing: true
