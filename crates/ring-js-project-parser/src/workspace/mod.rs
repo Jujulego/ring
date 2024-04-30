@@ -22,12 +22,12 @@ pub enum ParseManifestError {
 impl Workspace {
     pub fn parse_manifest(json: &str) -> Result<Workspace, ParseManifestError> {
         let manifest: WorkspaceManifest = serde_json::from_str(json)
-            .map_err(|err| ParseManifestError::JsonError(err))?;
+            .map_err(ParseManifestError::JsonError)?;
 
         Ok(Workspace {
             name: manifest.name,
             version: Version::parse(&manifest.version)
-                .map_err(|err| ParseManifestError::VersionError(err))?,
+                .map_err(ParseManifestError::VersionError)?,
         })
     }
 
