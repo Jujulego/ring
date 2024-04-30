@@ -1,3 +1,3 @@
 mod workspace;
 
-pub use workspace::Workspace;
+pub use crate::workspace::*;
