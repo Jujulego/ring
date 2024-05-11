@@ -5,6 +5,8 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-project-graph/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-js-project-parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
