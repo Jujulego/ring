@@ -10,6 +10,7 @@ pub enum JsCommands {
 }
 
 #[derive(Args, Debug)]
+/// js specific commands
 pub struct JsCli {
     #[command(subcommand)]
     command: JsCommands,
