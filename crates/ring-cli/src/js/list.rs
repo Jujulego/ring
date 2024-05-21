@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{arg, ArgMatches, Command, value_parser};
 use std::env;
 use std::path::PathBuf;
+use tracing::info;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -11,6 +12,7 @@ pub fn build_command() -> Command {
             .value_parser(value_parser!(PathBuf)))
 }
 
+#[tracing::instrument(name = "list", skip_all)]
 pub fn handle_command(args: &ArgMatches) -> Result<()> {
     let current_dir = env::current_dir()?;
 
@@ -25,8 +27,7 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
     };
     
     let project_dir = project_dir.canonicalize()?;
-    
-    println!("Project directory: {}", project_dir.display());
+    info!("project directory: {}", project_dir.display());
     
     Ok(())
 }
