@@ -1,15 +1,24 @@
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::{debug, trace};
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::PackageManager;
+use crate::workspace::JsWorkspace;
 
+#[derive(Debug)]
 pub struct JsProject {
+    main_workspace: JsWorkspace,
     package_manager: PackageManager,
-    root: PathBuf,
 }
 
 impl JsProject {
+    pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
+        Ok(JsProject {
+            main_workspace: JsWorkspace::new(root)?,
+            package_manager
+        })
+    }
+
     pub fn search_from(path: &Path) -> Result<Option<JsProject>> {
         let mut root = if path.is_file() { path.parent().unwrap() } else { path };
         let mut manifest = None;
@@ -18,21 +27,18 @@ impl JsProject {
             trace!("Testing {}", root.display());
 
             for (package_manager, lockfile) in LOCKFILES {
-                let lockfile = root.to_path_buf().join(lockfile);
+                let lockfile = root.join(lockfile);
 
                 if lockfile.try_exists().context(format!("Unable to access {}", lockfile.display()))? {
                     debug!("Found lockfile {}", lockfile.display());
                     debug!("Detected package manager {}", package_manager);
-                    
-                    return Ok(Some(JsProject {
-                        package_manager,
-                        root: root.to_path_buf()
-                    }));
+
+                    return Ok(Some(JsProject::new(root, package_manager)?));
                 }
             }
 
             {
-                let file = root.to_path_buf().join(MANIFEST);
+                let file = root.join(MANIFEST);
 
                 if file.try_exists().context(format!("Unable to access {}", file.display()))? {
                     debug!("Found manifest {}", file.display());
@@ -50,22 +56,22 @@ impl JsProject {
         }
 
         if let Some(root) = manifest.as_deref().and_then(Path::parent) {
-            debug!("Uses package manager {} by default", PackageManager::NPM);
-            
-            Ok(Some(JsProject {
-                root: root.to_path_buf(),
-                package_manager: PackageManager::NPM,
-            }))
+            debug!("No package manager detected, uses {} by default", PackageManager::default());
+            Ok(Some(JsProject::new(root, PackageManager::default())?))
         } else {
             Ok(None)
         }
     }
-    
+
+    pub fn main_workspace(&self) -> &JsWorkspace {
+        &self.main_workspace
+    }
+
     pub fn get_package_manager(&self) -> &PackageManager {
         &self.package_manager
     }
     
     pub fn get_root(&self) -> &Path {
-        &self.root
+        &self.main_workspace.get_root()
     }
 }

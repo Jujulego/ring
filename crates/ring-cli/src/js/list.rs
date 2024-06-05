@@ -26,10 +26,12 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
     
     // Search project root
     info!("Searching project root from {}", project_dir.display());
-    
-    match JsProject::search_from(&project_dir)? {
-        Some(project) => info!("Project root found at {}", project.get_root().display()),
-        None => warn!("Project root not found")
+
+    if let Some(project) = JsProject::search_from(&project_dir)? {
+        info!("Project root found at {}", project.get_root().display());
+        println!("Project {}", project.main_workspace().get_name());
+    } else if let None = JsProject::search_from(&project_dir)? {
+        warn!("Project root not found");
     }
     
     Ok(())
