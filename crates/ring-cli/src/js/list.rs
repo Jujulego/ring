@@ -34,7 +34,7 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
         for workspace in project.list_workspaces()? {
             println!(" - {workspace}");
         }
-    } else if let None = JsProject::search_from(&project_dir)? {
+    } else {
         warn!("Project root not found");
     }
     

@@ -1,15 +1,10 @@
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub enum PackageManager {
+    #[default]
     NPM,
     Yarn
-}
-
-impl Default for PackageManager {
-    fn default() -> Self {
-        PackageManager::NPM
-    }
 }
 
 impl Display for PackageManager {

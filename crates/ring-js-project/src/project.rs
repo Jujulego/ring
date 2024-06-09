@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use glob::glob;
 use tracing::{debug, trace};
 use crate::constants::{LOCKFILES, MANIFEST};
@@ -98,6 +98,6 @@ impl JsProject {
     }
     
     pub fn get_root(&self) -> &Path {
-        &self.main_workspace.get_root()
+        self.main_workspace.get_root()
     }
 }
