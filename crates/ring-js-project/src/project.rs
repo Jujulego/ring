@@ -1,21 +1,26 @@
+use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use glob::glob;
 use tracing::{debug, trace};
+use ring_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
+use crate::package_manifest::PackageManifest;
 use crate::PackageManager;
 use crate::workspace::JsWorkspace;
 
 #[derive(Debug)]
 pub struct JsProject {
-    main_workspace: JsWorkspace,
+    root: PathBuf,
+    manifest: PackageManifest,
     package_manager: PackageManager,
 }
 
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
         Ok(JsProject {
-            main_workspace: JsWorkspace::new(root)?,
+            root: root.to_path_buf(),
+            manifest: PackageManifest::parse_file(&root.join(MANIFEST))?,
             package_manager
         })
     }
@@ -65,8 +70,8 @@ impl JsProject {
     }
 
     pub fn list_workspaces(&self) -> Result<Vec<JsWorkspace>> {
-        let patterns = self.main_workspace.get_manifest().workspaces.iter()
-            .map(|pattern| self.get_root().join(pattern).join("package.json"));
+        let patterns = self.manifest.workspaces.iter()
+            .map(|pattern| self.root.join(pattern).join("package.json"));
         
         let mut workspaces = vec!();
 
@@ -89,15 +94,31 @@ impl JsProject {
         Ok(workspaces)
     }
 
-    pub fn main_workspace(&self) -> &JsWorkspace {
-        &self.main_workspace
+    pub fn manifest(&self) -> &PackageManifest {
+        &self.manifest
     }
 
-    pub fn get_package_manager(&self) -> &PackageManager {
+    pub fn package_manager(&self) -> &PackageManager {
         &self.package_manager
     }
-    
-    pub fn get_root(&self) -> &Path {
-        self.main_workspace.get_root()
+}
+
+impl Workspace for JsProject {
+    fn name(&self) -> &str {
+        &self.manifest.name
+    }
+
+    fn root(&self) -> &Path {
+        &self.root
+    }
+
+    fn version(&self) -> Option<&str> {
+        self.manifest.version.as_deref()
+    }
+}
+
+impl Display for JsProject {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.reference())
     }
 }
