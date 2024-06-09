@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use glob::glob;
 use tracing::{debug, trace};
-use ring_project::Workspace;
+use jill_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::PackageManager;

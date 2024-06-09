@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-use ring_project::Workspace;
+use jill_project::Workspace;
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
