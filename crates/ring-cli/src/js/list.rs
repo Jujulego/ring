@@ -4,6 +4,7 @@ use std::env;
 use std::path::PathBuf;
 use tracing::{info, warn};
 use ring_js_project::JsProject;
+use ring_project::Workspace;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -28,11 +29,11 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
     info!("Searching project root from {}", project_dir.display());
 
     if let Some(project) = JsProject::search_from(&project_dir)? {
-        info!("Project root found at {}", project.get_root().display());
-        println!("Project {}", project.main_workspace());
+        info!("Project root found at {}", project.root().display());
+        println!("Project {project}");
         
         for workspace in project.list_workspaces()? {
-            println!(" - {workspace}");
+            println!("- {workspace}");
         }
     } else {
         warn!("Project root not found");

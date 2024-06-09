@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+use ring_project::Workspace;
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
@@ -18,25 +19,27 @@ impl JsWorkspace {
         })
     }
 
-    pub fn get_manifest(&self) -> &PackageManifest {
+    pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
     }
+}
 
-    pub fn get_name(&self) -> &String {
+impl Workspace for JsWorkspace {
+    fn name(&self) -> &str {
         &self.manifest.name
     }
 
-    pub fn get_root(&self) -> &Path {
+    fn root(&self) -> &Path {
         &self.root
+    }
+
+    fn version(&self) -> Option<&str> {
+        self.manifest.version.as_deref()
     }
 }
 
 impl Display for JsWorkspace {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if let Some(version) = &self.manifest.version {
-            write!(f, "{}@{version}", self.manifest.name)
-        } else {
-            write!(f, "{}", self.manifest.name)
-        }
+        write!(f, "{}", self.reference())
     }
 }
