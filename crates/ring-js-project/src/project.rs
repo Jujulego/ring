@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use std::path::Path;
+use glob::glob;
 use tracing::{debug, trace};
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::PackageManager;
@@ -61,6 +62,26 @@ impl JsProject {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn list_workspaces(&self) -> Result<()> {
+        let patterns = self.main_workspace.get_manifest().workspaces.iter()
+            .map(|pattern| self.get_root().join(pattern).join("package.json"));
+
+        for pattern in patterns {
+            let pattern = pattern.to_str().unwrap();
+            
+            #[cfg(windows)]
+            let pattern = &pattern[4..];
+            
+            trace!("List manifests matching pattern {pattern}");
+
+            for manifest in glob(pattern)? {
+                debug!("Found manifest {}", manifest?.display());
+            }
+        }
+
+        Ok(())
     }
 
     pub fn main_workspace(&self) -> &JsWorkspace {

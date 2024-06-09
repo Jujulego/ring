@@ -18,6 +18,10 @@ impl JsWorkspace {
         })
     }
 
+    pub fn get_manifest(&self) -> &PackageManifest {
+        &self.manifest
+    }
+
     pub fn get_name(&self) -> &String {
         &self.manifest.name
     }
