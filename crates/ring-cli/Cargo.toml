@@ -1,0 +1,12 @@
+[package]
+name = "ring-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.83"
+clap = { version = "4.5.4", features = ["cargo"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+
+ring-js-project = { path = "../ring-js-project" }

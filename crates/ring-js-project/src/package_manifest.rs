@@ -1,12 +1,14 @@
+use anyhow::{Context, Result};
 use std::collections::HashMap;
-use std::io;
 use std::fs::File;
+use std::path::Path;
 use serde::Deserialize;
+use tracing::trace;
 
 #[derive(Debug, Deserialize)]
 pub struct PackageManifest {
     pub name: String,
-    pub version: String,
+    pub version: Option<String>,
     #[serde(default)]
     pub workspaces: Vec<String>,
     #[serde(default)]
@@ -17,16 +19,13 @@ pub struct PackageManifest {
     pub dev_dependencies: HashMap<String, String>,
 }
 
-pub enum Error {
-    Io(io::Error),
-    Parse(serde_json::Error)
-}
-
 impl PackageManifest {
-    pub fn parse_file(path: &str) -> Result<PackageManifest, Error> {
-        let file = File::open(path).map_err(Error::Io)?;
-        let manifest = serde_json::from_reader(&file).map_err(Error::Parse)?;
-        
+    pub fn parse_file(path: &Path) -> Result<PackageManifest> {
+        trace!("Parsing manifest file {}", path.display());
+
+        let file = File::open(path).context(format!("Unable to read file {}", path.display()))?;
+        let manifest = serde_json::from_reader(&file).context(format!("Error while parsing {}", path.display()))?;
+
         Ok(manifest)
     }
 }
