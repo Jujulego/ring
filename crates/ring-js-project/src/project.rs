@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use glob::glob;
 use tracing::{debug, trace};
 use crate::constants::{LOCKFILES, MANIFEST};
@@ -64,9 +64,11 @@ impl JsProject {
         }
     }
 
-    pub fn list_workspaces(&self) -> Result<()> {
+    pub fn list_workspaces(&self) -> Result<Vec<JsWorkspace>> {
         let patterns = self.main_workspace.get_manifest().workspaces.iter()
             .map(|pattern| self.get_root().join(pattern).join("package.json"));
+        
+        let mut workspaces = vec!();
 
         for pattern in patterns {
             let pattern = pattern.to_str().unwrap();
@@ -77,11 +79,14 @@ impl JsProject {
             trace!("List manifests matching pattern {pattern}");
 
             for manifest in glob(pattern)? {
-                debug!("Found manifest {}", manifest?.display());
+                let manifest = manifest?.canonicalize()?;
+                debug!("Found manifest {}", manifest.display());
+                
+                workspaces.push(JsWorkspace::new(manifest.parent().unwrap())?);
             }
         }
 
-        Ok(())
+        Ok(workspaces)
     }
 
     pub fn main_workspace(&self) -> &JsWorkspace {
