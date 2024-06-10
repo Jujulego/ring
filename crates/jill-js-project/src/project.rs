@@ -1,13 +1,11 @@
 use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
-use glob::glob;
 use tracing::{debug, trace};
 use jill_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::PackageManager;
-use crate::workspace::JsWorkspace;
 use crate::workspace_iterator::WorkspaceIterator;
 
 #[derive(Debug)]
