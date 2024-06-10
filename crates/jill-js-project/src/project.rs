@@ -8,6 +8,7 @@ use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::PackageManager;
 use crate::workspace::JsWorkspace;
+use crate::workspace_iterator::WorkspaceIterator;
 
 #[derive(Debug)]
 pub struct JsProject {
@@ -69,29 +70,8 @@ impl JsProject {
         }
     }
 
-    pub fn list_workspaces(&self) -> Result<Vec<JsWorkspace>> {
-        let patterns = self.manifest.workspaces.iter()
-            .map(|pattern| self.root.join(pattern).join("package.json"));
-        
-        let mut workspaces = vec!();
-
-        for pattern in patterns {
-            let pattern = pattern.to_str().unwrap();
-            
-            #[cfg(windows)]
-            let pattern = &pattern[4..];
-            
-            trace!("List manifests matching pattern {pattern}");
-
-            for manifest in glob(pattern)? {
-                let manifest = manifest?.canonicalize()?;
-                debug!("Found manifest {}", manifest.display());
-                
-                workspaces.push(JsWorkspace::new(manifest.parent().unwrap())?);
-            }
-        }
-
-        Ok(workspaces)
+    pub fn workspaces(&self) -> WorkspaceIterator {
+        return WorkspaceIterator::new(&self.manifest.workspaces, &self.root);
     }
 
     pub fn manifest(&self) -> &PackageManifest {
