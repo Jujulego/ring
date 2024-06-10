@@ -1,26 +1,33 @@
 use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use tracing::{debug, trace};
 use jill_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::PackageManager;
-use crate::workspace_iterator::WorkspaceIterator;
+use crate::workspace::JsWorkspace;
+use crate::workspace_glob::WorkspaceGlob;
 
 #[derive(Debug)]
 pub struct JsProject {
     root: PathBuf,
     manifest: PackageManifest,
     package_manager: PackageManager,
+    workspaces: Vec<Rc<JsWorkspace>>,
 }
 
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
+        let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
+        let root = root.to_path_buf();
+
         Ok(JsProject {
-            root: root.to_path_buf(),
-            manifest: PackageManifest::parse_file(&root.join(MANIFEST))?,
-            package_manager
+            root,
+            manifest,
+            package_manager,
+            workspaces: Vec::new(),
         })
     }
 
@@ -68,8 +75,9 @@ impl JsProject {
         }
     }
 
-    pub fn workspaces(&self) -> WorkspaceIterator {
-        return WorkspaceIterator::new(&self.manifest.workspaces, &self.root);
+    pub fn workspaces(&mut self) -> WorkspaceGlob<'_> {
+        self.workspaces.iter();
+        return WorkspaceGlob::new(&self.manifest.workspaces, &self.root, &mut self.workspaces);
     }
 
     pub fn manifest(&self) -> &PackageManifest {
