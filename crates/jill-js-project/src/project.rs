@@ -6,29 +6,24 @@ use tracing::{debug, trace};
 use jill_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
-use crate::PackageManager;
-use crate::workspace_glob::{WorkspaceGlob, WorkspaceIterator};
+use crate::{PackageManager, workspace_store};
+use crate::workspace_store::WorkspaceStore;
 
 #[derive(Debug)]
 pub struct JsProject {
     root: PathBuf,
     manifest: PackageManifest,
     package_manager: PackageManager,
-    glob: RefCell<WorkspaceGlob>
+    workspace_store: RefCell<WorkspaceStore>,
 }
 
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
         let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
         let root = root.to_path_buf();
-        let glob = RefCell::new(WorkspaceGlob::new(&manifest.workspaces, &root));
+        let workspace_store = RefCell::new(WorkspaceStore::new(&manifest.workspaces, &root));
 
-        Ok(JsProject {
-            root,
-            manifest,
-            package_manager,
-            glob,
-        })
+        Ok(JsProject { root, manifest, package_manager, workspace_store })
     }
 
     pub fn search_from(path: &Path) -> Result<Option<JsProject>> {
@@ -75,8 +70,8 @@ impl JsProject {
         }
     }
 
-    pub fn workspaces(&self) -> WorkspaceIterator {
-        WorkspaceIterator::new(&self.glob)
+    pub fn workspaces(&self) -> workspace_store::Iter {
+        workspace_store::Iter::new(&self.workspace_store)
     }
 
     pub fn manifest(&self) -> &PackageManifest {
