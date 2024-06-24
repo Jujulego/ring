@@ -4,7 +4,7 @@ use std::env;
 use std::path::PathBuf;
 use tracing::{info, warn};
 use jill_js_project::JsProject;
-use jill_project::Workspace;
+use jill_project::{Project, Workspace};
 
 pub fn build_command() -> Command {
     Command::new("list")
