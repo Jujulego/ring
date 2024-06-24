@@ -74,7 +74,7 @@ impl JsProject {
     }
 
     pub fn manifest(&self) -> &PackageManifest {
-        &self.main_workspace.manifest()
+        self.main_workspace.manifest()
     }
 
     pub fn package_manager(&self) -> &PackageManager {
@@ -84,11 +84,11 @@ impl JsProject {
 
 impl Workspace for JsProject {
     fn name(&self) -> &str {
-        &self.main_workspace.name()
+        self.main_workspace.name()
     }
 
     fn root(&self) -> &Path {
-        &self.main_workspace.root()
+        self.main_workspace.root()
     }
 
     fn version(&self) -> Option<&str> {

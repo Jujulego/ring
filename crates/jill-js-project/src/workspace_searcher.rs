@@ -14,7 +14,7 @@ pub struct WorkspaceSearcher {
 }
 
 impl WorkspaceSearcher {
-    pub fn new(patterns: &Vec<String>, root: &Path) -> WorkspaceSearcher {
+    pub fn new(patterns: &[String], root: &Path) -> WorkspaceSearcher {
         WorkspaceSearcher {
             patterns: patterns.iter()
                 .map(|pattern| root.join(pattern).join(MANIFEST))
