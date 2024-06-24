@@ -1,3 +1,4 @@
+use std::io;
 use anyhow::Result;
 use clap::{arg, ArgAction, command};
 use tracing::Level;
@@ -25,6 +26,7 @@ fn main() -> Result<()> {
             _ => Level::TRACE,
         })
         .with_target(false)
+        .with_writer(io::stderr)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
