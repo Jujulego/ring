@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use std::path::{Path};
 use std::rc::Rc;
 use tracing::{debug, trace};
-use jill_project::Workspace;
+use jill_project::{Project, Workspace};
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::{JsWorkspace, PackageManager, workspace_store};
@@ -69,16 +69,20 @@ impl JsProject {
         }
     }
 
-    pub fn workspaces(&self) -> workspace_store::Iter {
-        workspace_store::Iter::new(&self.workspace_store)
-    }
-
     pub fn manifest(&self) -> &PackageManifest {
         self.main_workspace.manifest()
     }
 
     pub fn package_manager(&self) -> &PackageManager {
         &self.package_manager
+    }
+}
+
+impl Project for JsProject {
+    type Workspace = JsWorkspace;
+
+    fn workspaces(&self) -> impl Iterator<Item=Result<Rc<Self::Workspace>>> {
+        workspace_store::Iter::new(&self.workspace_store)
     }
 }
 
