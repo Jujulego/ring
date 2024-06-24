@@ -30,10 +30,9 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
 
     if let Some(project) = JsProject::search_from(&project_dir)? {
         info!("Project root found at {}", project.root().display());
-        println!("Project {project}");
         
-        for workspace in project.list_workspaces()? {
-            println!("- {workspace}");
+        for workspace in project.workspaces() {
+            println!("{}", workspace?);
         }
     } else {
         warn!("Project root not found");

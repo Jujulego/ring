@@ -1,28 +1,28 @@
+use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
-use glob::glob;
+use std::path::{Path};
+use std::rc::Rc;
 use tracing::{debug, trace};
 use jill_project::Workspace;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
-use crate::PackageManager;
-use crate::workspace::JsWorkspace;
+use crate::{JsWorkspace, PackageManager, workspace_store};
+use crate::workspace_store::WorkspaceStore;
 
 #[derive(Debug)]
 pub struct JsProject {
-    root: PathBuf,
-    manifest: PackageManifest,
+    main_workspace: Rc<JsWorkspace>,
     package_manager: PackageManager,
+    workspace_store: RefCell<WorkspaceStore>,
 }
 
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
-        Ok(JsProject {
-            root: root.to_path_buf(),
-            manifest: PackageManifest::parse_file(&root.join(MANIFEST))?,
-            package_manager
-        })
+        let main_workspace = Rc::new(JsWorkspace::new(root)?);
+        let workspace_store = RefCell::new(WorkspaceStore::new(main_workspace.clone()));
+
+        Ok(JsProject { main_workspace, package_manager, workspace_store })
     }
 
     pub fn search_from(path: &Path) -> Result<Option<JsProject>> {
@@ -69,33 +69,12 @@ impl JsProject {
         }
     }
 
-    pub fn list_workspaces(&self) -> Result<Vec<JsWorkspace>> {
-        let patterns = self.manifest.workspaces.iter()
-            .map(|pattern| self.root.join(pattern).join("package.json"));
-        
-        let mut workspaces = vec!();
-
-        for pattern in patterns {
-            let pattern = pattern.to_str().unwrap();
-            
-            #[cfg(windows)]
-            let pattern = &pattern[4..];
-            
-            trace!("List manifests matching pattern {pattern}");
-
-            for manifest in glob(pattern)? {
-                let manifest = manifest?.canonicalize()?;
-                debug!("Found manifest {}", manifest.display());
-                
-                workspaces.push(JsWorkspace::new(manifest.parent().unwrap())?);
-            }
-        }
-
-        Ok(workspaces)
+    pub fn workspaces(&self) -> workspace_store::Iter {
+        workspace_store::Iter::new(&self.workspace_store)
     }
 
     pub fn manifest(&self) -> &PackageManifest {
-        &self.manifest
+        self.main_workspace.manifest()
     }
 
     pub fn package_manager(&self) -> &PackageManager {
@@ -105,15 +84,15 @@ impl JsProject {
 
 impl Workspace for JsProject {
     fn name(&self) -> &str {
-        &self.manifest.name
+        self.main_workspace.name()
     }
 
     fn root(&self) -> &Path {
-        &self.root
+        self.main_workspace.root()
     }
 
     fn version(&self) -> Option<&str> {
-        self.manifest.version.as_deref()
+        self.main_workspace.version()
     }
 }
 
