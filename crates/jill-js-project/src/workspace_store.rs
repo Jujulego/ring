@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use anyhow::Result;
-use std::path::Path;
 use std::rc::Rc;
+use jill_project::Workspace;
 use crate::workspace::JsWorkspace;
 use crate::workspace_searcher::WorkspaceSearcher;
 
@@ -12,13 +12,16 @@ pub struct WorkspaceStore {
 }
 
 impl WorkspaceStore {
-    pub fn new(patterns: &Vec<String>, root: &Path) -> WorkspaceStore {
+    pub fn new(main_workspace: Rc<JsWorkspace>) -> WorkspaceStore {
         WorkspaceStore {
-            searcher: WorkspaceSearcher::new(patterns, root),
-            workspaces: Vec::new()
+            searcher: WorkspaceSearcher::new(
+                &main_workspace.manifest().workspaces,
+                main_workspace.root()
+            ),
+            workspaces: vec![main_workspace]
         }
     }
-    
+
     fn search_next(&mut self) -> Option<Result<Rc<JsWorkspace>>> {
         match self.searcher.next() {
             Some(Ok(workspace)) => {
