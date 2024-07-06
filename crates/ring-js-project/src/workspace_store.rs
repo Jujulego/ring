@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use anyhow::Result;
 use std::rc::Rc;
-use jill_project::Workspace;
+use ring_project::Workspace;
 use crate::workspace::JsWorkspace;
 use crate::workspace_searcher::WorkspaceSearcher;
 

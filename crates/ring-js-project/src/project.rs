@@ -5,7 +5,7 @@ use std::path::{Path};
 use std::rc::Rc;
 use semver::Version;
 use tracing::{debug, trace};
-use jill_project::{Project, Workspace};
+use ring_project::{Project, Workspace};
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::{JsWorkspace, PackageManager, workspace_store};

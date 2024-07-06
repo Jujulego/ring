@@ -3,8 +3,8 @@ use clap::{arg, ArgMatches, Command, value_parser};
 use std::env;
 use std::path::PathBuf;
 use tracing::{info, warn};
-use jill_js_project::JsProject;
-use jill_project::{Project, Workspace};
+use ring_js_project::JsProject;
+use ring_project::{Project, Workspace};
 
 pub fn build_command() -> Command {
     Command::new("list")
