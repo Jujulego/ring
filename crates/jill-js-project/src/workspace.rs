@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+use semver::Version;
 use jill_project::Workspace;
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
@@ -13,9 +14,11 @@ pub struct JsWorkspace {
 
 impl JsWorkspace {
     pub fn new(root: &Path) -> Result<JsWorkspace> {
+        let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
+        
         Ok(JsWorkspace {
             root: root.to_path_buf(),
-            manifest: PackageManifest::parse_file(&root.join(MANIFEST))?
+            manifest,
         })
     }
 
@@ -33,8 +36,8 @@ impl Workspace for JsWorkspace {
         &self.root
     }
 
-    fn version(&self) -> Option<&str> {
-        self.manifest.version.as_deref()
+    fn version(&self) -> Option<&Version> {
+        self.manifest.version.as_ref()
     }
 }
 
