@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
 use std::path::{Path};
 use std::rc::Rc;
+use semver::Version;
 use tracing::{debug, trace};
 use jill_project::{Project, Workspace};
 use crate::constants::{LOCKFILES, MANIFEST};
@@ -95,7 +96,7 @@ impl Workspace for JsProject {
         self.main_workspace.root()
     }
 
-    fn version(&self) -> Option<&str> {
+    fn version(&self) -> Option<&Version> {
         self.main_workspace.version()
     }
 }
