@@ -9,7 +9,7 @@ use tracing::trace;
 #[derive(Debug, Deserialize)]
 pub struct PackageManifest {
     pub name: String,
-    #[serde(with = "serde_version")]
+    #[serde(default, with = "serde_version")]
     pub version: Option<Version>,
     #[serde(default)]
     pub workspaces: Vec<String>,
@@ -27,7 +27,7 @@ impl PackageManifest {
 
         let file = File::open(path).context(format!("Unable to read file {}", path.display()))?;
         let manifest = serde_json::from_reader(&file).context(format!("Error while parsing {}", path.display()))?;
-
+        
         Ok(manifest)
     }
 }
@@ -41,7 +41,7 @@ mod serde_version {
         D: Deserializer<'de>
     {
         let s: Option<String> = Option::deserialize(deserializer)?;
-        
+
         if let Some(s) = s {
             return Ok(Some(Version::parse(&s).map_err(serde::de::Error::custom)?))
         }
