@@ -3,19 +3,19 @@ use glob::glob;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
-
+use ring_project::Searcher;
 use crate::constants::MANIFEST;
 use crate::workspace::JsWorkspace;
 
 #[derive(Debug)]
-pub struct WorkspaceSearcher {
+pub struct JsWorkspaceSearcher {
     patterns: VecDeque<PathBuf>,
     glob_iter: Option<glob::Paths>,
 }
 
-impl WorkspaceSearcher {
-    pub fn new(patterns: &[String], root: &Path) -> WorkspaceSearcher {
-        WorkspaceSearcher {
+impl JsWorkspaceSearcher {
+    pub fn new(patterns: &[String], root: &Path) -> JsWorkspaceSearcher {
+        JsWorkspaceSearcher {
             patterns: patterns.iter()
                 .map(|pattern| root.join(pattern).join(MANIFEST))
                 .collect(),
@@ -24,10 +24,10 @@ impl WorkspaceSearcher {
     }
 }
 
-impl Iterator for WorkspaceSearcher {
-    type Item = Result<JsWorkspace>;
+impl Searcher for JsWorkspaceSearcher {
+    type Item = JsWorkspace;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    fn search(&mut self) -> Option<Result<Self::Item>> {
         loop {
             if let Some(glob_iter) = &mut self.glob_iter {
                 match glob_iter.next() {
