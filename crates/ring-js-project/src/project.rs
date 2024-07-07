@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use anyhow::{Context, Result};
 use std::path::{Path};
@@ -6,7 +5,7 @@ use std::rc::Rc;
 use semver::Version;
 use tracing::{debug, trace};
 use ring_project::{Project, Workspace};
-use ring_utils::store::{self, Store};
+use ring_utils::store::Store;
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::{JsWorkspace, PackageManager};
@@ -16,17 +15,15 @@ use crate::workspace_searcher::JsWorkspaceSearcher;
 pub struct JsProject {
     main_workspace: Rc<JsWorkspace>,
     package_manager: PackageManager,
-    workspace_store: RefCell<Store<JsWorkspace, JsWorkspaceSearcher>>,
+    workspace_store: Store<JsWorkspace, JsWorkspaceSearcher>,
 }
 
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
         let main_workspace = Rc::new(JsWorkspace::new(root)?);
-        let workspace_store = RefCell::new(
-            Store::new(
-                JsWorkspaceSearcher::new(&main_workspace.manifest().workspaces, root),
-                vec![main_workspace.clone()]
-            )
+        let workspace_store = Store::new_with(
+            JsWorkspaceSearcher::new(&main_workspace.manifest().workspaces, root),
+            vec![main_workspace.clone()]
         );
 
         Ok(JsProject { main_workspace, package_manager, workspace_store })
@@ -89,7 +86,7 @@ impl Project for JsProject {
     type Workspace = JsWorkspace;
 
     fn workspaces(&self) -> impl Iterator<Item = Result<Rc<Self::Workspace>>> {
-        store::Iter::new(&self.workspace_store)
+        self.workspace_store.iter()
     }
 }
 
