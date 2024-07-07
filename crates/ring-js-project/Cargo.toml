@@ -13,3 +13,4 @@ tracing = "0.1.40"
 log = "0.4.21"
 
 ring-project = { path = "../ring-project" }
+ring-utils = { path = "../ring-utils" }

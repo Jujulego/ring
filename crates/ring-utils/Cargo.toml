@@ -1,11 +1,10 @@
 [package]
-name = "ring-project"
+name = "ring-utils"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.83"
-semver = "1.0.23"
 
 [dev-dependencies]
 mockall = "0.12.1"
