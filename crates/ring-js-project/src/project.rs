@@ -21,9 +21,9 @@ pub struct JsProject {
 impl JsProject {
     pub fn new(root: &Path, package_manager: PackageManager) -> Result<JsProject> {
         let main_workspace = Rc::new(JsWorkspace::new(root)?);
-        let workspace_store = Store::new_with(
+        let workspace_store = Store::new_from(
             JsWorkspaceSearcher::new(&main_workspace.manifest().workspaces, root),
-            vec![main_workspace.clone()]
+            &[main_workspace.clone()]
         );
 
         Ok(JsProject { main_workspace, package_manager, workspace_store })
