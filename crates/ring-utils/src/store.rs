@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use anyhow::Result;
 use std::rc::Rc;
-use crate::Searcher;
+use crate::searcher::Searcher;
 
 #[derive(Debug)]
 pub struct Store<I, S: Searcher<Item =I>> {

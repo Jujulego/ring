@@ -5,7 +5,8 @@ use std::path::{Path};
 use std::rc::Rc;
 use semver::Version;
 use tracing::{debug, trace};
-use ring_project::{Project, Store, Workspace};
+use ring_project::{Project, Workspace};
+use ring_utils::store::{self, Store};
 use crate::constants::{LOCKFILES, MANIFEST};
 use crate::package_manifest::PackageManifest;
 use crate::{JsWorkspace, PackageManager};
@@ -88,7 +89,7 @@ impl Project for JsProject {
     type Workspace = JsWorkspace;
 
     fn workspaces(&self) -> impl Iterator<Item = Result<Rc<Self::Workspace>>> {
-        ring_project::store::Iter::new(&self.workspace_store)
+        store::Iter::new(&self.workspace_store)
     }
 }
 

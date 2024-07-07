@@ -3,7 +3,7 @@ use glob::glob;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
-use ring_project::Searcher;
+use ring_utils::searcher::Searcher;
 use crate::constants::MANIFEST;
 use crate::workspace::JsWorkspace;
 
