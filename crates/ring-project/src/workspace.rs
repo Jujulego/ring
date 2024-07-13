@@ -17,7 +17,12 @@ pub trait Workspace {
 
     fn matches(&self, requirement: &Requirement) -> bool {
         match requirement {
-            Requirement::PATH(_) => false, // <= TODO: check if paths matches
+            Requirement::PATH(req) => {
+                assert!(req.is_absolute(), "requirement path is not absolute");
+                assert!(self.root().is_absolute(), "workspace root path is not absolute");
+                
+                req == self.root()
+            },
             Requirement::VERSION(req) => self.version()
                 .map(|v| req.matches(v))
                 .unwrap_or(false)

@@ -1,8 +1,9 @@
+use std::path::PathBuf;
 use semver::VersionReq;
 
 #[derive(Debug)]
 pub enum Requirement {
-    PATH(String),
+    PATH(PathBuf),
     VERSION(VersionReq),
 }
 
