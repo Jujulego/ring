@@ -1,5 +1,6 @@
 use std::path::Path;
 use semver::Version;
+use crate::Requirement;
 
 pub trait Workspace {
     fn name(&self) -> &str;
@@ -11,6 +12,15 @@ pub trait Workspace {
             format!("{}@{version}", self.name())
         } else {
             self.name().to_string()
+        }
+    }
+
+    fn matches(&self, requirement: &Requirement) -> bool {
+        match requirement {
+            Requirement::PATH(_) => false, // <= TODO: check if paths matches
+            Requirement::VERSION(req) => self.version()
+                .map(|v| req.matches(v))
+                .unwrap_or(false)
         }
     }
 }
