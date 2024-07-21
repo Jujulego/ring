@@ -32,8 +32,9 @@ pub trait Workspace {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use mockall::mock;
-    use semver::Version;
+    use semver::{Version, VersionReq};
     use super::*;
 
     mock! {
@@ -65,5 +66,28 @@ mod tests {
         mock.expect_version().return_const(Some(version));
 
         assert_eq!(mock.reference(), "test@1.0.0");
+    }
+
+    #[test]
+    fn it_should_match_given_path_requirement() {
+        let root = PathBuf::from(".").canonicalize().unwrap();
+        let req = Requirement::PATH(root.clone());
+
+        let mut mock = MockWorkspace::new();
+        mock.expect_root().return_const(root);
+
+        assert!(mock.matches(&req));
+    }
+    
+    #[test]
+    fn it_should_match_given_version_requirement() {
+        let req = Requirement::VERSION(VersionReq::parse("1.0.0").unwrap());
+
+        let mut mock = MockWorkspace::new();
+        let version = Box::new(Version::new(1, 0, 0));
+        let version: &'static Version = Box::leak(version);
+        mock.expect_version().return_const(version);
+
+        assert!(mock.matches(&req));
     }
 }
