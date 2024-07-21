@@ -1,6 +1,7 @@
 use std::path::Path;
 use semver::Version;
-use crate::{Dependency, Requirement};
+use crate::Dependency;
+use crate::requirement::Requirement;
 
 pub trait Workspace {
     fn name(&self) -> &str;

@@ -1,21 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::path::PathBuf;
-use semver::VersionReq;
-
-#[derive(Debug)]
-pub enum Requirement {
-    PATH(PathBuf),
-    VERSION(VersionReq),
-}
-
-impl Display for Requirement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Requirement::PATH(path) => write!(f, "path:{}", path.display()),
-            Requirement::VERSION(version) => write!(f, "version:{version}")
-        }
-    }
-}
+use crate::requirement::Requirement;
 
 #[derive(Debug)]
 pub struct Dependency {
@@ -40,5 +24,19 @@ impl Dependency {
 impl Display for Dependency {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}@{}", self.target, self.requirement)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use super::*;
+
+    #[test]
+    fn it_should_print_target_with_requirement() {
+        let req = Requirement::PATH(PathBuf::from("/test"));
+        let dependency = Dependency::new("test".to_string(), req);
+        
+        assert_eq!(format!("{dependency}"), "test@path:/test");
     }
 }
