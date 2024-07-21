@@ -1,10 +1,11 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Error, Result};
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
-use semver::Version;
+use semver::{Version, VersionReq};
 use serde::Deserialize;
 use tracing::trace;
+use ring_project::{Dependency, Requirement};
 
 #[derive(Debug, Deserialize)]
 pub struct PackageManifest {
@@ -30,8 +31,48 @@ impl PackageManifest {
         
         Ok(manifest)
     }
+
+    pub fn dependencies(&self, root: &Path) -> Result<Vec<Dependency>> {
+        let mut result = Vec::with_capacity(self.dependencies.len() + self.dev_dependencies.len());
+        let dependencies = self.dependencies.iter().chain(self.dev_dependencies.iter());
+
+        for (target, requirement) in dependencies {
+            if let Some(colon) = requirement.find(':') {
+                let protocol = &requirement[..colon];
+                let value = &requirement[(colon + 1)..];
+
+                match protocol {
+                    "npm" | "workspace" => {
+                        result.push(Dependency::new(
+                            target.to_string(),
+                            Requirement::VERSION(VersionReq::parse(value)
+                                .with_context(|| format!("Error while parsing {requirement}"))?)
+                        ));
+                    }
+                    "file" => {
+                        result.push(Dependency::new(
+                            target.to_string(),
+                            Requirement::PATH(root.join(value).canonicalize()
+                                .with_context(|| format!("Error while parsing {requirement}"))?)
+                        ));
+                    }
+                    &_ => {
+                        return Err(Error::msg(format!("Unsupported dependency requirement {}", requirement)));
+                    }
+                }
+            } else {
+                result.push(Dependency::new(
+                    target.to_string(),
+                    Requirement::VERSION(VersionReq::parse(requirement)?)
+                ));
+            }
+        }
+
+        Ok(result)
+    }
 }
 
+// Parse version number
 mod serde_version {
     use semver::Version;
     use serde::{Deserialize, Deserializer};

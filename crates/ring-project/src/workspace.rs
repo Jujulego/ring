@@ -1,11 +1,12 @@
 use std::path::Path;
 use semver::Version;
-use crate::Requirement;
+use crate::{Dependency, Requirement};
 
 pub trait Workspace {
     fn name(&self) -> &str;
     fn root(&self) -> &Path;
     fn version(&self) -> Option<&Version>;
+    fn dependencies(&self) -> &Vec<Dependency>;
 
     fn reference(&self) -> String {
         if let Some(version) = self.version() {
@@ -44,6 +45,7 @@ mod tests {
             fn name(&self) -> &str;
             fn root(&self) -> &Path;
             fn version(&self) -> Option<&'static Version>;
+            fn dependencies(&self) -> &Vec<Dependency>;
         }
     }
 
@@ -78,7 +80,7 @@ mod tests {
 
         assert!(mock.matches(&req));
     }
-    
+
     #[test]
     fn it_should_match_given_version_requirement() {
         let req = Requirement::VERSION(VersionReq::parse("1.0.0").unwrap());

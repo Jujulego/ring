@@ -102,6 +102,10 @@ impl Workspace for JsProject {
     fn version(&self) -> Option<&Version> {
         self.main_workspace.version()
     }
+    
+    fn dependencies(&self) -> &Vec<ring_project::Dependency> {
+        self.main_workspace.dependencies()
+    }
 }
 
 impl Display for JsProject {
