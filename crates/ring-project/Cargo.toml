@@ -8,4 +8,4 @@ anyhow = "1.0.83"
 semver = "1.0.23"
 
 [dev-dependencies]
-mockall = "0.12.1"
+mockall = "0.13.0"
