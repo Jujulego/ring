@@ -1,42 +1,45 @@
-use anyhow::{Context, Result};
-use clap::{arg, ArgMatches, Command, value_parser};
+mod list;
+
 use std::env;
 use std::path::PathBuf;
+use anyhow::{Context, Result};
+use clap::{arg, ArgMatches, Command, value_parser};
 use tracing::{info, warn};
 use ring_js_project::JsProject;
-use ring_project::{Project, Workspace};
+use ring_project::Workspace;
 
 pub fn build_command() -> Command {
-    Command::new("list")
-        .visible_alias("ls")
+    Command::new("workspaces")
+        .aliases(["workspace", "wks"])
+        .subcommand(list::build_command())
         .arg(arg!(-p --project <directory> ... "Project directory. Defaults to current directory")
+            .global(true)
             .required(false)
             .value_parser(value_parser!(PathBuf)))
 }
 
-#[tracing::instrument(name = "list", skip_all)]
+#[tracing::instrument(name = "workspaces", skip_all)]
 pub fn handle_command(args: &ArgMatches) -> Result<()> {
-    let current_dir = env::current_dir()?;
-
     // Compute project directory
+    let current_dir = env::current_dir()?;
     let project_dir = args.get_one::<PathBuf>("project")
         .unwrap_or(&current_dir);
-    
+
     let project_dir = current_dir.join(project_dir).canonicalize()
         .context(format!("Unable to access {}", project_dir.display()))?;
-    
+
     // Search project root
     info!("Searching project root from {}", project_dir.display());
 
     if let Some(project) = JsProject::search_from(&project_dir)? {
         info!("Project root found at {}", project.root().display());
-        
-        for workspace in project.workspaces() {
-            println!("{}", workspace?);
+
+        match args.subcommand() {
+            Some(("list", _)) => list::handle_command(project),
+            _ => unreachable!()
         }
     } else {
         warn!("Project root not found");
+        Ok(())
     }
-    
-    Ok(())
 }

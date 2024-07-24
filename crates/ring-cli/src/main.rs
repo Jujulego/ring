@@ -4,15 +4,16 @@ use clap::{arg, ArgAction, command};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
-mod js;
+mod workspaces;
 
 fn main() -> Result<()> {
     // Parse args
     let args = command!()
         .propagate_version(true)
         .subcommand_required(true)
-        .subcommand(js::build_command())
+        .subcommand(workspaces::build_command())
         .arg(arg!(-v --verbose)
+            .global(true)
             .required(false)
             .action(ArgAction::Count))
         .get_matches();
@@ -33,7 +34,7 @@ fn main() -> Result<()> {
 
     // Handle subcommands
     match args.subcommand() {
-        Some(("js", args)) => js::handle_command(args),
+        Some(("workspaces", args)) => workspaces::handle_command(args),
         _ => unreachable!()
     }
 }
