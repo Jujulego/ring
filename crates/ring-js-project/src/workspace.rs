@@ -1,8 +1,11 @@
 use std::fmt::{Display, Formatter};
-use anyhow::Result;
 use std::path::{Path, PathBuf};
+
+use anyhow::Result;
 use semver::Version;
-use ring_project::Workspace;
+
+use ring_project::{Dependency, Workspace};
+
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
@@ -10,6 +13,7 @@ use crate::package_manifest::PackageManifest;
 pub struct JsWorkspace {
     root: PathBuf,
     manifest: PackageManifest,
+    dependencies: Vec<Dependency>,
 }
 
 impl JsWorkspace {
@@ -18,6 +22,7 @@ impl JsWorkspace {
         
         Ok(JsWorkspace {
             root: root.to_path_buf(),
+            dependencies: manifest.dependencies(root)?,
             manifest,
         })
     }
@@ -38,6 +43,10 @@ impl Workspace for JsWorkspace {
 
     fn version(&self) -> Option<&Version> {
         self.manifest.version.as_ref()
+    }
+
+    fn dependencies(&self) -> &Vec<Dependency> {
+        &self.dependencies
     }
 }
 
