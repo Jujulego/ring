@@ -8,7 +8,7 @@ mod workspaces;
 
 fn main() -> Result<()> {
     // Parse args
-    let args = command!()
+    let args = command!("ring")
         .propagate_version(true)
         .subcommand_required(true)
         .subcommand(workspaces::build_command())
