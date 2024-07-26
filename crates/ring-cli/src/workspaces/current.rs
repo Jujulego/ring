@@ -11,7 +11,6 @@ pub fn build_command() -> Command {
 
 #[tracing::instrument(name = "current", skip_all)]
 pub fn handle_command(project: impl Project) -> Result<()> {
-
     let current_dir = env::current_dir()?;
     let current_dir = current_dir.canonicalize()
         .context(format!("Unable to access {}", current_dir.display()))?;

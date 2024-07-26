@@ -46,14 +46,14 @@ impl PackageManifest {
                         result.push(Dependency::new(
                             target.to_string(),
                             Requirement::VERSION(VersionReq::parse(value)
-                                .with_context(|| format!("Error while parsing {requirement}"))?)
+                                .context(format!("Error while parsing {requirement}"))?)
                         ));
                     }
                     "file" => {
                         result.push(Dependency::new(
                             target.to_string(),
                             Requirement::PATH(root.join(value).canonicalize()
-                                .with_context(|| format!("Error while parsing {requirement}"))?)
+                                .context(format!("Error while parsing {requirement}"))?)
                         ));
                     }
                     &_ => {
