@@ -26,6 +26,7 @@ fn main() -> Result<()> {
             2 => Level::DEBUG,
             _ => Level::TRACE,
         })
+        .without_time()
         .with_target(false)
         .with_writer(io::stderr)
         .finish();

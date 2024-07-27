@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use glob::glob;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
@@ -30,15 +30,15 @@ impl Searcher for JsWorkspaceSearcher {
     fn search(&mut self) -> Option<Result<Self::Item>> {
         loop {
             if let Some(glob_iter) = &mut self.glob_iter {
-                match glob_iter.next() {
-                    Some(Ok(manifest)) => {
-                        debug!("Found manifest {}", manifest.display());
-                        return Some(JsWorkspace::new(manifest.parent().unwrap()));
-                    }
-                    Some(Err(error)) => {
-                        return Some(Err(error.into()));
-                    }
-                    None => {}
+                if let Some(path) = glob_iter.next() {
+                    return Some(
+                        path.map_err(|error| error.into())
+                            .and_then(|path| path.canonicalize().context(format!("Unable to access {}", path.display())))
+                            .and_then(|path| {
+                                debug!("Found manifest {}", path.display());
+                                JsWorkspace::new(path.parent().unwrap())
+                            })
+                    );
                 }
             }
 

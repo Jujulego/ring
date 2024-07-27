@@ -51,8 +51,10 @@ impl JsProject {
                 let file = root.join(MANIFEST);
 
                 if file.try_exists().context(format!("Unable to access {}", file.display()))? {
-                    debug!("Found manifest {}", file.display());
-                    
+                    let file = file.canonicalize()
+                        .context(format!("Unable to access {}", file.display()))?;
+
+                    debug!("Found manifest at {}", file.display());
                     manifest = Some(file);
                 }
             }

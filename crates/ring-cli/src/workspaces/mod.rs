@@ -1,4 +1,5 @@
 mod list;
+mod current;
 
 use std::env;
 use std::path::PathBuf;
@@ -11,7 +12,10 @@ use ring_project::Workspace;
 pub fn build_command() -> Command {
     Command::new("workspaces")
         .aliases(["workspace", "wks"])
-        .subcommand(list::build_command())
+        .subcommands([
+            list::build_command(),
+            current::build_command()
+        ])
         .arg(arg!(-p --project <directory> ... "Project directory. Defaults to current directory")
             .global(true)
             .required(false)
@@ -36,10 +40,11 @@ pub fn handle_command(args: &ArgMatches) -> Result<()> {
 
         match args.subcommand() {
             Some(("list", _)) => list::handle_command(project),
+            Some(("current", _)) => current::handle_command(project),
             _ => unreachable!()
         }
     } else {
-        warn!("Project root not found");
+        warn!("No project root found");
         Ok(())
     }
 }
