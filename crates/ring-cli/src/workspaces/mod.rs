@@ -12,6 +12,7 @@ use ring_project::Workspace;
 pub fn build_command() -> Command {
     Command::new("workspaces")
         .aliases(["workspace", "wks"])
+        .subcommand_required(true)
         .subcommands([
             list::build_command(),
             current::build_command()
