@@ -4,6 +4,7 @@ use clap::{arg, ArgAction, command};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
+mod list;
 mod workspaces;
 
 fn main() -> Result<()> {
@@ -11,7 +12,10 @@ fn main() -> Result<()> {
     let args = command!("ring")
         .propagate_version(true)
         .subcommand_required(true)
-        .subcommand(workspaces::build_command())
+        .subcommands([
+            list::build_command(),
+            workspaces::build_command()
+        ])
         .arg(arg!(-v --verbose)
             .global(true)
             .required(false)
@@ -35,6 +39,7 @@ fn main() -> Result<()> {
 
     // Handle subcommands
     match args.subcommand() {
+        Some(("list", args)) => list::handle_command(args),
         Some(("workspaces", args)) => workspaces::handle_command(args),
         _ => unreachable!()
     }
