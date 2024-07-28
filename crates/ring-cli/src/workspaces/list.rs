@@ -25,7 +25,7 @@ pub fn handle_command(project: impl Project) -> Result<()> {
         let version = workspace.version()
             .map_or("unknown".bright_black(), |v| v.to_string().normal());
 
-        println!("{:name_len$} {}", workspace.name(), version, name_len = name_len);
+        println!("{:name_len$} {}", workspace.name(), version);
     }
 
     Ok(())
