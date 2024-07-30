@@ -19,53 +19,56 @@ impl<T> Default for PathNode<T> {
 }
 
 #[derive(Debug)]
-enum FollowResult<'n, T> {
+enum FollowResult<'n, 'c, T> {
     Found(&'n PathNode<T>),
     Missing,
-    Back,
+    Back(Components<'c>),
 }
 
 #[derive(Debug)]
-enum FollowResultMut<T> {
+enum FollowResultMut<'c, T> {
     Stored,
-    Back(T),
+    Back(Components<'c>, T),
 }
 
 impl<T> PathNode<T> {
-    fn get(&self, components: &mut Components) -> FollowResult<'_, T> {
+    fn get<'c>(&self, mut components: Components<'c>) -> FollowResult<'_, 'c, T> {
         loop {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     if let Some(next) = self.children.get(name) {
                         match next.get(components) {
-                            FollowResult::Back => continue,
+                            FollowResult::Back(c) => {
+                                components = c;
+                            },
                             result => break result,
                         }
                     } else {
                         break FollowResult::Missing;
                     }
                 }
-                Some(Component::ParentDir) => break FollowResult::Back,
+                Some(Component::ParentDir) => break FollowResult::Back(components),
                 None => break FollowResult::Found(self),
                 _ => continue,
             }
         }
     }
 
-    fn set(&mut self, components: &mut Components, value: T) -> FollowResultMut<T> {
-        let mut value = value;
-
+    fn set<'c>(&mut self, mut components: Components<'c>, mut value: T) -> FollowResultMut<'c, T> {
         loop {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     let next = self.children.entry(name.to_os_string()).or_default();
 
                     match next.set(components, value) {
-                        FollowResultMut::Back(v) => value = v,
+                        FollowResultMut::Back(c, v) => {
+                            components = c;
+                            value = v;
+                        },
                         FollowResultMut::Stored => break FollowResultMut::Stored
                     }
                 }
-                Some(Component::ParentDir) => break FollowResultMut::Back(value),
+                Some(Component::ParentDir) => break FollowResultMut::Back(components, value),
                 None => {
                     self.data = Some(value);
                     break FollowResultMut::Stored;
@@ -150,13 +153,15 @@ macro_rules! get_root_mut {
 impl<T> PathTree<T> {
     fn node(&self, path: &Path) -> Option<&PathNode<T>> {
         if let Some(root) = get_root!(self, path) {
-            let components = &mut path.components();
+            let mut components = path.components();
 
             loop {
                 match root.get(components) {
                     FollowResult::Found(node) => break Some(node),
                     FollowResult::Missing => break None,
-                    FollowResult::Back => continue,
+                    FollowResult::Back(c) => {
+                        components = c
+                    },
                 }
             }
         } else {
@@ -172,14 +177,17 @@ impl<T> PathTree<T> {
     pub fn set(&mut self, path: &Path, value: T) {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
 
-        let components = &mut path.components();
         let root = get_root_mut!(self, path);
+        let mut components = path.components();
         let mut value = value;
 
         loop {
             match root.set(components, value) {
                 FollowResultMut::Stored => break,
-                FollowResultMut::Back(v) => value = v
+                FollowResultMut::Back(c, v) => {
+                    components = c;
+                    value = v;
+                }
             }
         }
     }
