@@ -79,80 +79,52 @@ impl<T> PathNode<T> {
     }
 }
 
-#[cfg(windows)]
 #[derive(Debug, Default)]
 pub struct PathTree<T> {
+    #[cfg(windows)]
     prefixes: HashMap<OsString, PathNode<T>>,
+    #[cfg(not(windows))]
+    root: PathNode<T>,
 }
 
-#[cfg(windows)]
 impl<T> PathTree<T> {
     pub fn new() -> PathTree<T> {
-        PathTree { prefixes: HashMap::new() }
+        #[cfg(windows)]
+        return PathTree { prefixes: HashMap::new() };
+
+        #[cfg(not(windows))]
+        return PathTree { root: PathNode::default() };
     }
 
-    fn root(&self, path: &Path) -> Option<&PathNode<T>> {
+    fn root(&self, #[cfg(windows)] path: &Path) -> Option<&PathNode<T>> {
+        #[cfg(windows)]
         if let Some(Component::Prefix(prefix)) = path.components().next() {
             self.prefixes.get(prefix.as_os_str())
         } else {
             unreachable!()
         }
+
+        #[cfg(not(windows))]
+        Some(&self.root)
     }
 
-    fn root_mut(&mut self, path: &Path) -> &mut PathNode<T> {
+    fn root_mut(&mut self, #[cfg(windows)] path: &Path) -> &mut PathNode<T> {
+        #[cfg(windows)]
         if let Some(Component::Prefix(prefix)) = path.components().next() {
             self.prefixes.entry(prefix.as_os_str().to_os_string())
                 .or_default()
         } else {
             unreachable!()
         }
-    }
-}
 
-#[cfg(windows)]
-macro_rules! get_root {
-    ($self:ident, $path:ident) => { $self.root($path) }
-}
-
-#[cfg(windows)]
-macro_rules! get_root_mut {
-    ($self:ident, $path:ident) => { $self.root_mut($path) }
-}
-
-#[cfg(not(windows))]
-#[derive(Debug, Default)]
-pub struct PathTree<T> {
-    root: PathNode<T>
-}
-
-#[cfg(not(windows))]
-impl<T> PathTree<T> {
-    pub fn new() -> PathTree<T> {
-        PathTree { root: PathNode::default() }
-    }
-
-    fn root(&self) -> Option<&PathNode<T>> {
-        Some(&self.root)
-    }
-
-    fn root_mut(&mut self) -> &mut PathNode<T> {
+        #[cfg(not(windows))]
         &mut self.root
     }
 }
 
-#[cfg(not(windows))]
-macro_rules! get_root {
-    ($self:ident, $path:ident) => { $self.root() }
-}
-
-#[cfg(not(windows))]
-macro_rules! get_root_mut {
-    ($self:ident, $path:ident) => { $self.root_mut() }
-}
-
 impl<T> PathTree<T> {
     fn node(&self, path: &Path) -> Option<&PathNode<T>> {
-        if let Some(root) = get_root!(self, path) {
+        if let Some(root) = self.root(#[cfg(windows)] path) {
             let mut components = path.components();
 
             loop {
@@ -177,7 +149,7 @@ impl<T> PathTree<T> {
     pub fn set(&mut self, path: &Path, value: T) {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
 
-        let root = get_root_mut!(self, path);
+        let root = self.root_mut(#[cfg(windows)] path);
         let mut components = path.components();
         let mut value = value;
 
@@ -197,14 +169,10 @@ impl<T> PathTree<T> {
 mod tests {
     use super::*;
 
-    #[cfg(windows)]
     macro_rules! absolute_path {
-        ($path:literal) => { std::path::PathBuf::from(r"C:\".to_owned() + $path) }
-    }
-
-    #[cfg(not(windows))]
-    macro_rules! absolute_path {
-        ($path:literal) => { std::path::PathBuf::from("/".to_owned() + $path) }
+        ($path:literal) => {
+            std::path::PathBuf::from((if cfg!(windows) { r"C:\" } else { "/" }).to_owned() + $path)
+        }
     }
 
     #[test]
