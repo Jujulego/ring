@@ -50,6 +50,11 @@ macro_rules! get_root {
     ($self:ident, $path:ident) => { $self.root($path) }
 }
 
+#[cfg(windows)]
+macro_rules! get_root_mut {
+    ($self:ident, $path:ident) => { $self.root_mut($path) }
+}
+
 #[cfg(not(windows))]
 #[derive(Debug)]
 pub struct PathTree<T> {
@@ -72,36 +77,79 @@ macro_rules! get_root {
     ($self:ident, $path:ident) => { $self.root() }
 }
 
-impl<T> PathTree<T> {
-    pub fn get(&self, path: &Path) -> Option<&T> {
-        assert!(path.is_absolute(), "PathTree keys must be absolute paths");
+#[cfg(not(windows))]
+macro_rules! get_root_mut {
+    ($self:ident, $path:ident) => { $self.root_mut() }
+}
 
+impl<T> PathTree<T> {
+    fn node(&self, path: &Path) -> Option<&PathNode<T>> {
         if let Some(root) = get_root!(self, path) {
-            let mut stack = VecDeque::new();
+            let mut stack = VecDeque::from([root]);
     
             for component in path.components() {
-                let current = stack.iter().last().unwrap_or(&root);
+                let parent = stack.pop_back().unwrap();
                 
                 match component {
                     Component::ParentDir => {
-                        stack.pop_back();
+                        if stack.is_empty() { // <= then "parent" is the root
+                            stack.push_back(parent);
+                        }
                     }
                     Component::Normal(name) => {
-                        if let Some(node) = current.children.get(name) {
+                        stack.push_back(parent);
+
+                        if let Some(node) = parent.children.get(name) {
                             stack.push_back(node);
                         } else {
                             return None;
                         }
                     }
-                    _ => continue,
+                    _ => {
+                        stack.push_back(parent);
+                    },
                 }
             }
             
-            if let Some(&node) = stack.iter().last() {
-                return node.data.as_ref();
+            stack.pop_back()
+        } else {
+            None
+        }
+    }
+
+    fn node_mut(&mut self, path: &Path) -> &mut PathNode<T> {
+        let root = get_root_mut!(self, path);
+        let mut stack = VecDeque::from([root]);
+
+        for component in path.components() {
+            let parent = stack.pop_back().unwrap();
+
+            match component {
+                Component::ParentDir => {
+                    if stack.is_empty() { // <= then "parent" is the root
+                        stack.push_back(parent);
+                    }
+                }
+                Component::Normal(name) => {
+                    let node = parent.children.entry(name.to_os_string()).or_default();
+                    stack.push_back(node);
+                }
+                _ => {
+                    stack.push_back(parent);
+                },
             }
         }
 
-        None
+        stack.pop_back().unwrap()
+    }
+
+    pub fn get(&self, path: &Path) -> Option<&T> {
+        assert!(path.is_absolute(), "PathTree keys must be absolute paths");
+        self.node(path).and_then(|n| n.data.as_ref())
+    }
+
+    pub fn set(&mut self, path: &Path, value: T) {
+        assert!(path.is_absolute(), "PathTree keys must be absolute paths");
+        self.node_mut(path).data = Some(value);
     }
 }
