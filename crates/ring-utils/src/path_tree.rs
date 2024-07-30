@@ -1,6 +1,7 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::ffi::OsString;
-use std::path::{Component, Path};
+use std::fmt::Debug;
+use std::path::{Component, Components, Path};
 
 #[derive(Debug)]
 struct PathNode<T> {
@@ -13,6 +14,64 @@ impl<T> Default for PathNode<T> {
         PathNode {
             children: HashMap::default(),
             data: None,
+        }
+    }
+}
+
+#[derive(Debug)]
+enum FollowResult<'n, T> {
+    Found(&'n PathNode<T>),
+    Missing,
+    Back,
+}
+
+#[derive(Debug)]
+enum FollowResultMut<T> {
+    Stored,
+    Back(T),
+}
+
+impl<T> PathNode<T> {
+    fn get(&self, components: &mut Components) -> FollowResult<'_, T> {
+        loop {
+            match components.next() {
+                Some(Component::Normal(name)) => {
+                    if let Some(next) = self.children.get(name) {
+                        match next.get(components) {
+                            FollowResult::Back => continue,
+                            result => break result,
+                        }
+                    } else {
+                        break FollowResult::Missing;
+                    }
+                }
+                Some(Component::ParentDir) => break FollowResult::Back,
+                None => break FollowResult::Found(self),
+                _ => continue,
+            }
+        }
+    }
+
+    fn set(&mut self, components: &mut Components, value: T) -> FollowResultMut<T> {
+        let mut value = value;
+
+        loop {
+            match components.next() {
+                Some(Component::Normal(name)) => {
+                    let next = self.children.entry(name.to_os_string()).or_default();
+
+                    match next.set(components, value) {
+                        FollowResultMut::Back(v) => value = v,
+                        FollowResultMut::Stored => break FollowResultMut::Stored
+                    }
+                }
+                Some(Component::ParentDir) => break FollowResultMut::Back(value),
+                None => {
+                    self.data = Some(value);
+                    break FollowResultMut::Stored;
+                }
+                _ => continue,
+            }
         }
     }
 }
@@ -91,63 +150,18 @@ macro_rules! get_root_mut {
 impl<T> PathTree<T> {
     fn node(&self, path: &Path) -> Option<&PathNode<T>> {
         if let Some(root) = get_root!(self, path) {
-            let mut stack = VecDeque::from([root]);
-    
-            for component in path.components() {
-                let parent = stack.pop_back().unwrap();
-                
-                match component {
-                    Component::ParentDir => {
-                        if stack.is_empty() { // <= then "parent" is the root
-                            stack.push_back(parent);
-                        }
-                    }
-                    Component::Normal(name) => {
-                        stack.push_back(parent);
+            let components = &mut path.components();
 
-                        if let Some(node) = parent.children.get(name) {
-                            stack.push_back(node);
-                        } else {
-                            return None;
-                        }
-                    }
-                    _ => {
-                        stack.push_back(parent);
-                    },
+            loop {
+                match root.get(components) {
+                    FollowResult::Found(node) => break Some(node),
+                    FollowResult::Missing => break None,
+                    FollowResult::Back => continue,
                 }
             }
-            
-            stack.pop_back()
         } else {
             None
         }
-    }
-
-    fn node_mut(&mut self, path: &Path) -> &mut PathNode<T> {
-        let root = get_root_mut!(self, path);
-        let mut stack = VecDeque::from([root]);
-
-        for component in path.components() {
-            let parent = stack.pop_back().unwrap();
-
-            match component {
-                Component::ParentDir => {
-                    if stack.is_empty() { // <= then "parent" is the root
-                        stack.push_back(parent);
-                    }
-                }
-                Component::Normal(name) => {
-                    let node = parent.children.entry(name.to_os_string()).or_default();
-
-                    stack.push_back(node);
-                }
-                _ => {
-                    stack.push_back(parent);
-                },
-            }
-        }
-
-        stack.pop_back().unwrap()
     }
 
     pub fn get(&self, path: &Path) -> Option<&T> {
@@ -157,7 +171,17 @@ impl<T> PathTree<T> {
 
     pub fn set(&mut self, path: &Path, value: T) {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
-        self.node_mut(path).data = Some(value);
+
+        let components = &mut path.components();
+        let root = get_root_mut!(self, path);
+        let mut value = value;
+
+        loop {
+            match root.set(components, value) {
+                FollowResultMut::Stored => break,
+                FollowResultMut::Back(v) => value = v
+            }
+        }
     }
 }
 
@@ -167,12 +191,12 @@ mod tests {
 
     #[cfg(windows)]
     macro_rules! absolute_path {
-        ($path:expr) => { std::path::PathBuf::from(r"C:\".to_owned() + "test") }
+        ($path:literal) => { std::path::PathBuf::from(r"C:\".to_owned() + $path) }
     }
 
     #[cfg(not(windows))]
     macro_rules! absolute_path {
-        ($path:expr) => { std::path::PathBuf::from("/".to_owned() + "test") }
+        ($path:literal) => { std::path::PathBuf::from("/".to_owned() + $path) }
     }
 
     #[test]
@@ -186,8 +210,32 @@ mod tests {
     fn it_should_return_stored_value() {
         let mut tree = PathTree::new();
 
-        tree.set(&absolute_path!("test"), "test");
+        tree.set(&absolute_path!("test"), "failed");
+        tree.set(&absolute_path!("test/life/42"), "ok");
+        tree.set(&absolute_path!("test/life"), "failed");
 
-        assert_eq!(tree.get(&absolute_path!("test")), Some(&"test"));
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
+    }
+
+    #[test]
+    fn it_should_handle_path_with_cur_dirs() {
+        let mut tree = PathTree::new();
+
+        tree.set(&absolute_path!("test/life/42"), "failed");
+        tree.set(&absolute_path!("test/././life/./42"), "ok");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
+        assert_eq!(tree.get(&absolute_path!("test/././life/./42")), Some(&"ok"));
+    }
+
+    #[test]
+    fn it_should_handle_path_with_parent_dirs() {
+        let mut tree = PathTree::new();
+
+        tree.set(&absolute_path!("test/life/42"), "failed");
+        tree.set(&absolute_path!("test/../test/life/../../test/life/42"), "ok");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
+        assert_eq!(tree.get(&absolute_path!("test/../test/life/../../test/life/42")), Some(&"ok"));
     }
 }
