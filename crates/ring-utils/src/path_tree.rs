@@ -19,59 +19,59 @@ impl<T> Default for PathNode<T> {
 }
 
 #[derive(Debug)]
-enum FollowResult<'n, 'c, T> {
+enum NodeGetResult<'n, 'c, T> {
     Found(&'n PathNode<T>),
     Missing,
     Back(Components<'c>),
 }
 
 #[derive(Debug)]
-enum FollowResultMut<'c, T> {
+enum NodeSetResult<'c, T> {
     Stored,
     Back(Components<'c>, T),
 }
 
 impl<T> PathNode<T> {
-    fn get<'c>(&self, mut components: Components<'c>) -> FollowResult<'_, 'c, T> {
+    fn get<'c>(&self, mut components: Components<'c>) -> NodeGetResult<'_, 'c, T> {
         loop {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     if let Some(next) = self.children.get(name) {
                         match next.get(components) {
-                            FollowResult::Back(c) => {
+                            NodeGetResult::Back(c) => {
                                 components = c;
                             },
                             result => break result,
                         }
                     } else {
-                        break FollowResult::Missing;
+                        break NodeGetResult::Missing;
                     }
                 }
-                Some(Component::ParentDir) => break FollowResult::Back(components),
-                None => break FollowResult::Found(self),
+                Some(Component::ParentDir) => break NodeGetResult::Back(components),
+                None => break NodeGetResult::Found(self),
                 _ => continue,
             }
         }
     }
 
-    fn set<'c>(&mut self, mut components: Components<'c>, mut value: T) -> FollowResultMut<'c, T> {
+    fn set<'c>(&mut self, mut components: Components<'c>, mut value: T) -> NodeSetResult<'c, T> {
         loop {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     let next = self.children.entry(name.to_os_string()).or_default();
 
                     match next.set(components, value) {
-                        FollowResultMut::Back(c, v) => {
+                        NodeSetResult::Back(c, v) => {
                             components = c;
                             value = v;
                         },
-                        FollowResultMut::Stored => break FollowResultMut::Stored
+                        NodeSetResult::Stored => break NodeSetResult::Stored
                     }
                 }
-                Some(Component::ParentDir) => break FollowResultMut::Back(components, value),
+                Some(Component::ParentDir) => break NodeSetResult::Back(components, value),
                 None => {
                     self.data = Some(value);
-                    break FollowResultMut::Stored;
+                    break NodeSetResult::Stored;
                 }
                 _ => continue,
             }
@@ -95,7 +95,7 @@ impl<T> PathTree<T> {
         #[cfg(not(windows))]
         return PathTree { root: PathNode::default() };
     }
-    
+
     #[cfg(windows)]
     fn root(&self, path: &Path) -> Option<&PathNode<T>> {
         if let Some(Component::Prefix(prefix)) = path.components().next() {
@@ -125,7 +125,7 @@ impl<T> PathTree<T> {
 
     pub fn get(&self, path: &Path) -> Option<&T> {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
-        
+
         let root = {
             #[cfg(windows)] { self.root(path)? }
             #[cfg(not(windows))] { self.root() }
@@ -134,9 +134,9 @@ impl<T> PathTree<T> {
 
         loop {
             match root.get(components) {
-                FollowResult::Found(node) => break node.data.as_ref(),
-                FollowResult::Missing => break None,
-                FollowResult::Back(c) => {
+                NodeGetResult::Found(node) => break node.data.as_ref(),
+                NodeGetResult::Missing => break None,
+                NodeGetResult::Back(c) => {
                     components = c
                 },
             }
@@ -152,8 +152,8 @@ impl<T> PathTree<T> {
 
         loop {
             match root.set(components, value) {
-                FollowResultMut::Stored => break,
-                FollowResultMut::Back(c, v) => {
+                NodeSetResult::Stored => break,
+                NodeSetResult::Back(c, v) => {
                     components = c;
                     value = v;
                 }
