@@ -77,7 +77,7 @@ impl<T> PathNode<T> {
 }
 
 #[cfg(windows)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PathTree<T> {
     prefixes: HashMap<OsString, PathNode<T>>,
 }
@@ -117,7 +117,7 @@ macro_rules! get_root_mut {
 }
 
 #[cfg(not(windows))]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PathTree<T> {
     root: PathNode<T>
 }
