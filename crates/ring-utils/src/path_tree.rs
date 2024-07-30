@@ -95,17 +95,19 @@ impl<T> PathTree<T> {
         #[cfg(not(windows))]
         return PathTree { root: PathNode::default() };
     }
-
-    fn root(&self, #[cfg(windows)] path: &Path) -> Option<&PathNode<T>> {
-        #[cfg(windows)]
+    
+    #[cfg(windows)]
+    fn root(&self, path: &Path) -> Option<&PathNode<T>> {
         if let Some(Component::Prefix(prefix)) = path.components().next() {
             self.prefixes.get(prefix.as_os_str())
         } else {
             unreachable!()
         }
+    }
 
-        #[cfg(not(windows))]
-        Some(&self.root)
+    #[cfg(not(windows))]
+    fn root(&self) -> &PathNode<T> {
+        &self.root
     }
 
     fn root_mut(&mut self, #[cfg(windows)] path: &Path) -> &mut PathNode<T> {
@@ -120,30 +122,25 @@ impl<T> PathTree<T> {
         #[cfg(not(windows))]
         &mut self.root
     }
-}
-
-impl<T> PathTree<T> {
-    fn node(&self, path: &Path) -> Option<&PathNode<T>> {
-        if let Some(root) = self.root(#[cfg(windows)] path) {
-            let mut components = path.components();
-
-            loop {
-                match root.get(components) {
-                    FollowResult::Found(node) => break Some(node),
-                    FollowResult::Missing => break None,
-                    FollowResult::Back(c) => {
-                        components = c
-                    },
-                }
-            }
-        } else {
-            None
-        }
-    }
 
     pub fn get(&self, path: &Path) -> Option<&T> {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
-        self.node(path).and_then(|n| n.data.as_ref())
+        
+        let root = {
+            #[cfg(windows)] { self.root(path)? }
+            #[cfg(not(windows))] { self.root() }
+        };
+        let mut components = path.components();
+
+        loop {
+            match root.get(components) {
+                FollowResult::Found(node) => break node.data.as_ref(),
+                FollowResult::Missing => break None,
+                FollowResult::Back(c) => {
+                    components = c
+                },
+            }
+        }
     }
 
     pub fn set(&mut self, path: &Path, value: T) {
