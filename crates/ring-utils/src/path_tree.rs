@@ -30,21 +30,19 @@ impl<T> PathTree<T> {
     }
 
     fn root(&self, path: &Path) -> Option<&PathNode<T>> {
-        match path.components().next() {
-            Some(Component::Prefix(prefix)) => self.prefixes.get(prefix.as_os_str()),
-            Some(_) => unreachable!(),
-            None => unreachable!()
+        if let Some(Component::Prefix(prefix)) = path.components().next() {
+            self.prefixes.get(prefix.as_os_str())
+        } else {
+            unreachable!()
         }
     }
 
     fn root_mut(&mut self, path: &Path) -> &mut PathNode<T> {
-        match path.components().next() {
-            Some(Component::Prefix(prefix)) => {
-                self.prefixes.entry(prefix.as_os_str().to_os_string())
-                    .or_default()
-            },
-            Some(_) => unreachable!(),
-            None => unreachable!()
+        if let Some(Component::Prefix(prefix)) = path.components().next() {
+            self.prefixes.entry(prefix.as_os_str().to_os_string())
+                .or_default()
+        } else {
+            unreachable!()
         }
     }
 }
