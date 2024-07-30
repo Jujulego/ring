@@ -163,19 +163,19 @@ impl<T> PathTree<T> {
     }
 }
 
-#[cfg(windows)]
-macro_rules! absolute_path {
-    ($path:expr) => { std::path::PathBuf::from(r"C:\".to_owned() + "test") }
-}
-
-#[cfg(not(windows))]
-macro_rules! absolute_path {
-    ($path:expr) => { std::path::PathBuf::from("/".to_owned() + "test") }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(windows)]
+    macro_rules! absolute_path {
+        ($path:expr) => { std::path::PathBuf::from(r"C:\".to_owned() + "test") }
+    }
+
+    #[cfg(not(windows))]
+    macro_rules! absolute_path {
+        ($path:expr) => { std::path::PathBuf::from("/".to_owned() + "test") }
+    }
 
     #[test]
     fn it_should_return_none_on_empty_tree() {
