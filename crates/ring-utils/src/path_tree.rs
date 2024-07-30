@@ -25,6 +25,10 @@ pub struct PathTree<T> {
 
 #[cfg(windows)]
 impl<T> PathTree<T> {
+    pub fn new() -> PathTree<T> {
+        PathTree { prefixes: HashMap::new() }
+    }
+
     fn root(&self, path: &Path) -> Option<&PathNode<T>> {
         match path.components().next() {
             Some(Component::Prefix(prefix)) => self.prefixes.get(prefix.as_os_str()),
@@ -63,6 +67,10 @@ pub struct PathTree<T> {
 
 #[cfg(not(windows))]
 impl<T> PathTree<T> {
+    pub fn new() -> PathTree<T> {
+        PathTree { root: PathNode::default() }
+    }
+
     fn root(&self) -> Option<&PathNode<T>> {
         Some(&self.root)
     }
@@ -132,6 +140,7 @@ impl<T> PathTree<T> {
                 }
                 Component::Normal(name) => {
                     let node = parent.children.entry(name.to_os_string()).or_default();
+
                     stack.push_back(node);
                 }
                 _ => {
@@ -151,5 +160,36 @@ impl<T> PathTree<T> {
     pub fn set(&mut self, path: &Path, value: T) {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
         self.node_mut(path).data = Some(value);
+    }
+}
+
+#[cfg(windows)]
+macro_rules! absolute_path {
+    ($path:expr) => { std::path::PathBuf::from(r"C:\".to_owned() + "test") }
+}
+
+#[cfg(not(windows))]
+macro_rules! absolute_path {
+    ($path:expr) => { std::path::PathBuf::from("/".to_owned() + "test") }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_return_none_on_empty_tree() {
+        let tree: PathTree<&str> = PathTree::new();
+
+        assert_eq!(tree.get(&absolute_path!("test")), None);
+    }
+
+    #[test]
+    fn it_should_return_stored_value() {
+        let mut tree = PathTree::new();
+
+        tree.set(&absolute_path!("test"), "test");
+
+        assert_eq!(tree.get(&absolute_path!("test")), Some(&"test"));
     }
 }
