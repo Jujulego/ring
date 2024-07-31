@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-js-project/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-project/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-traits/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
