@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
-use tracing::{debug, trace};
+use tracing::{debug, info, trace};
 use ring_traits::{Project, ProjectDetector};
 use ring_utils::PathTree;
 use crate::JsProject;
@@ -29,8 +29,9 @@ impl Default for JsProjectDetector {
 impl ProjectDetector for JsProjectDetector {
     type Project = JsProject;
 
+    #[tracing::instrument(name = "js::search_from", skip_all)]
     fn search_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Project>>> {
-        debug!("Searching js project from {}", path.display());
+        info!("Searching js project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         for ancestor in path.ancestors() {

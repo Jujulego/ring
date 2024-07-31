@@ -5,6 +5,7 @@ use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
 mod list;
+mod projects;
 mod workspaces;
 
 fn main() -> Result<()> {
@@ -14,6 +15,7 @@ fn main() -> Result<()> {
         .subcommand_required(true)
         .subcommands([
             list::build_command(),
+            projects::build_command(),
             workspaces::build_command()
         ])
         .arg(arg!(-v --verbose)
@@ -40,6 +42,7 @@ fn main() -> Result<()> {
     // Handle subcommands
     match args.subcommand() {
         Some(("list", args)) => list::handle_command(args),
+        Some(("projects", args)) => projects::handle_command(args),
         Some(("workspaces", args)) => workspaces::handle_command(args),
         _ => unreachable!()
     }
