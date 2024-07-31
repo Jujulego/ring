@@ -143,12 +143,11 @@ impl<T> PathTree<T> {
         }
     }
 
-    pub fn set(&mut self, path: &Path, value: T) {
+    pub fn set(&mut self, path: &Path, mut value: T) {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
 
         let root = self.root_mut(#[cfg(windows)] path);
         let mut components = path.components();
-        let mut value = value;
 
         loop {
             match root.set(components, value) {
@@ -180,6 +179,21 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "PathTree keys must be absolute paths")]
+    fn it_should_panic_if_get_is_called_without_an_absolute_path() {
+        let tree: PathTree<&str> = PathTree::new();
+        tree.get(Path::new("test"));
+    }
+
+    #[test]
+    #[should_panic(expected = "PathTree keys must be absolute paths")]
+    fn it_should_panic_if_set_is_called_without_an_absolute_path() {
+        let mut tree = PathTree::new();
+
+        tree.set(Path::new("test"), "failed");
+    }
+
+    #[test]
     fn it_should_return_stored_value() {
         let mut tree = PathTree::new();
 
@@ -195,6 +209,10 @@ mod tests {
         let mut tree = PathTree::new();
 
         tree.set(&absolute_path!("test/life/42"), "failed");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
+        assert_eq!(tree.get(&absolute_path!("test/././life/./42")), Some(&"failed"));
+
         tree.set(&absolute_path!("test/././life/./42"), "ok");
 
         assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
@@ -206,9 +224,28 @@ mod tests {
         let mut tree = PathTree::new();
 
         tree.set(&absolute_path!("test/life/42"), "failed");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
+        assert_eq!(tree.get(&absolute_path!("test/../test/life/../../test/life/42")), Some(&"failed"));
+
         tree.set(&absolute_path!("test/../test/life/../../test/life/42"), "ok");
 
         assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
         assert_eq!(tree.get(&absolute_path!("test/../test/life/../../test/life/42")), Some(&"ok"));
+    }
+
+    #[test]
+    fn it_should_handle_deep_parent_dirs() {
+        let mut tree = PathTree::new();
+
+        tree.set(&absolute_path!("test/life/42"), "failed");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
+        assert_eq!(tree.get(&absolute_path!("test/../../../test/life/42")), Some(&"failed"));
+
+        tree.set(&absolute_path!("test/../../../test/life/42"), "ok");
+
+        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
+        assert_eq!(tree.get(&absolute_path!("test/../../../test/life/42")), Some(&"ok"));
     }
 }
