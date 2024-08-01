@@ -1,14 +1,13 @@
 use std::cmp::max;
 use std::env;
 use std::fs::read_dir;
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::path::PathBuf;
 use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
 use colored::Colorize;
-use tracing::{error, info};
-use ring_js_project::JsProject;
-use ring_project::{Project, Workspace};
+use tracing::info;
+use ring_js::JsProjectDetector;
+use ring_traits::{Project, ProjectDetector};
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -19,7 +18,6 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-#[tracing::instrument(name = "list", skip_all)]
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
     let directory = args.get_one::<PathBuf>("path")
@@ -27,13 +25,14 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
     let path = current_dir.join(directory).canonicalize()
         .context(format!("Unable to access {}", directory.display()))?;
-    
+
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
+    let detector = JsProjectDetector::new();
+
     if path.is_dir() {
         info!("Searching project root from {}", path.display());
-        let project = JsProject::search_from(&path)?;
         let mut first_len = 0;
         let mut results = Vec::new();
 
@@ -58,13 +57,11 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                     file_name.normal()
                 }
             };
-            
-            let workspace = if let Some(project) = &project { find_workspace(&entry.path(), project) } else { None };
-            
-            if let Some(workspace) = workspace {
-                first_len = max(first_len, workspace.name().len());
 
-                results.push((file_name, workspace.name().normal()));
+            if let Some(project) = detector.search_from(&entry.path())? {
+                first_len = max(first_len, project.name().len());
+
+                results.push((file_name, project.name().normal()));
             } else {
                 first_len = max(first_len, 7);
                 
@@ -76,23 +73,14 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             println!("{:first_len$} {}", workspace, file_name);
         }
     } else {
-        info!("Searching project root from {}", path.display());
-        let workspace = JsProject::search_from(path.parent().unwrap())?
-            .and_then(|prj| find_workspace(&path, &prj));
+        let project = detector.search_from(&path)?;
 
         println!(
             "{} {}",
             path.file_name().and_then(|s| s.to_str()).unwrap(),
-            workspace.map_or("unknown".bright_black(), |wks| wks.name().normal())
+            project.map_or("unknown".bright_black(), |wks| wks.name().normal())
         );
     }
 
     Ok(())
-}
-
-fn find_workspace<P: Project>(path: &Path, project: &P) -> Option<Rc<P::Workspace>> {
-    project.workspaces()
-        .flat_map(|wks| wks.map_or_else(|err| { error!("{}", err); None }, Some))
-        .filter(|wks| path.starts_with(wks.root()))
-        .max_by(|a, b| a.root().components().count().cmp(&b.root().components().count()))
 }
