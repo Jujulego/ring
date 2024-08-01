@@ -18,6 +18,10 @@ impl JsProject {
             manifest,
         })
     }
+    
+    pub fn manifest(&self) -> &PackageManifest {
+        &self.manifest
+    }
 }
 
 impl Project for JsProject {

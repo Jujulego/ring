@@ -5,6 +5,7 @@ use anyhow::Context;
 use tracing::{debug, info, trace};
 use ring_traits::{Project, ProjectDetector};
 use ring_utils::PathTree;
+use crate::constants::MANIFEST;
 use crate::JsProject;
 
 #[derive(Debug)]
@@ -18,6 +19,44 @@ impl JsProjectDetector {
             loaded: RefCell::new(PathTree::new())
         }
     }
+
+    pub fn load_at(&self, path: &Path) -> anyhow::Result<Option<Rc<JsProject>>> {
+        if let Some(project) = self.loaded.borrow().get(path) {
+            debug!("Found js project {} at {} (cached)", project.name(), path.display());
+            return Ok(Some(project.clone()));
+        }
+
+        let manifest_file = path.join(MANIFEST);
+
+        trace!("Testing {}", manifest_file.display());
+        let manifest_exists = manifest_file.try_exists()
+            .with_context(|| format!("Unable to access {}", manifest_file.display()))?;
+
+        if manifest_exists {
+            let project = JsProject::new(path.to_path_buf())?;
+            debug!("Found js project {} at {}", project.name(), path.display());
+
+            let project = Rc::new(project);
+            self.loaded.borrow_mut().set(path, project.clone());
+
+            Ok(Some(project))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item = anyhow::Result<Rc<JsProject>>> + 'a {
+        info!("Searching js project from {}", path.display());
+        let path = if path.is_file() { path.parent().unwrap() } else { path };
+
+        path.ancestors()
+            .map(|ancestor| self.load_at(ancestor))
+            .filter_map(|result| match result {
+                Ok(Some(prj)) => Some(Ok(prj)),
+                Ok(None) => None,
+                Err(err) => Some(Err(err)),
+            })
+    }
 }
 
 impl Default for JsProjectDetector {
@@ -29,34 +68,12 @@ impl Default for JsProjectDetector {
 impl ProjectDetector for JsProjectDetector {
     type Project = JsProject;
 
-    #[tracing::instrument(name = "js::search_from", skip_all)]
-    fn search_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Project>>> {
-        info!("Searching js project from {}", path.display());
-        let path = if path.is_file() { path.parent().unwrap() } else { path };
-
-        for ancestor in path.ancestors() {
-            if let Some(project) = self.loaded.borrow().get(ancestor) {
-                debug!("Found js project {} at {} (cached)", project.name(), ancestor.display());
-                return Ok(Some(project.clone()));
-            }
-
-            let manifest_file = ancestor.join("package.json");
-
-            trace!("Testing {}", manifest_file.display());
-            let manifest_exists = manifest_file.try_exists()
-                .with_context(|| format!("Unable to access {}", manifest_file.display()))?;
-
-            if manifest_exists {
-                let project = JsProject::new(ancestor.to_path_buf())?;
-                debug!("Found js project {} at {}", project.name(), ancestor.display());
-
-                let project = Rc::new(project);
-                self.loaded.borrow_mut().set(ancestor, project.clone());
-
-                return Ok(Some(project));
-            }
+    #[tracing::instrument(name = "js::detect_from", skip_all)]
+    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Project>>> {
+        if let Some(res) = self.search_form(path).next() {
+            res.map(|prj| Some(prj))
+        } else {
+            Ok(None)
         }
-
-        Ok(None)
     }
 }

@@ -58,7 +58,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 }
             };
 
-            if let Some(project) = detector.search_from(&entry.path())? {
+            if let Some(project) = detector.detect_from(&entry.path())? {
                 first_len = max(first_len, project.name().len());
 
                 results.push((file_name, project.name().normal()));
@@ -73,7 +73,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             println!("{:first_len$} {}", workspace, file_name);
         }
     } else {
-        let project = detector.search_from(&path)?;
+        let project = detector.detect_from(&path)?;
 
         println!(
             "{} {}",

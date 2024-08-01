@@ -10,6 +10,8 @@ pub struct PackageManifest {
     pub name: String,
     #[serde(default, with = "serde_version")]
     pub version: Option<Version>,
+    #[serde(default)]
+    pub workspaces: Vec<String>,
 }
 
 impl PackageManifest {
