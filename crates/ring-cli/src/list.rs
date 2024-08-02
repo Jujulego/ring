@@ -20,11 +20,11 @@ pub fn build_command() -> Command {
 
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
-    let directory = args.get_one::<PathBuf>("path")
+    let path = args.get_one::<PathBuf>("path")
         .unwrap_or(&current_dir);
 
-    let path = current_dir.join(directory).canonicalize()
-        .context(format!("Unable to access {}", directory.display()))?;
+    let path = current_dir.join(path).canonicalize()
+        .with_context(|| format!("Unable to access {}", path.display()))?;
 
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
@@ -58,7 +58,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 }
             };
 
-            if let Some(project) = detector.search_from(&entry.path())? {
+            if let Some(project) = detector.detect_from(&entry.path())? {
                 first_len = max(first_len, project.name().len());
 
                 results.push((file_name, project.name().normal()));
@@ -73,7 +73,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             println!("{:first_len$} {}", workspace, file_name);
         }
     } else {
-        let project = detector.search_from(&path)?;
+        let project = detector.detect_from(&path)?;
 
         println!(
             "{} {}",

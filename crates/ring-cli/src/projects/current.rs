@@ -17,7 +17,7 @@ pub fn handle_command() -> anyhow::Result<()> {
 
     let detector = JsProjectDetector::new();
 
-    if let Some(project) = detector.search_from(&current_dir)? {
+    if let Some(project) = detector.detect_from(&current_dir)? {
         println!("{}", project.name());
     } else {
         warn!("No matching project found");

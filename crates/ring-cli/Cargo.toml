@@ -11,6 +11,4 @@ tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
 ring-js = { path = "../ring-js" }
-ring-js-project = { path = "../ring-js-project" }
-ring-project = { path = "../ring-project" }
 ring-traits = { path = "../ring-traits" }
