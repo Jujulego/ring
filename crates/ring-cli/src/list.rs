@@ -20,11 +20,11 @@ pub fn build_command() -> Command {
 
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
-    let directory = args.get_one::<PathBuf>("path")
+    let path = args.get_one::<PathBuf>("path")
         .unwrap_or(&current_dir);
 
-    let path = current_dir.join(directory).canonicalize()
-        .context(format!("Unable to access {}", directory.display()))?;
+    let path = current_dir.join(path).canonicalize()
+        .with_context(|| format!("Unable to access {}", path.display()))?;
 
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
