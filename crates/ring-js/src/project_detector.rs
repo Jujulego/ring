@@ -71,7 +71,7 @@ impl ProjectDetector for JsProjectDetector {
     #[tracing::instrument(name = "js::detect_from", skip_all)]
     fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Project>>> {
         if let Some(res) = self.search_form(path).next() {
-            res.map(|prj| Some(prj))
+            res.map(Some)
         } else {
             Ok(None)
         }

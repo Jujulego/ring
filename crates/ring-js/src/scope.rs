@@ -45,7 +45,7 @@ impl Scope for JsScope {
                 { glob(&pattern.to_str().unwrap()[4..]).ok() }
                 
                 #[cfg(not(windows))]
-                { glob(&pattern.to_str().unwrap()).ok() }
+                { glob(pattern.to_str().unwrap()).ok() }
             })
             .flatten()
             .map(|path| {
