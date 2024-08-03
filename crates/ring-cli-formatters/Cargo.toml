@@ -1,5 +1,5 @@
 [package]
-name = "ring-formatters"
+name = "ring-cli-formatters"
 version = "0.1.0"
 edition = "2021"
 

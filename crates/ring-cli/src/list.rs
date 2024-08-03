@@ -5,7 +5,7 @@ use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
 use colored::Colorize;
 use tracing::info;
-use ring_formatters::ListFormatter;
+use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
 use ring_traits::{Project, ProjectDetector};
 
