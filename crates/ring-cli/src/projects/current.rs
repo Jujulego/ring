@@ -13,7 +13,7 @@ pub fn build_command() -> Command {
 pub fn handle_command() -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
     let current_dir = current_dir.canonicalize()
-        .context(format!("Unable to access {}", current_dir.display()))?;
+        .with_context(|| format!("Unable to access {}", current_dir.display()))?;
 
     let detector = JsProjectDetector::new();
 
