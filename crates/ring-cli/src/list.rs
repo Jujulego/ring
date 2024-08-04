@@ -69,7 +69,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
         list.add_row([
             &project.map_or("unknown".bright_black(), |wks| wks.name().normal()),
-            &path.file_name().and_then(|s| s.to_str()).unwrap().normal(),
+            &path.file_name().and_then(|s| s.to_str()).unwrap(),
         ]);
     }
     

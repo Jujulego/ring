@@ -1,6 +1,5 @@
 use std::cmp::max;
 use std::fmt::{Display, Formatter};
-use std::iter::zip;
 use textwrap::core::display_width;
 use unicode_width::UnicodeWidthStr;
 
@@ -15,7 +14,7 @@ impl<const N: usize> ListFormatter<N> {
         ListFormatter { rows: Vec::new(), widths: [0; N] }
     }
 
-    pub fn add_row<T: Display>(&mut self, row: [&T; N]) {
+    pub fn add_row(&mut self, row: [&dyn Display; N]) {
         let items = core::array::from_fn(|idx| format!("{}", row[idx]));
 
         self.widths.iter_mut()
@@ -39,12 +38,36 @@ impl<const N: usize> Display for ListFormatter<N> {
                 writeln!(f)?;
             }
 
-            for (item, width) in zip(row, &self.widths) {
-                let width = width + item.width() - display_width(item);
-                write!(f, "{item:width$} ")?;
+            for (idx, item) in row.iter().enumerate() {
+                if idx == N - 1 {
+                    write!(f, "{item}")?;
+                } else {
+                    let width = self.widths[idx] + item.width() - display_width(item);
+                    write!(f, "{item:width$} ")?;
+                }
             }
         }
-        
+
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_print_data_in_align_columns() {
+        let mut list = ListFormatter::new();
+        
+        list.add_row([&"test", &"title",      &"result"]);
+        list.add_row([&"1",    &"first test", &"ok"]);
+        list.add_row([&"42",   &"life",       &"ok"]);
+
+        assert_eq!(format!("{list}"), [
+            "test title      result",
+            "1    first test ok",
+            "42   life       ok",
+        ].join("\n"));
     }
 }
