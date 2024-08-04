@@ -1,5 +1,5 @@
 use std::cmp::max;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::iter::zip;
 use textwrap::core::display_width;
 use unicode_width::UnicodeWidthStr;
@@ -24,21 +24,27 @@ impl<const N: usize> ListFormatter<N> {
 
         self.rows.push(items);
     }
-
-    pub fn display(&self) {
-        for row in &self.rows {
-            for (item, width) in zip(row, &self.widths) {
-                let width = width + item.width() - display_width(item);
-                print!("{item:width$} ");
-            }
-
-            println!();
-        }
-    }
 }
 
 impl<const N: usize> Default for ListFormatter<N> {
     fn default() -> Self {
         ListFormatter::new()
+    }
+}
+
+impl<const N: usize> Display for ListFormatter<N> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for (idx, row) in self.rows.iter().enumerate() {
+            if idx != 0 {
+                writeln!(f)?;
+            }
+
+            for (item, width) in zip(row, &self.widths) {
+                let width = width + item.width() - display_width(item);
+                write!(f, "{item:width$} ")?;
+            }
+        }
+        
+        Ok(())
     }
 }

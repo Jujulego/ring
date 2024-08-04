@@ -30,7 +30,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
     // List directory files
     let detector = JsProjectDetector::new();
-    let mut formatter = ListFormatter::new();
+    let mut list = ListFormatter::new();
 
     if path.is_dir() {
         info!("Searching project root from {}", path.display());
@@ -59,21 +59,21 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
             let project = detector.detect_from(&entry.path())?;
             
-            formatter.add_row([
+            list.add_row([
+                &project.map_or("unknown".bright_black(), |wks| wks.name().normal()),
                 &file_name,
-                &project.map_or("unknown".bright_black(), |wks| wks.name().normal())
             ]);
         }
     } else {
         let project = detector.detect_from(&path)?;
 
-        formatter.add_row([
-            &path.file_name().and_then(|s| s.to_str()).unwrap().normal(),
+        list.add_row([
             &project.map_or("unknown".bright_black(), |wks| wks.name().normal()),
+            &path.file_name().and_then(|s| s.to_str()).unwrap().normal(),
         ]);
     }
     
-    formatter.display();
+    println!("{list}");
 
     Ok(())
 }
