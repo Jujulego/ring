@@ -57,20 +57,28 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 }
             };
 
-            let project = detector.detect_from(&entry.path())?;
-            
-            list.add_row([
-                &project.map_or("unknown".bright_black(), |wks| wks.name().normal()),
-                &file_name,
-            ]);
+            if let Some(project) = detector.detect_from(&entry.path())? {
+                list.add_row([
+                    &project.name(),
+                    &project.tags().join(", "),
+                    &file_name,
+                ]);
+            } else {
+                list.add_row([&"unknown".bright_black(), &"", &file_name]);
+            }
         }
     } else {
-        let project = detector.detect_from(&path)?;
+        let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
 
-        list.add_row([
-            &project.map_or("unknown".bright_black(), |wks| wks.name().normal()),
-            &path.file_name().and_then(|s| s.to_str()).unwrap(),
-        ]);
+        if let Some(project) = detector.detect_from(&path)? {
+            list.add_row([
+                &project.name(),
+                &project.tags().join(", "),
+                &file_name,
+            ]);
+        } else {
+            list.add_row([&"unknown".bright_black(), &"", &file_name]);
+        }
     }
     
     println!("{list}");

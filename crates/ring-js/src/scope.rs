@@ -60,7 +60,7 @@ impl Scope for JsScope {
             })
     }
 
-    fn tag(&self) -> &[&str] {
+    fn tags(&self) -> &[&str] {
         &["js"]
     }
 }
