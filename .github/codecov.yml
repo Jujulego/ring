@@ -13,6 +13,11 @@ component_management:
       paths:
         - crates/ring-cli/**
 
+    - component_id: crate-ring-cli-formatters
+      name: cli-formatters
+      paths:
+        - crates/ring-cli-formatters/**
+
     - component_id: crate-ring-js
       name: js
       paths:
