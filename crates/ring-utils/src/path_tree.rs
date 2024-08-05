@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fmt::Debug;
-use std::path::{Component, Components, Path};
+use std::path::{Component, Path};
+use crate::path::{ANC, normalize};
 
 #[derive(Debug)]
 struct PathNode<T> {
@@ -14,67 +15,6 @@ impl<T> Default for PathNode<T> {
         PathNode {
             children: HashMap::default(),
             data: None,
-        }
-    }
-}
-
-#[derive(Debug)]
-enum NodeGetResult<'n, 'c, T> {
-    Found(&'n PathNode<T>),
-    Missing,
-    Back(Components<'c>),
-}
-
-#[derive(Debug)]
-enum NodeSetResult<'c, T> {
-    Stored,
-    Back(Components<'c>, T),
-}
-
-impl<T> PathNode<T> {
-    fn get<'c>(&self, mut components: Components<'c>) -> NodeGetResult<'_, 'c, T> {
-        loop {
-            match components.next() {
-                Some(Component::Normal(name)) => {
-                    if let Some(next) = self.children.get(name) {
-                        match next.get(components) {
-                            NodeGetResult::Back(c) => {
-                                components = c;
-                            },
-                            result => break result,
-                        }
-                    } else {
-                        break NodeGetResult::Missing;
-                    }
-                }
-                Some(Component::ParentDir) => break NodeGetResult::Back(components),
-                None => break NodeGetResult::Found(self),
-                _ => continue,
-            }
-        }
-    }
-
-    fn set<'c>(&mut self, mut components: Components<'c>, mut value: T) -> NodeSetResult<'c, T> {
-        loop {
-            match components.next() {
-                Some(Component::Normal(name)) => {
-                    let next = self.children.entry(name.to_os_string()).or_default();
-
-                    match next.set(components, value) {
-                        NodeSetResult::Back(c, v) => {
-                            components = c;
-                            value = v;
-                        },
-                        NodeSetResult::Stored => break NodeSetResult::Stored
-                    }
-                }
-                Some(Component::ParentDir) => break NodeSetResult::Back(components, value),
-                None => {
-                    self.data = Some(value);
-                    break NodeSetResult::Stored;
-                }
-                _ => continue,
-            }
         }
     }
 }
@@ -126,38 +66,46 @@ impl<T> PathTree<T> {
     pub fn get(&self, path: &Path) -> Option<&T> {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
 
-        let root = {
+        let mut node = {
             #[cfg(windows)] { self.root(path)? }
             #[cfg(not(windows))] { self.root() }
         };
-        let mut components = path.components();
-
-        loop {
-            match root.get(components) {
-                NodeGetResult::Found(node) => break node.data.as_ref(),
-                NodeGetResult::Missing => break None,
-                NodeGetResult::Back(c) => {
-                    components = c
-                },
+        
+        for component in normalize(path) {
+            if let ANC::Normal(name) = component {
+                node = node.children.get(name)?;
             }
         }
+
+        return node.data.as_ref();
     }
 
-    pub fn set(&mut self, path: &Path, mut value: T) {
+    pub fn get_mut(&mut self, path: &Path) -> Option<&mut T> {
         assert!(path.is_absolute(), "PathTree keys must be absolute paths");
 
-        let root = self.root_mut(#[cfg(windows)] path);
-        let mut components = path.components();
+        let mut node = self.root_mut(#[cfg(windows)] path);
 
-        loop {
-            match root.set(components, value) {
-                NodeSetResult::Stored => break,
-                NodeSetResult::Back(c, v) => {
-                    components = c;
-                    value = v;
-                }
+        for component in normalize(path) {
+            if let ANC::Normal(name) = component {
+                node = node.children.get_mut(name)?;
             }
         }
+
+        return node.data.as_mut();
+    }
+
+    pub fn set(&mut self, path: &Path, value: T) {
+        assert!(path.is_absolute(), "PathTree keys must be absolute paths");
+
+        let mut node = self.root_mut(#[cfg(windows)] path);
+
+        for component in normalize(path) {
+            if let ANC::Normal(name) = component {
+                node = node.children.entry(name.to_os_string()).or_default();
+            }
+        }
+        
+        node.data = Some(value);
     }
 }
 
