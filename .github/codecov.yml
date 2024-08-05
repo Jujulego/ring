@@ -1,9 +1,34 @@
-coverage:
-  status:
-    project:
-      default:
+component_management:
+  default_rules:
+    statuses:
+      - type: project
         target: auto
 
-    patch:
-      default:
-        target: 80%
+      - type: patch
+        target: auto
+
+  individual_components:
+    - component_id: crate-ring-cli
+      name: cli
+      paths:
+        - crates/ring-cli/**
+
+    - component_id: crate-ring-cli-formatters
+      name: cli-formatters
+      paths:
+        - crates/ring-cli-formatters/**
+
+    - component_id: crate-ring-js
+      name: js
+      paths:
+        - crates/ring-js/**
+
+    - component_id: crate-ring-traits
+      name: traits
+      paths:
+        - crates/ring-traits/**
+
+    - component_id: crate-ring-utils
+      name: utils
+      paths:
+        - crates/ring-utils/**
