@@ -8,35 +8,35 @@ pub enum AbsoluteNormalizedComponent<'p> {
     Normal(&'p OsStr)
 }
 
-pub type ANC<'p> = AbsoluteNormalizedComponent<'p>;
+pub type Anc<'p> = AbsoluteNormalizedComponent<'p>;
 
 impl<'p> PartialEq<Component<'p>> for AbsoluteNormalizedComponent<'p> {
     fn eq(&self, other: &Component<'p>) -> bool {
         match (self, other) {
-            (ANC::Prefix(a), Component::Prefix(b)) => a == b,
-            (ANC::RootDir, Component::RootDir) => true,
-            (ANC::Normal(a), Component::Normal(b)) => *a == *b,
+            (Anc::Prefix(a), Component::Prefix(b)) => a == b,
+            (Anc::RootDir, Component::RootDir) => true,
+            (Anc::Normal(a), Component::Normal(b)) => *a == *b,
             (_, _) => false,
         }
     }
 }
 
-pub fn normalize(path: &Path) -> Vec<ANC> {
+pub fn normalize(path: &Path) -> Vec<Anc> {
     assert!(path.is_absolute(), "normalize only works on absolute paths");
     let mut components = Vec::new();
 
     for component in path.components() {
         match component {
-            Component::Prefix(prefix) => components.push(ANC::Prefix(prefix)),
-            Component::RootDir => components.push(ANC::RootDir),
+            Component::Prefix(prefix) => components.push(Anc::Prefix(prefix)),
+            Component::RootDir => components.push(Anc::RootDir),
             Component::CurDir => continue,
             Component::ParentDir => {
                 match components.last() {
-                    Some(ANC::RootDir | ANC::Prefix(_)) | None => continue,
+                    Some(Anc::RootDir | Anc::Prefix(_)) | None => continue,
                     Some(_) => { components.pop(); },
                 }
             },
-            Component::Normal(str) => components.push(ANC::Normal(str)),
+            Component::Normal(str) => components.push(Anc::Normal(str)),
         }
     }
 

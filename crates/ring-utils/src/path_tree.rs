@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fmt::Debug;
-use std::path::{Component, Path};
-use crate::path::{ANC, normalize};
+use std::path::Path;
+use crate::path::{Anc, normalize};
+
+#[cfg(windows)] use std::path::Component;
 
 #[derive(Debug)]
 struct PathNode<T> {
@@ -50,16 +52,18 @@ impl<T> PathTree<T> {
         &self.root
     }
 
-    fn root_mut(&mut self, #[cfg(windows)] path: &Path) -> &mut PathNode<T> {
-        #[cfg(windows)]
+    #[cfg(windows)]
+    fn root_mut(&mut self, path: &Path) -> &mut PathNode<T> {
         if let Some(Component::Prefix(prefix)) = path.components().next() {
             self.prefixes.entry(prefix.as_os_str().to_os_string())
                 .or_default()
         } else {
             unreachable!()
         }
+    }
 
-        #[cfg(not(windows))]
+    #[cfg(not(windows))]
+    fn root_mut(&mut self) -> &mut PathNode<T> {
         &mut self.root
     }
 
@@ -72,8 +76,8 @@ impl<T> PathTree<T> {
         };
         
         for component in normalize(path) {
-            if let ANC::Normal(name) = component {
-                node = node.children.get(name)?;
+            if let Anc::Normal(name) = component {
+                node = node.children.get(name)?
             }
         }
 
@@ -86,7 +90,7 @@ impl<T> PathTree<T> {
         let mut node = self.root_mut(#[cfg(windows)] path);
 
         for component in normalize(path) {
-            if let ANC::Normal(name) = component {
+            if let Anc::Normal(name) = component {
                 node = node.children.get_mut(name)?;
             }
         }
@@ -100,7 +104,7 @@ impl<T> PathTree<T> {
         let mut node = self.root_mut(#[cfg(windows)] path);
 
         for component in normalize(path) {
-            if let ANC::Normal(name) = component {
+            if let Anc::Normal(name) = component {
                 node = node.children.entry(name.to_os_string()).or_default();
             }
         }
