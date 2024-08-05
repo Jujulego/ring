@@ -49,10 +49,34 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_should_normalize_given_path() {
+    fn it_should_normalize_path() {
         assert_eq!(
-            normalize(&absolute_path!("/./test/../life/test/toto/../../42")),
-            absolute_path!("/life/42").components().collect::<Vec<_>>()
+            normalize(&absolute_path!("test/life/42")),
+            absolute_path!("test/life/42").components().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn it_should_normalize_path_with_cur_dirs() {
+        assert_eq!(
+            normalize(&absolute_path!("test/././life/./42")),
+            absolute_path!("test/life/42").components().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn it_should_normalize_path_with_parent_dirs() {
+        assert_eq!(
+            normalize(&absolute_path!("test/../test/life/../../test/life/42")),
+            absolute_path!("test/life/42").components().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn it_should_normalize_deep_parent_dirs() {
+        assert_eq!(
+            normalize(&absolute_path!("test/../../../test/life/42")),
+            absolute_path!("test/life/42").components().collect::<Vec<_>>()
         );
     }
 }

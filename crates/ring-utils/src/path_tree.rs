@@ -152,47 +152,15 @@ mod tests {
     }
 
     #[test]
-    fn it_should_handle_path_with_cur_dirs() {
+    fn it_should_mutate_stored_value() {
         let mut tree = PathTree::new();
 
+        tree.set(&absolute_path!("test"), "failed");
         tree.set(&absolute_path!("test/life/42"), "failed");
-
-        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
-        assert_eq!(tree.get(&absolute_path!("test/././life/./42")), Some(&"failed"));
-
-        tree.set(&absolute_path!("test/././life/./42"), "ok");
+        tree.set(&absolute_path!("test/life"), "failed");
+        
+        *tree.get_mut(&absolute_path!("test/life/42")).unwrap() = "ok";
 
         assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
-        assert_eq!(tree.get(&absolute_path!("test/././life/./42")), Some(&"ok"));
-    }
-
-    #[test]
-    fn it_should_handle_path_with_parent_dirs() {
-        let mut tree = PathTree::new();
-
-        tree.set(&absolute_path!("test/life/42"), "failed");
-
-        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
-        assert_eq!(tree.get(&absolute_path!("test/../test/life/../../test/life/42")), Some(&"failed"));
-
-        tree.set(&absolute_path!("test/../test/life/../../test/life/42"), "ok");
-
-        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
-        assert_eq!(tree.get(&absolute_path!("test/../test/life/../../test/life/42")), Some(&"ok"));
-    }
-
-    #[test]
-    fn it_should_handle_deep_parent_dirs() {
-        let mut tree = PathTree::new();
-
-        tree.set(&absolute_path!("test/life/42"), "failed");
-
-        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"failed"));
-        assert_eq!(tree.get(&absolute_path!("test/../../../test/life/42")), Some(&"failed"));
-
-        tree.set(&absolute_path!("test/../../../test/life/42"), "ok");
-
-        assert_eq!(tree.get(&absolute_path!("test/life/42")), Some(&"ok"));
-        assert_eq!(tree.get(&absolute_path!("test/../../../test/life/42")), Some(&"ok"));
     }
 }
