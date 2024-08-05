@@ -4,6 +4,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use clap::{arg, ArgMatches, Command, value_parser};
 use tracing::warn;
+use ring_cli_formatters::ListFormatter;
 use ring_js::{JsProjectDetector, JsScopeDetector};
 use ring_traits::{Project, Scope, ScopeDetector};
 
@@ -23,13 +24,16 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         .with_context(|| format!("Unable to access {}", path.display()))?;
 
     let detector = JsScopeDetector::new(Rc::new(JsProjectDetector::new()));
+    let mut list = ListFormatter::new();
 
     if let Some(scope) = detector.detect_from(&path)? {
         for project in scope.projects() {
             let project = project?;
             
-            println!("{}", project.name());
+            list.add_row([&project.name(), &project.tags().join(", ")]);
         }
+        
+        println!("{list}");
     } else {
         warn!("No matching scope found");
     }

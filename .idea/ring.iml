@@ -4,11 +4,10 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/ring-js-project/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/ring-project/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/ring-utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-formatters/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-js/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-traits/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-utils/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

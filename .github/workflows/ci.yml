@@ -77,12 +77,6 @@ jobs:
       - name: Test docs
         run: cargo test --doc
 
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: codecov-unit-${{ matrix.name }}
-          path: codecov-unit.json
-
       - name: Upload coverage to Codecov
         if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
         uses: codecov/codecov-action@v4

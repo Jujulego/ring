@@ -37,7 +37,7 @@ impl Project for JsProject {
         self.manifest.version.as_ref()
     }
 
-    fn tag(&self) -> &[&str] {
+    fn tags(&self) -> &[&str] {
         &["js"]
     }
 }

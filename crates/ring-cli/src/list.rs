@@ -1,4 +1,3 @@
-use std::cmp::max;
 use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
@@ -6,6 +5,7 @@ use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
 use colored::Colorize;
 use tracing::info;
+use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
 use ring_traits::{Project, ProjectDetector};
 
@@ -30,12 +30,11 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
     // List directory files
     let detector = JsProjectDetector::new();
+    let mut list = ListFormatter::new();
 
     if path.is_dir() {
         info!("Searching project root from {}", path.display());
-        let mut first_len = 0;
-        let mut results = Vec::new();
-
+        
         for entry in read_dir(path)? {
             let entry = entry?;
             let file_name = entry.file_name().to_str().unwrap().to_string();
@@ -59,28 +58,30 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             };
 
             if let Some(project) = detector.detect_from(&entry.path())? {
-                first_len = max(first_len, project.name().len());
-
-                results.push((file_name, project.name().normal()));
+                list.add_row([
+                    &project.name(),
+                    &project.tags().join(", "),
+                    &file_name,
+                ]);
             } else {
-                first_len = max(first_len, 7);
-                
-                results.push((file_name, "unknown".bright_black()));
+                list.add_row([&"unknown".bright_black(), &"", &file_name]);
             }
         }
-        
-        for (file_name, workspace) in results {
-            println!("{:first_len$} {}", workspace, file_name);
-        }
     } else {
-        let project = detector.detect_from(&path)?;
+        let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
 
-        println!(
-            "{} {}",
-            path.file_name().and_then(|s| s.to_str()).unwrap(),
-            project.map_or("unknown".bright_black(), |wks| wks.name().normal())
-        );
+        if let Some(project) = detector.detect_from(&path)? {
+            list.add_row([
+                &project.name(),
+                &project.tags().join(", "),
+                &file_name,
+            ]);
+        } else {
+            list.add_row([&"unknown".bright_black(), &"", &file_name]);
+        }
     }
+    
+    println!("{list}");
 
     Ok(())
 }
