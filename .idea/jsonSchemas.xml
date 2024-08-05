@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="Codecov configuration files">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="Codecov configuration files" />
+              <option name="relativePathToSchema" value="https://json.schemastore.org/codecov.json" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value=".github/codecov.yml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="GitHub Workflow">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="GitHub Workflow" />
+              <option name="relativePathToSchema" value="https://json.schemastore.org/github-workflow.json" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="directory" value="true" />
+                    <option name="path" value=".github/workflows" />
+                    <option name="mappingKind" value="Directory" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="GitHub automatically generated release notes configuration">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="GitHub automatically generated release notes configuration" />
+              <option name="relativePathToSchema" value="https://json.schemastore.org/github-release-config.json" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value=".github/release.yml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="Renovate">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="Renovate" />
+              <option name="relativePathToSchema" value="https://docs.renovatebot.com/renovate-schema.json" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value=".github/renovate.json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>
