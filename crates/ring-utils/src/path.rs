@@ -31,9 +31,8 @@ pub fn normalize(path: &Path) -> Vec<Anc> {
             Component::RootDir => components.push(Anc::RootDir),
             Component::CurDir => continue,
             Component::ParentDir => {
-                match components.last() {
-                    Some(Anc::RootDir | Anc::Prefix(_)) | None => continue,
-                    Some(_) => { components.pop(); },
+                if let Some(Anc::Normal(_)) = components.last() {
+                    components.pop();
                 }
             },
             Component::Normal(str) => components.push(Anc::Normal(str)),
