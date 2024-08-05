@@ -120,9 +120,10 @@ mod tests {
 
     #[test]
     fn it_should_return_none_on_empty_tree() {
-        let tree: PathTree<&str> = PathTree::new();
+        let mut tree: PathTree<&str> = PathTree::new();
 
         assert_eq!(tree.get(&absolute_path!("test")), None);
+        assert_eq!(tree.get_mut(&absolute_path!("test")), None);
     }
 
     #[test]
@@ -130,6 +131,13 @@ mod tests {
     fn it_should_panic_if_get_is_called_without_an_absolute_path() {
         let tree: PathTree<&str> = PathTree::new();
         tree.get(Path::new("test"));
+    }
+
+    #[test]
+    #[should_panic(expected = "PathTree keys must be absolute paths")]
+    fn it_should_panic_if_get_mut_is_called_without_an_absolute_path() {
+        let mut tree: PathTree<&str> = PathTree::new();
+        tree.get_mut(Path::new("test"));
     }
 
     #[test]

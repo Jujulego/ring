@@ -57,6 +57,12 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "normalize only works on absolute paths")]
+    fn it_should_panic_if_normalize_is_called_without_an_absolute_path() {
+        normalize(Path::new("test"));
+    }
+
+    #[test]
     fn it_should_normalize_path_with_cur_dirs() {
         assert_eq!(
             normalize(&absolute_path!("test/././life/./42")),
