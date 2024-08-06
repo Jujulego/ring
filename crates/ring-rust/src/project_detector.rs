@@ -66,11 +66,9 @@ impl Default for RustProjectDetector {
 }
 
 impl ProjectDetector for RustProjectDetector {
-    type Project = RustProject;
-
-    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Project>>> {
+    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn Project>>> {
         if let Some(res) = self.search_form(path).next() {
-            res.map(Some)
+            res.map(|prj| Some(prj as Rc<dyn Project>))
         } else {
             Ok(None)
         }

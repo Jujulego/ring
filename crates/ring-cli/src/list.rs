@@ -7,7 +7,7 @@ use colored::Colorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
-use ring_traits::{Project, ProjectDetector};
+use ring_traits::ProjectDetector;
 
 pub fn build_command() -> Command {
     Command::new("list")
