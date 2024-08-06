@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use semver::Version;
 use ring_traits::Project;
+use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
 #[derive(Debug)]
@@ -11,7 +12,7 @@ pub struct JsProject {
 
 impl JsProject {
     pub fn new(root: PathBuf) -> anyhow::Result<JsProject> {
-        let manifest = PackageManifest::parse_file(&root.join("package.json"))?;
+        let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
         
         Ok(JsProject {
             root,

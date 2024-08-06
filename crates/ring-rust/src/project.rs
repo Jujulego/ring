@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use semver::Version;
 use ring_traits::Project;
 use crate::cargo_manifest::CargoManifest;
+use crate::constants::MANIFEST;
 
 #[derive(Debug)]
 pub struct RustProject {
@@ -11,7 +12,7 @@ pub struct RustProject {
 
 impl RustProject {
     pub fn new(root: PathBuf) -> anyhow::Result<RustProject> {
-        let manifest = CargoManifest::parse_file(&root.join("Cargo.toml"))?;
+        let manifest = CargoManifest::parse_file(&root.join(MANIFEST))?;
         
         Ok(RustProject {
             root,

@@ -1,0 +1,1 @@
+pub const MANIFEST: &str = "Cargo.toml";
