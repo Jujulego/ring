@@ -15,7 +15,7 @@ pub struct CargoPackage {
 
 #[derive(Debug, Deserialize)]
 pub struct CargoManifest {
-    pub package: CargoPackage
+    pub package: Option<CargoPackage>
 }
 
 impl CargoManifest {

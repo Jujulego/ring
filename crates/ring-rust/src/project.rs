@@ -1,27 +1,21 @@
 use std::path::{Path, PathBuf};
 use semver::Version;
 use ring_traits::Project;
-use crate::cargo_manifest::CargoManifest;
-use crate::constants::MANIFEST;
+use crate::CargoPackage;
 
 #[derive(Debug)]
 pub struct RustProject {
     root: PathBuf,
-    manifest: CargoManifest,
+    package: CargoPackage,
 }
 
 impl RustProject {
-    pub fn new(root: PathBuf) -> anyhow::Result<RustProject> {
-        let manifest = CargoManifest::parse_file(&root.join(MANIFEST))?;
-        
-        Ok(RustProject {
-            root,
-            manifest
-        })
+    pub fn new(root: PathBuf, package: CargoPackage) -> RustProject {
+        RustProject { root, package }
     }
-    
-    pub fn manifest(&self) -> &CargoManifest {
-        &self.manifest
+
+    pub fn package(&self) -> &CargoPackage {
+        &self.package
     }
 }
 
@@ -31,11 +25,11 @@ impl Project for RustProject {
     }
 
     fn name(&self) -> &str {
-        &self.manifest.package.name
+        &self.package.name
     }
 
     fn version(&self) -> Option<&Version> {
-        self.manifest.package.version.as_ref()
+        self.package.version.as_ref()
     }
 
     fn tags(&self) -> &[&str] {

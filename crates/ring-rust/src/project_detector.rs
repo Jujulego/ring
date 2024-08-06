@@ -6,7 +6,7 @@ use tracing::{debug, info, trace};
 use ring_traits::{Project, ProjectDetector};
 use ring_utils::PathTree;
 use crate::constants::MANIFEST;
-use crate::RustProject;
+use crate::{CargoManifest, RustProject};
 
 #[derive(Debug)]
 pub struct RustProjectDetector {
@@ -19,33 +19,38 @@ impl RustProjectDetector {
             loaded: RefCell::new(PathTree::new())
         }
     }
-    
+
     pub fn load_at(&self, path: &Path) -> anyhow::Result<Option<Rc<RustProject>>> {
         if let Some(project) = self.loaded.borrow().get(path) {
             debug!("Found rust project {} at {} (cached)", project.name(), path.display());
-            return Ok(Some(project.clone()))
+            return Ok(Some(project.clone()));
         }
 
         let manifest_file = path.join(MANIFEST);
-        
+
         trace!("Testing {}", manifest_file.display());
         let manifest_exists = manifest_file.try_exists()
             .with_context(|| format!("Unable to access {}", manifest_file.display()))?;
 
         if manifest_exists {
-            let project = RustProject::new(path.to_path_buf())?;
-            debug!("Found rust project {} at {}", project.name(), path.display());
+            let manifest = CargoManifest::parse_file(&manifest_file)?;
 
-            let project = Rc::new(project);
-            self.loaded.borrow_mut().set(path, project.clone());
+            Ok(manifest.package
+                .map(|pkg| {
+                    let project = RustProject::new(path.to_path_buf(), pkg);
+                    debug!("Found rust project {} at {}", project.name(), path.display());
 
-            Ok(Some(project))
+                    let project = Rc::new(project);
+                    self.loaded.borrow_mut().set(path, project.clone());
+
+                    project
+                }))
         } else {
             Ok(None)
         }
     }
 
-    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item = anyhow::Result<Rc<RustProject>>> + 'a {
+    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item=anyhow::Result<Rc<RustProject>>> + 'a {
         info!("Searching rust project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
