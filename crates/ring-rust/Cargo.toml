@@ -9,3 +9,6 @@ semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
 toml = "0.8.19"
 tracing = "0.1.40"
+
+ring-traits = { path = "../ring-traits" }
+ring-utils = { path = "../ring-utils" }

@@ -7,19 +7,19 @@ use serde::Deserialize;
 use tracing::trace;
 
 #[derive(Debug, Deserialize)]
-pub struct CratePackage {
+pub struct CargoPackage {
     pub name: String,
     #[serde(default)]
     pub version: Option<Version>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CreateManifest {
-    pub package: CratePackage
+pub struct CargoManifest {
+    pub package: CargoPackage
 }
 
-impl CreateManifest {
-    pub fn parse_file(path: &Path) -> anyhow::Result<CreateManifest> {
+impl CargoManifest {
+    pub fn parse_file(path: &Path) -> anyhow::Result<CargoManifest> {
         trace!("Parsing manifest file {}", path.display());
 
         let mut buffer = String::new();
