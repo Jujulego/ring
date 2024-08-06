@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use anyhow::Context;
 use semver::Version;
@@ -6,22 +7,28 @@ use serde::Deserialize;
 use tracing::trace;
 
 #[derive(Debug, Deserialize)]
-pub struct PackageManifest {
+pub struct CratePackage {
     pub name: String,
     #[serde(default)]
     pub version: Option<Version>,
-    #[serde(default)]
-    pub workspaces: Vec<String>,
 }
 
-impl PackageManifest {
-    pub fn parse_file(path: &Path) -> anyhow::Result<PackageManifest> {
+#[derive(Debug, Deserialize)]
+pub struct CreateManifest {
+    pub package: CratePackage
+}
+
+impl CreateManifest {
+    pub fn parse_file(path: &Path) -> anyhow::Result<CreateManifest> {
         trace!("Parsing manifest file {}", path.display());
 
-        let file = File::open(path)
+        let mut buffer = String::new();
+        
+        File::open(path)
+            .and_then(|mut f| f.read_to_string(&mut buffer))
             .with_context(|| format!("Unable to read file {}", path.display()))?;
 
-        serde_json::from_reader(&file)
+        toml::from_str(&buffer)
             .with_context(|| format!("Error while parsing {}", path.display()))
     }
 }

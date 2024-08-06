@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.86"
+semver = { version = "1.0.23", features = ["serde"] }
+serde = { version = "1.0.203", features = ["derive"] }
+toml = "0.8.19"
+tracing = "0.1.40"
