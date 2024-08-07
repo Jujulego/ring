@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
-use tracing::debug;
+use tracing::{debug, trace};
 use ring_traits::{Project, ScopeDetector};
 use crate::{JsProjectDetector, JsScope};
 use crate::constants::LOCKFILES;
@@ -27,6 +27,7 @@ impl ScopeDetector for JsScopeDetector {
             for (package_manager, lockfile) in LOCKFILES {
                 let lockfile = project.root().join(lockfile);
 
+                trace!("Testing {}", lockfile.display());
                 if lockfile.try_exists().with_context(|| format!("Unable to access {}", lockfile.display()))? {
                     debug!("Found lockfile {}", lockfile.display());
                     debug!("Detected package manager {}", package_manager);

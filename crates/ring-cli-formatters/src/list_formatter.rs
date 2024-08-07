@@ -43,7 +43,7 @@ impl<const N: usize> Display for ListFormatter<N> {
                 }
             }
 
-            if idx < N - 1 {
+            if idx < self.rows.len() - 1 {
                 writeln!(f)?;
             }
         }
