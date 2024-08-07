@@ -4,6 +4,7 @@ mod project;
 mod project_detector;
 mod scope;
 mod scope_detector;
+mod cargo_loader;
 
 pub use cargo_manifest::{CargoManifest, CargoPackage, CargoWorkspace};
 pub use project::RustProject;

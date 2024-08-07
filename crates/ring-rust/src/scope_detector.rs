@@ -1,55 +1,44 @@
 use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
-use anyhow::Context;
-use tracing::{debug, info, trace};
+use tracing::{debug, info};
 use ring_traits::{Scope, ScopeDetector};
 use ring_utils::PathTree;
-use crate::{CargoManifest, RustProjectDetector, RustScope};
-use crate::constants::MANIFEST;
+use crate::{RustProjectDetector, RustScope};
+use crate::cargo_loader::CargoLoader;
 
 #[derive(Debug)]
 pub struct RustScopeDetector {
-    loaded: RefCell<PathTree<Rc<RustScope>>>,
+    cache: RefCell<PathTree<Rc<RustScope>>>,
     project_detector: Rc<RustProjectDetector>,
 }
 
 impl RustScopeDetector {
     pub fn new(project_detector: Rc<RustProjectDetector>) -> RustScopeDetector {
         RustScopeDetector {
-            loaded: RefCell::new(PathTree::new()),
-            project_detector
+            cache: RefCell::new(PathTree::new()),
+            project_detector,
         }
     }
 
+    fn cargo_loader(&self) -> &CargoLoader {
+        self.project_detector.cargo_loader()
+    }
+
     pub fn load_at(&self, path: &Path) -> anyhow::Result<Option<Rc<RustScope>>> {
-        if let Some(scope) = self.loaded.borrow().get(path) {
-            debug!("Found rust scope at {} (cached)", path.display());
-            return Ok(Some(scope.clone()));
-        }
+        let manifest = self.cargo_loader().load(path)?;
 
-        let manifest_file = path.join(MANIFEST);
+        Ok(manifest
+            .and_then(|mnf| mnf.workspace.clone())
+            .map(|wks| {
+                let scope = RustScope::new(path.to_path_buf(), wks, self.project_detector.clone());
+                debug!("Found rust scope at {}", path.display());
 
-        trace!("Testing {}", manifest_file.display());
-        let manifest_exists = manifest_file.try_exists()
-            .with_context(|| format!("Unable to access {}", manifest_file.display()))?;
+                let project = Rc::new(scope);
+                self.cache.borrow_mut().set(path, project.clone());
 
-        if manifest_exists {
-            let manifest = CargoManifest::parse_file(&manifest_file)?;
-
-            Ok(manifest.workspace
-                .map(|wks| {
-                    let scope = RustScope::new(path.to_path_buf(), wks, self.project_detector.clone());
-                    debug!("Found rust scope at {}", path.display());
-
-                    let project = Rc::new(scope);
-                    self.loaded.borrow_mut().set(path, project.clone());
-
-                    project
-                }))
-        } else {
-            Ok(None)
-        }
+                project
+            }))
     }
 
     pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item=anyhow::Result<Rc<RustScope>>> + 'a {
