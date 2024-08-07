@@ -14,8 +14,14 @@ pub struct CargoPackage {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct CargoWorkspace {
+    pub members: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct CargoManifest {
-    pub package: Option<CargoPackage>
+    pub package: Option<CargoPackage>,
+    pub workspace: Option<CargoWorkspace>,
 }
 
 impl CargoManifest {

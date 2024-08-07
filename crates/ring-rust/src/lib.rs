@@ -1,8 +1,12 @@
 mod cargo_manifest;
+mod constants;
 mod project;
 mod project_detector;
-mod constants;
+mod scope;
+mod scope_detector;
 
-pub use cargo_manifest::{CargoManifest, CargoPackage};
+pub use cargo_manifest::{CargoManifest, CargoPackage, CargoWorkspace};
 pub use project::RustProject;
 pub use project_detector::RustProjectDetector;
+pub use scope::RustScope;
+pub use scope_detector::RustScopeDetector;
