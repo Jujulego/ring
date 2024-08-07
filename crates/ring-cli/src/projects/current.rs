@@ -2,6 +2,7 @@ use std::env;
 use anyhow::Context;
 use clap::Command;
 use tracing::warn;
+use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
 use ring_rust::RustProjectDetector;
 use ring_traits::ProjectDetector;
@@ -21,16 +22,20 @@ pub fn handle_command() -> anyhow::Result<()> {
         &RustProjectDetector::new()
     ];
 
+    let mut list = ListFormatter::new();
     let mut found = false;
     
     for detector in detectors {
         if let Some(project) = detector.detect_from(&current_dir)? {
-            println!("{}", project.name());
+
+            list.add_row([&project.name(), &project.tags().join(", ")]);
             found = true;
         }
     }
-    
-    if !found {
+
+    if found {
+        println!("{list}");
+    } else {
         warn!("No matching project found");
     }
 
