@@ -29,9 +29,9 @@ impl RustProjectDetector {
         let manifest = self.cargo_loader.load(path)?;
 
         Ok(manifest
-            .and_then(|mnf| mnf.package.clone())
-            .map(|pkg| {
-                let project = RustProject::new(path.to_path_buf(), pkg);
+            .filter(|mnf| mnf.package.is_some())
+            .map(|mnf| {
+                let project = RustProject::new(path.to_path_buf(), mnf);
                 debug!("Found rust project {} at {}", project.name(), path.display());
 
                 let project = Rc::new(project);

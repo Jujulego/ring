@@ -29,9 +29,9 @@ impl RustScopeDetector {
         let manifest = self.cargo_loader().load(path)?;
 
         Ok(manifest
-            .and_then(|mnf| mnf.workspace.clone())
-            .map(|wks| {
-                let scope = RustScope::new(path.to_path_buf(), wks, self.project_detector.clone());
+            .filter(|mnf| mnf.workspace.is_some())
+            .map(|mnf| {
+                let scope = RustScope::new(path.to_path_buf(), mnf, self.project_detector.clone());
                 debug!("Found rust scope at {}", path.display());
 
                 let project = Rc::new(scope);

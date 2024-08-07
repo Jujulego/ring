@@ -6,14 +6,14 @@ use semver::Version;
 use serde::Deserialize;
 use tracing::trace;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CargoPackage {
     pub name: String,
     #[serde(default)]
     pub version: Option<Version>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CargoWorkspace {
     pub members: Vec<String>,
 }

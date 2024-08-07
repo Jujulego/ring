@@ -4,22 +4,22 @@ use anyhow::Context;
 use glob::glob;
 use tracing::debug;
 use ring_traits::{Project, Scope};
-use crate::{CargoWorkspace, RustProjectDetector};
+use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 
 #[derive(Debug)]
 pub struct RustScope {
     root: PathBuf,
-    workspace: CargoWorkspace,
+    manifest: Rc<CargoManifest>,
     project_detector: Rc<RustProjectDetector>,
 }
 
 impl RustScope {
-    pub fn new(root: PathBuf, workspace: CargoWorkspace, project_detector: Rc<RustProjectDetector>) -> RustScope {
-        RustScope { root, workspace, project_detector }
+    pub fn new(root: PathBuf, manifest: Rc<CargoManifest>, project_detector: Rc<RustProjectDetector>) -> RustScope {
+        RustScope { root, manifest, project_detector }
     }
     
     pub fn workspace(&self) -> &CargoWorkspace {
-        &self.workspace
+        self.manifest.workspace.as_ref().unwrap()
     }
 }
 
@@ -29,7 +29,7 @@ impl Scope for RustScope {
     }
 
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.workspace.members.iter()
+        let patterns = self.workspace().members.iter()
             .map(|pattern| self.root.join(pattern));
         
         Box::new(patterns
