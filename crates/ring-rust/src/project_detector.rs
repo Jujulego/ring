@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_traits::{Project, ProjectDetector};
+use ring_traits::{Detector, Project};
 use ring_utils::PathTree;
 use crate::RustProject;
 use crate::cargo_loader::CargoLoader;
@@ -61,8 +61,10 @@ impl Default for RustProjectDetector {
     }
 }
 
-impl ProjectDetector for RustProjectDetector {
-    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn Project>>> {
+impl Detector for RustProjectDetector {
+    type Item = Rc<dyn Project>;
+    
+    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Self::Item>> {
         if let Some(res) = self.search_form(path).next() {
             res.map(|prj| Some(prj as Rc<dyn Project>))
         } else {

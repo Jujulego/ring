@@ -30,7 +30,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
-    let detectors: [&dyn ProjectDetector; 2] = [
+    let detectors: [&ProjectDetector; 2] = [
         &JsProjectDetector::new(),
         &RustProjectDetector::new()
     ];

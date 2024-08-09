@@ -17,7 +17,7 @@ pub fn handle_command() -> anyhow::Result<()> {
     let current_dir = current_dir.canonicalize()
         .with_context(|| format!("Unable to access {}", current_dir.display()))?;
 
-    let detectors: [&dyn ProjectDetector; 2] = [
+    let detectors: [&ProjectDetector; 2] = [
         &JsProjectDetector::new(),
         &RustProjectDetector::new()
     ];
