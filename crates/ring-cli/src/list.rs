@@ -65,7 +65,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             let mut tags: Vec<&str> = Vec::new();
 
             for detector in detectors {
-                if let Some(project) = detector.detect_from(&entry.path())? {
+                if let Some(project) = detector.detect_from(&entry.path()).into_result()? {
                     tags.extend(project.tags());
                 }
             }
@@ -84,7 +84,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         let mut tags: Vec<&str> = Vec::new();
 
         for detector in detectors {
-            if let Some(project) = detector.detect_from(&path)? {
+            if let Some(project) = detector.detect_from(&path).into_result()? {
                 tags.extend(project.tags());
             }
         }

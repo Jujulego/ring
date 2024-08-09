@@ -25,7 +25,7 @@ pub fn handle_command() -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
     
     for detector in detectors {
-        if let Some(project) = detector.detect_from(&current_dir)? {
+        if let Some(project) = detector.detect_from(&current_dir).into_result()? {
             list.add_row([&project.name(), &project.tags().join(", ")]);
         }
     }
