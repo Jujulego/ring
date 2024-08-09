@@ -7,7 +7,7 @@ pub trait Detector {
     fn detect_from(&self, path: &Path) -> DetectorResult<Self::Item>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum DetectorResult<T, E = anyhow::Error> {
     Found(T),
     Err(E),
@@ -47,5 +47,36 @@ impl<T, E> DetectorResult<T, E> {
             DetectorResult::Err(err) => Err(err),
             DetectorResult::None => Ok(None),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_convert_result_into_detector_result() {
+        assert_eq!(DetectorResult::<&str, ()>::from(Ok("test")),  DetectorResult::Found("test"));
+        assert_eq!(DetectorResult::<(), &str>::from(Err("test")), DetectorResult::Err("test"));
+    }
+
+    #[test]
+    fn it_should_convert_option_into_detector_result() {
+        assert_eq!(DetectorResult::<&str, ()>::from(Some("test")), DetectorResult::Found("test"));
+        assert_eq!(DetectorResult::<(),   ()>::from(None),         DetectorResult::None);
+    }
+
+    #[test]
+    fn it_should_convert_detector_result_into_result() {
+        assert_eq!(DetectorResult::<&str, ()>::Found("test").into_result(), Ok(Some("test")));
+        assert_eq!(DetectorResult::<(), &str>::Err("test").into_result(),   Err("test"));
+        assert_eq!(DetectorResult::<(),   ()>::None.into_result(),          Ok(None));
+    }
+
+    #[test]
+    fn it_should_convert_detector_result_into_option() {
+        assert_eq!(DetectorResult::<&str, ()>::Found("test").into_option(), Some(Ok("test")));
+        assert_eq!(DetectorResult::<(), &str>::Err("test").into_option(),   Some(Err("test")));
+        assert_eq!(DetectorResult::<(),   ()>::None.into_option(),          None);
     }
 }
