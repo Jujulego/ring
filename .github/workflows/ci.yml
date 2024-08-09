@@ -68,20 +68,31 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo llvm-cov --all-features --workspace --codecov --output-path codecov-unit.json
+        run: cargo llvm-cov nextest --workspace --all-features --profile ci --lcov --output-path codecov-unit.json
 
       - name: Test docs
         run: cargo test --doc
 
       - name: Upload coverage to Codecov
-        if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
+        if: ${{ !cancelled() && !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
         uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           files: codecov-unit.json
+          flags: unit,${{ matrix.name }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
+        uses: codecov/test-results-action@v1
+        with:
+          files: target/nextest/ci/junit.xml
           flags: unit,${{ matrix.name }}
           token: ${{ secrets.CODECOV_TOKEN }}
