@@ -24,7 +24,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let path = current_dir.join(path).canonicalize()
         .with_context(|| format!("Unable to access {}", path.display()))?;
 
-    let detectors: [&dyn ScopeDetector; 2] = [
+    let detectors: [&ScopeDetector; 2] = [
         &JsScopeDetector::new(Rc::new(JsProjectDetector::new())),
         &RustScopeDetector::new(Rc::new(RustProjectDetector::new()))
     ];
@@ -32,7 +32,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
 
     for detector in detectors {
-        if let Some(scope) = detector.detect_from(&path)? {
+        if let Some(scope) = detector.detect_from(&path).into_result()? {
             for project in scope.projects() {
                 let project = project?;
                 

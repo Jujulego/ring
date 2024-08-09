@@ -3,7 +3,7 @@ use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
 use tracing::{debug, info, trace};
-use ring_traits::{Project, ProjectDetector};
+use ring_traits::{Detector, DetectorResult, Project};
 use ring_utils::PathTree;
 use crate::constants::MANIFEST;
 use crate::JsProject;
@@ -65,12 +65,14 @@ impl Default for JsProjectDetector {
     }
 }
 
-impl ProjectDetector for JsProjectDetector {
-    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn Project>>> {
+impl Detector for JsProjectDetector {
+    type Item = Rc<dyn Project>;
+    
+    fn detect_from(&self, path: &Path) -> DetectorResult<Self::Item> {
         if let Some(res) = self.search_form(path).next() {
-            res.map(|prj| Some(prj as Rc<dyn Project>))
+            res.map(|prj| prj as Rc<dyn Project>).into()
         } else {
-            Ok(None)
+            DetectorResult::None
         }
     }
 }

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_traits::{Scope, ScopeDetector};
+use ring_traits::{Detector, DetectorResult, Scope};
 use ring_utils::PathTree;
 use crate::{RustProjectDetector, RustScope};
 use crate::cargo_loader::CargoLoader;
@@ -55,12 +55,14 @@ impl RustScopeDetector {
     }
 }
 
-impl ScopeDetector for RustScopeDetector {
-    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn Scope>>> {
+impl Detector for RustScopeDetector {
+    type Item = Rc<dyn Scope>;
+    
+    fn detect_from(&self, path: &Path) -> DetectorResult<Self::Item> {
         if let Some(res) = self.search_form(path).next() {
-            res.map(|scp| Some(scp as Rc<dyn Scope>))
+            res.map(|scp| scp as Rc<dyn Scope>).into()
         } else {
-            Ok(None)
+            DetectorResult::None
         }
     }
 }

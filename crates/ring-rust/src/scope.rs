@@ -3,7 +3,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
 use tracing::debug;
-use ring_traits::{Project, Scope};
+use ring_traits::{Project, Scope, Tagged};
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ impl Scope for RustScope {
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
         let patterns = self.workspace().members.iter()
             .map(|pattern| self.root.join(pattern));
-        
+
         Box::new(patterns
             .inspect(|pattern| debug!("Search rust project matching {}", pattern.display()))
             .filter_map(|pattern| {
@@ -53,8 +53,10 @@ impl Scope for RustScope {
                 Err(err) => Some(Err(err)),
             }))
     }
+}
 
-    fn tags(&self) -> &[&str] {
+impl Tagged for RustScope {
+    fn tags(&self) -> &[&'static str] {
         &["rust"]
     }
 }

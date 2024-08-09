@@ -3,7 +3,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
 use tracing::debug;
-use ring_traits::{Project, Scope};
+use ring_traits::{Project, Scope, Tagged};
 use crate::{JsProject, JsProjectDetector, PackageManager};
 
 #[derive(Debug)]
@@ -41,7 +41,7 @@ impl Scope for JsScope {
             .filter_map(|pattern| {
                 #[cfg(windows)]
                 { glob(&pattern.to_str().unwrap()[4..]).ok() }
-                
+
                 #[cfg(not(windows))]
                 { glob(pattern.to_str().unwrap()).ok() }
             })
@@ -57,8 +57,10 @@ impl Scope for JsScope {
                 Err(err) => Some(Err(err)),
             }))
     }
+}
 
-    fn tags(&self) -> &[&str] {
+impl Tagged for JsScope {
+    fn tags(&self) -> &[&'static str] {
         &["js"]
     }
 }

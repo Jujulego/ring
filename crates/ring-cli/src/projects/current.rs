@@ -17,7 +17,7 @@ pub fn handle_command() -> anyhow::Result<()> {
     let current_dir = current_dir.canonicalize()
         .with_context(|| format!("Unable to access {}", current_dir.display()))?;
 
-    let detectors: [&dyn ProjectDetector; 2] = [
+    let detectors: [&ProjectDetector; 2] = [
         &JsProjectDetector::new(),
         &RustProjectDetector::new()
     ];
@@ -25,7 +25,7 @@ pub fn handle_command() -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
     
     for detector in detectors {
-        if let Some(project) = detector.detect_from(&current_dir)? {
+        if let Some(project) = detector.detect_from(&current_dir).into_result()? {
             list.add_row([&project.name(), &project.tags().join(", ")]);
         }
     }

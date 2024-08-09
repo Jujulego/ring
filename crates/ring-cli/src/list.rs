@@ -30,7 +30,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
-    let detectors: [&dyn ProjectDetector; 2] = [
+    let detectors: [&ProjectDetector; 2] = [
         &JsProjectDetector::new(),
         &RustProjectDetector::new()
     ];
@@ -61,11 +61,11 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                     file_name.normal()
                 }
             };
-            
+
             let mut tags: Vec<&str> = Vec::new();
 
             for detector in detectors {
-                if let Some(project) = detector.detect_from(&entry.path())? {
+                if let Some(project) = detector.detect_from(&entry.path()).into_result()? {
                     tags.extend(project.tags());
                 }
             }
@@ -82,13 +82,13 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
         let mut tags: Vec<&str> = Vec::new();
-        
+
         for detector in detectors {
-            if let Some(project) = detector.detect_from(&path)? {
+            if let Some(project) = detector.detect_from(&path).into_result()? {
                 tags.extend(project.tags());
             }
         }
-        
+
         if !tags.is_empty() {
             list.add_row([
                 &tags.join("/"),
