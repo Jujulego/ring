@@ -2,7 +2,7 @@ use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
 use tracing::{debug, trace};
-use ring_traits::{Project, ScopeDetector};
+use ring_traits::{Project, Scope, ScopeDetector};
 use crate::{JsProjectDetector, JsScope};
 use crate::constants::LOCKFILES;
 
@@ -18,9 +18,7 @@ impl JsScopeDetector {
 }
 
 impl ScopeDetector for JsScopeDetector {
-    type Scope = JsScope;
-
-    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<Self::Scope>>> {
+    fn detect_from(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn Scope>>> {
         for project in self.project_detector.search_form(path) {
             let project = project?;
 

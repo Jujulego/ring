@@ -23,6 +23,11 @@ component_management:
       paths:
         - crates/ring-js/**
 
+    - component_id: crate-ring-rust
+      name: rust
+      paths:
+        - crates/ring-rust/**
+
     - component_id: crate-ring-traits
       name: traits
       paths:
