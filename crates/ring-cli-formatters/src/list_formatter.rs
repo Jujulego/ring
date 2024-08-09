@@ -23,6 +23,14 @@ impl<const N: usize> ListFormatter<N> {
 
         self.rows.push(items);
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.rows.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.rows.len()
+    }
 }
 
 impl<const N: usize> Default for ListFormatter<N> {
@@ -72,6 +80,8 @@ mod tests {
                 "42   life       ok"
             )
         );
+        assert_eq!(list.len(), 3);
+        assert!(!list.is_empty());
     }
 
     #[test]
@@ -79,5 +89,7 @@ mod tests {
         let list: ListFormatter<0> = ListFormatter::new();
 
         assert_eq!(format!("{list}"), "");
+        assert_eq!(list.len(), 0);
+        assert!(list.is_empty());
     }
 }
