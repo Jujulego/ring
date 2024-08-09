@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use semver::Version;
-use ring_traits::Project;
+use ring_traits::{Project, Tagged};
 use crate::{CargoManifest, CargoPackage};
 
 #[derive(Debug)]
@@ -32,7 +32,9 @@ impl Project for RustProject {
     fn version(&self) -> Option<&Version> {
         self.package().version.as_ref()
     }
+}
 
+impl Tagged for RustProject {
     fn tags(&self) -> &[&'static str] {
         &["rust"]
     }

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use semver::Version;
-use ring_traits::Project;
+use ring_traits::{Project, Tagged};
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
@@ -37,7 +37,9 @@ impl Project for JsProject {
     fn version(&self) -> Option<&Version> {
         self.manifest.version.as_ref()
     }
+}
 
+impl Tagged for JsProject {
     fn tags(&self) -> &[&'static str] {
         &["js"]
     }
