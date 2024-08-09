@@ -12,5 +12,5 @@ pub trait Project {
     fn version(&self) -> Option<&Version>;
 
     /// Return some project tags, identifying the kind of project
-    fn tags(&self) -> &[&str];
+    fn tags(&self) -> &[&'static str];
 }

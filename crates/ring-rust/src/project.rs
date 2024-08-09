@@ -33,7 +33,7 @@ impl Project for RustProject {
         self.package().version.as_ref()
     }
 
-    fn tags(&self) -> &[&str] {
+    fn tags(&self) -> &[&'static str] {
         &["rust"]
     }
 }

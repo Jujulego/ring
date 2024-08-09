@@ -7,6 +7,7 @@ use colored::Colorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
+use ring_rust::RustProjectDetector;
 use ring_traits::ProjectDetector;
 
 pub fn build_command() -> Command {
@@ -29,7 +30,11 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
-    let detector = JsProjectDetector::new();
+    let detectors: [&dyn ProjectDetector; 2] = [
+        &JsProjectDetector::new(),
+        &RustProjectDetector::new()
+    ];
+
     let mut list = ListFormatter::new();
 
     if path.is_dir() {
@@ -56,28 +61,41 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                     file_name.normal()
                 }
             };
+            
+            let mut tags: Vec<&str> = Vec::new();
 
-            if let Some(project) = detector.detect_from(&entry.path())? {
+            for detector in detectors {
+                if let Some(project) = detector.detect_from(&entry.path())? {
+                    tags.extend(project.tags());
+                }
+            }
+
+            if !tags.is_empty() {
                 list.add_row([
-                    &project.name(),
-                    &project.tags().join(", "),
+                    &tags.join("/"),
                     &file_name,
                 ]);
             } else {
-                list.add_row([&"unknown".bright_black(), &"", &file_name]);
+                list.add_row([&"none".bright_black(), &file_name]);
             }
         }
     } else {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
-
-        if let Some(project) = detector.detect_from(&path)? {
+        let mut tags: Vec<&str> = Vec::new();
+        
+        for detector in detectors {
+            if let Some(project) = detector.detect_from(&path)? {
+                tags.extend(project.tags());
+            }
+        }
+        
+        if !tags.is_empty() {
             list.add_row([
-                &project.name(),
-                &project.tags().join(", "),
+                &tags.join("/"),
                 &file_name,
             ]);
         } else {
-            list.add_row([&"unknown".bright_black(), &"", &file_name]);
+            list.add_row([&"none".bright_black(), &file_name]);
         }
     }
     
