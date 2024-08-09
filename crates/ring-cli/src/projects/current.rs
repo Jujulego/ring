@@ -23,17 +23,14 @@ pub fn handle_command() -> anyhow::Result<()> {
     ];
 
     let mut list = ListFormatter::new();
-    let mut found = false;
     
     for detector in detectors {
         if let Some(project) = detector.detect_from(&current_dir)? {
-
             list.add_row([&project.name(), &project.tags().join(", ")]);
-            found = true;
         }
     }
 
-    if found {
+    if !list.is_empty() {
         println!("{list}");
     } else {
         warn!("No matching project found");

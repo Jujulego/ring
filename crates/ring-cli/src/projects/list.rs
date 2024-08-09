@@ -30,7 +30,6 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     ];
 
     let mut list = ListFormatter::new();
-    let mut found = false;
 
     for detector in detectors {
         if let Some(scope) = detector.detect_from(&path)? {
@@ -38,12 +37,11 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 let project = project?;
                 
                 list.add_row([&project.name(), &project.tags().join(", ")]);
-                found = true;
             }
         }
     }
 
-    if found {
+    if !list.is_empty() {
         println!("{list}");
     } else {
         warn!("No matching project found");
