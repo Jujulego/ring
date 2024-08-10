@@ -3,6 +3,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use tracing::{debug, trace};
 use ring_traits::{Detector, OptionalResult, Project, Scope};
+use ring_traits::OptionalResult::{Empty, Fail, Found};
 use crate::{JsProjectDetector, JsScope};
 use crate::constants::LOCKFILES;
 
@@ -34,21 +35,21 @@ impl Detector for JsScopeDetector {
                                 debug!("Detected package manager {}", package_manager);
 
                                 let scope = JsScope::new(project, package_manager, self.project_detector.clone());
-                                return OptionalResult::Found(Rc::new(scope));
+                                return Found(Rc::new(scope));
                             }
                             Ok(false) => continue,
                             Err(err) => {
-                                return OptionalResult::Err(err)
+                                return Fail(err)
                             }
                         }
                     }
                 }
                 Err(err) => {
-                    return OptionalResult::Err(err);
+                    return Fail(err);
                 }
             }
         }
 
-        OptionalResult::None
+        Empty
     }
 }

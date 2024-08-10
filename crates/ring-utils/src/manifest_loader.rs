@@ -46,9 +46,9 @@ impl<M : Manifest> ManifestLoader<M> {
             }
             Err(err) if err.kind() == ErrorKind::NotFound => {
                 self.cache.borrow_mut().set(&path, None);
-                OptionalResult::None
+                OptionalResult::Empty
             }
-            Err(err) => OptionalResult::Err(
+            Err(err) => OptionalResult::Fail(
                 anyhow!(err).context(format!("Unable to access {}", path.display()))
             )
         }

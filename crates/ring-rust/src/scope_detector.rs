@@ -3,6 +3,7 @@ use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
 use ring_traits::{Detector, OptionalResult, Scope};
+use ring_traits::OptionalResult::{Empty, Found};
 use ring_utils::{ManifestLoader, PathTree};
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 
@@ -27,7 +28,7 @@ impl RustScopeDetector {
     pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<RustScope>> {
         if let Some(scope) = self.cache.borrow().get(path) {
             debug!("Found rust scope at {} (cached)", path.display());
-            return OptionalResult::Found(scope.clone());
+            return Found(scope.clone());
         }
 
         self.cargo_loader().load(path)
@@ -56,7 +57,7 @@ impl Detector for RustScopeDetector {
         if let Some(res) = self.search_form(path).next() {
             res.map(|scp| scp as Rc<dyn Scope>).into()
         } else {
-            OptionalResult::None
+            Empty
         }
     }
 }

@@ -3,6 +3,7 @@ use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
 use ring_traits::{Detector, OptionalResult, Project};
+use ring_traits::OptionalResult::{Empty, Found};
 use ring_utils::{ManifestLoader, PathTree};
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
@@ -24,7 +25,7 @@ impl JsProjectDetector {
     pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<JsProject>> {
         if let Some(project) = self.cache.borrow().get(path) {
             debug!("Found js project {} at {} (cached)", project.name(), path.display());
-            return OptionalResult::Found(project.clone());
+            return Found(project.clone());
         }
 
         self.package_loader.load(path)
@@ -58,7 +59,7 @@ impl Detector for JsProjectDetector {
         if let Some(res) = self.search_form(path).next() {
             res.map(|prj| prj as Rc<dyn Project>).into()
         } else {
-            OptionalResult::None
+            Empty
         }
     }
 }
