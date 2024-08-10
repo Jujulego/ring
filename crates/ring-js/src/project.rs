@@ -1,6 +1,9 @@
+use std::fs::File;
 use std::path::{Path, PathBuf};
+use anyhow::Context;
 use semver::Version;
-use ring_traits::{Project, Tagged};
+use tracing::trace;
+use ring_traits::{Manifest, Project, Tagged};
 use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
@@ -12,11 +15,15 @@ pub struct JsProject {
 
 impl JsProject {
     pub fn new(root: PathBuf) -> anyhow::Result<JsProject> {
-        let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
-        
+        let manifest_path = root.join(MANIFEST);
+
+        trace!("Parsing manifest file {}", manifest_path.display());
+        let mut manifest = File::open(&manifest_path)
+            .with_context(|| format!("Unable to read file {}", manifest_path.display()))?;
+
         Ok(JsProject {
             root,
-            manifest,
+            manifest: PackageManifest::from_reader(&mut manifest)?,
         })
     }
     

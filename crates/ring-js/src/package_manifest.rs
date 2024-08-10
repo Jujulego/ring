@@ -1,9 +1,8 @@
-use std::fs::File;
-use std::path::Path;
+use std::io::Read;
 use anyhow::Context;
 use semver::Version;
 use serde::Deserialize;
-use tracing::trace;
+use ring_traits::Manifest;
 
 #[derive(Debug, Deserialize)]
 pub struct PackageManifest {
@@ -14,14 +13,14 @@ pub struct PackageManifest {
     pub workspaces: Vec<String>,
 }
 
-impl PackageManifest {
-    pub fn parse_file(path: &Path) -> anyhow::Result<PackageManifest> {
-        trace!("Parsing manifest file {}", path.display());
+impl Manifest for PackageManifest {
+    fn from_str(content: &str) -> anyhow::Result<Self> {
+        serde_json::from_str(content)
+            .context("Error while parsing package manifest")
+    }
 
-        let file = File::open(path)
-            .with_context(|| format!("Unable to read file {}", path.display()))?;
-
-        serde_json::from_reader(&file)
-            .with_context(|| format!("Error while parsing {}", path.display()))
+    fn from_reader<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
+        serde_json::from_reader(reader)
+            .context("Error while parsing package manifest")
     }
 }
