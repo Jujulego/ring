@@ -49,7 +49,7 @@ impl Scope for JsScope {
             .map(|path| {
                 path.map_err(|err| err.into())
                     .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.load_at(&path))
+                    .and_then(|path| self.project_detector.load_at(&path).into_result())
             })
             .filter_map(|result| match result {
                 Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),

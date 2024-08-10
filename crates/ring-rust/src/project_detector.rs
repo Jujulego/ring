@@ -16,8 +16,8 @@ pub struct RustProjectDetector {
 impl RustProjectDetector {
     pub fn new() -> RustProjectDetector {
         RustProjectDetector {
-            cargo_loader: ManifestLoader::new(MANIFEST),
             cache: RefCell::new(PathTree::new()),
+            cargo_loader: ManifestLoader::new(MANIFEST),
         }
     }
 
@@ -26,6 +26,11 @@ impl RustProjectDetector {
     }
 
     pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<RustProject>> {
+        if let Some(project) = self.cache.borrow().get(path) {
+            debug!("Found rust project {} at {} (cached)", project.name(), path.display());
+            return OptionalResult::Found(project.clone());
+        }
+
         self.cargo_loader.load(path)
             .filter(|mnf| mnf.package.is_some())
             .map(|mnf| Rc::new(RustProject::new(path.to_path_buf(), mnf)))

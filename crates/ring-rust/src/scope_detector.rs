@@ -25,6 +25,11 @@ impl RustScopeDetector {
     }
 
     pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<RustScope>> {
+        if let Some(scope) = self.cache.borrow().get(path) {
+            debug!("Found rust scope at {} (cached)", path.display());
+            return OptionalResult::Found(scope.clone());
+        }
+
         self.cargo_loader().load(path)
             .filter(|mnf| mnf.workspace.is_some())
             .map(|mnf| Rc::new(RustScope::new(path.to_path_buf(), mnf, self.project_detector.clone())))

@@ -1,30 +1,18 @@
-use std::fs::File;
 use std::path::{Path, PathBuf};
-use anyhow::Context;
+use std::rc::Rc;
 use semver::Version;
-use tracing::trace;
-use ring_traits::{Manifest, Project, Tagged};
-use crate::constants::MANIFEST;
+use ring_traits::{Project, Tagged};
 use crate::package_manifest::PackageManifest;
 
 #[derive(Debug)]
 pub struct JsProject {
     root: PathBuf,
-    manifest: PackageManifest,
+    manifest: Rc<PackageManifest>,
 }
 
 impl JsProject {
-    pub fn new(root: PathBuf) -> anyhow::Result<JsProject> {
-        let manifest_path = root.join(MANIFEST);
-
-        trace!("Parsing manifest file {}", manifest_path.display());
-        let mut manifest = File::open(&manifest_path)
-            .with_context(|| format!("Unable to read file {}", manifest_path.display()))?;
-
-        Ok(JsProject {
-            root,
-            manifest: PackageManifest::from_reader(&mut manifest)?,
-        })
+    pub fn new(root: PathBuf, manifest: Rc<PackageManifest>) -> JsProject {
+        JsProject { root, manifest }
     }
     
     pub fn manifest(&self) -> &PackageManifest {
