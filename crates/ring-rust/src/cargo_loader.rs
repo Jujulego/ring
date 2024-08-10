@@ -1,8 +1,10 @@
 use std::cell::RefCell;
+use std::fs::File;
 use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
 use tracing::{debug, trace};
+use ring_traits::Manifest;
 use ring_utils::PathTree;
 use crate::CargoManifest;
 use crate::constants::MANIFEST;
@@ -28,14 +30,20 @@ impl CargoLoader {
             return Ok(result.clone());
         }
         
-        let manifest_file = path.join(MANIFEST);
+        let manifest_path = path.join(MANIFEST);
 
-        trace!("Testing {}", manifest_file.display());
-        let manifest_exists = manifest_file.try_exists()
-            .with_context(|| format!("Unable to access {}", manifest_file.display()))?;
+        trace!("Testing {}", manifest_path.display());
+        let manifest_exists = manifest_path.try_exists()
+            .with_context(|| format!("Unable to access {}", manifest_path.display()))?;
 
         if manifest_exists {
-            let manifest = CargoManifest::parse_file(&manifest_file)?;
+            trace!("Parsing manifest file {}", path.display());
+            let mut manifest_file = File::open(path)
+                .with_context(|| format!("Unable to access {}", manifest_path.display()))?;
+
+            let manifest = CargoManifest::from_reader(&mut manifest_file)
+                .with_context(|| format!("Error while parsing {}", manifest_path.display()))?;
+
             debug!("Loaded cargo manifest at {}", path.display());
 
             let manifest = Rc::new(manifest);

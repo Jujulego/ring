@@ -1,40 +1,82 @@
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
 use anyhow::Context;
 use semver::Version;
 use serde::Deserialize;
-use tracing::trace;
+use ring_traits::Manifest;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct CargoPackage {
     pub name: String,
     #[serde(default)]
     pub version: Option<Version>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct CargoWorkspace {
     pub members: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct CargoManifest {
     pub package: Option<CargoPackage>,
     pub workspace: Option<CargoWorkspace>,
 }
 
-impl CargoManifest {
-    pub fn parse_file(path: &Path) -> anyhow::Result<CargoManifest> {
-        trace!("Parsing manifest file {}", path.display());
+impl Manifest for CargoManifest {
+    fn from_str(content: &str) -> anyhow::Result<Self> {
+        toml::from_str(content)
+            .context("Error while parsing cargo manifest")
+    }
+}
 
-        let mut buffer = String::new();
-        
-        File::open(path)
-            .and_then(|mut f| f.read_to_string(&mut buffer))
-            .with_context(|| format!("Unable to read file {}", path.display()))?;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        toml::from_str(&buffer)
-            .with_context(|| format!("Error while parsing {}", path.display()))
+    #[test]
+    fn it_should_parse_crate_manifest() {
+        let manifest = CargoManifest::from_str(r#"
+            [package]
+            name = "test"
+        "#);
+
+        assert_eq!(manifest.unwrap(), CargoManifest {
+            package: Some(CargoPackage { 
+                name: "test".to_string(),
+                version: None
+            }),
+            workspace: None
+        });
+    }
+
+    #[test]
+    fn it_should_parse_crate_manifest_with_version() {
+        let manifest = CargoManifest::from_str(r#"
+            [package]
+            name = "test"
+            version = "1.0.0"
+        "#);
+
+        assert_eq!(manifest.unwrap(), CargoManifest {
+            package: Some(CargoPackage { 
+                name: "test".to_string(),
+                version: Some(Version::new(1, 0, 0))
+            }),
+            workspace: None
+        });
+    }
+
+    #[test]
+    fn it_should_parse_workspace_manifest() {
+        let manifest = CargoManifest::from_str(r#"
+            [workspace]
+            members = ["crates/test-a", "crates/test-b"]
+        "#);
+
+        assert_eq!(manifest.unwrap(), CargoManifest {
+            package: None,
+            workspace: Some(CargoWorkspace {
+                members: vec!["crates/test-a".to_string(), "crates/test-b".to_string()],
+            })
+        });
     }
 }
