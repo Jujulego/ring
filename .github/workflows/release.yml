@@ -44,7 +44,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build executable
-        run: cargo build --release --bin ring-cli --target ${{ matrix.target }}
+        run: cargo --locked build --release --bin ring-cli --target ${{ matrix.target }}
 
       - name: Rename binary
         id: rename

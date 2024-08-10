@@ -75,10 +75,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo llvm-cov nextest --workspace --all-features --profile ci --lcov --output-path codecov-unit.json
+        run: cargo --locked llvm-cov --lcov --output-path codecov-unit.json nextest --workspace --all-features --profile ci
 
       - name: Test docs
-        run: cargo test --doc
+        run: cargo --locked test --doc
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() && !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
