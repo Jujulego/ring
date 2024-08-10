@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
+tracing = "0.1.40"
+
+ring-traits = { path = "../ring-traits" }

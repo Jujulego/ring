@@ -2,7 +2,7 @@ use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
 use tracing::{debug, trace};
-use ring_traits::{Detector, DetectorResult, Project, Scope};
+use ring_traits::{Detector, OptionalResult, Project, Scope};
 use crate::{JsProjectDetector, JsScope};
 use crate::constants::LOCKFILES;
 
@@ -20,7 +20,7 @@ impl JsScopeDetector {
 impl Detector for JsScopeDetector {
     type Item = Rc<dyn Scope>;
     
-    fn detect_from(&self, path: &Path) -> DetectorResult<Self::Item> {
+    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         for project in self.project_detector.search_form(path) {
             match project {
                 Ok(project) => {
@@ -34,21 +34,21 @@ impl Detector for JsScopeDetector {
                                 debug!("Detected package manager {}", package_manager);
 
                                 let scope = JsScope::new(project, package_manager, self.project_detector.clone());
-                                return DetectorResult::Found(Rc::new(scope));
+                                return OptionalResult::Found(Rc::new(scope));
                             }
                             Ok(false) => continue,
                             Err(err) => {
-                                return DetectorResult::Err(err)
+                                return OptionalResult::Err(err)
                             }
                         }
                     }
                 }
                 Err(err) => {
-                    return DetectorResult::Err(err);
+                    return OptionalResult::Err(err);
                 }
             }
         }
 
-        DetectorResult::None
+        OptionalResult::None
     }
 }
