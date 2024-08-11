@@ -42,13 +42,14 @@ impl RustProjectDetector {
             })
     }
 
-    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item=anyhow::Result<Rc<RustProject>>> + 'a {
+    pub fn search_form(&self, path: &Path) -> OptionalResult<Rc<RustProject>> {
         info!("Searching rust project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         path.ancestors()
-            .map(|ancestor| self.load_at(ancestor))
-            .filter_map(|result| result.into_option())
+            .map(|anc| self.load_at(anc))
+            .find(|res| matches!(res, Found(_)))
+            .unwrap_or(Empty)
     }
 }
 
@@ -62,10 +63,7 @@ impl Detector for RustProjectDetector {
     type Item = Rc<dyn Project>;
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
-        if let Some(res) = self.search_form(path).next() {
-            res.map(|prj| prj as Rc<dyn Project>).into()
-        } else {
-            Empty
-        }
+        self.search_form(path)
+            .map(|prj| prj as Rc<dyn Project>)
     }
 }

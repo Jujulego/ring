@@ -6,6 +6,7 @@ use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
 use ring_rust::RustProjectDetector;
 use ring_traits::ProjectDetector;
+use ring_utils::OptionalResult::{Empty, Fail, Found};
 
 pub fn build_command() -> Command {
     Command::new("current")
@@ -25,8 +26,10 @@ pub fn handle_command() -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
     
     for detector in detectors {
-        if let Some(project) = detector.detect_from(&current_dir).into_result()? {
-            list.add_row([&project.name(), &project.tags().join(", ")]);
+        match detector.detect_from(&current_dir) {
+            Found(project) => list.add_row([&project.name(), &project.tags().join(", ")]),
+            Fail(err) => return Err(err),
+            Empty => continue,
         }
     }
 

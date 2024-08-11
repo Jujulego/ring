@@ -285,6 +285,7 @@ dependencies = [
  "ring-js",
  "ring-rust",
  "ring-traits",
+ "ring-utils",
  "tracing",
  "tracing-subscriber",
 ]

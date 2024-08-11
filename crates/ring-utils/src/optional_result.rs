@@ -8,6 +8,17 @@ pub enum OptionalResult<T, E = anyhow::Error> {
 }
 
 impl<T, E> OptionalResult<T, E> {
+    pub fn and_then<R, F>(self, f: F) -> OptionalResult<R, E>
+    where
+        F: FnOnce(T) -> OptionalResult<R, E>,
+    {
+        match self {
+            Found(val) => f(val),
+            Fail(err) => Fail(err),
+            Empty => Empty,
+        }
+    }
+
     pub fn filter<F>(self, f: F) -> OptionalResult<T, E>
     where
         F: FnOnce(&T) -> bool,
@@ -51,6 +62,16 @@ impl<T, E> From<Result<T, E>> for OptionalResult<T, E> {
     }
 }
 
+impl<T, E> From<OptionalResult<T, E>> for Result<Option<T>, E> {
+    fn from(res: OptionalResult<T, E>) -> Self {
+        match res {
+            Found(val) => Ok(Some(val)),
+            Fail(err) => Err(err),
+            Empty => Ok(None),
+        }
+    }
+}
+
 impl<T, E> From<Option<T>> for OptionalResult<T, E> {
     fn from(opt: Option<T>) -> Self {
         match opt {
@@ -60,20 +81,12 @@ impl<T, E> From<Option<T>> for OptionalResult<T, E> {
     }
 }
 
-impl<T, E> OptionalResult<T, E> {
-    pub fn into_option(self) -> Option<Result<T, E>> {
-        match self {
+impl<T, E> From<OptionalResult<T, E>> for Option<Result<T, E>> {
+    fn from(res: OptionalResult<T, E>) -> Self {
+        match res {
             Found(val) => Some(Ok(val)),
             Fail(err) => Some(Err(err)),
             Empty => None,
-        }
-    }
-
-    pub fn into_result(self) -> Result<Option<T>, E> {
-        match self {
-            Found(val) => Ok(Some(val)),
-            Fail(err) => Err(err),
-            Empty => Ok(None),
         }
     }
 }
@@ -101,16 +114,31 @@ mod tests {
 
     #[test]
     fn it_should_convert_detector_result_into_result() {
-        assert_eq!(OR::Found("test").into_result(), Ok(Some("test")));
-        assert_eq!(OR::Fail("test").into_result(), Err("test"));
-        assert_eq!(OR::Empty.into_result(), Ok(None));
+        assert_eq!(Result::from(OR::Found("test")), Ok(Some("test")));
+        assert_eq!(Result::from(OR::Fail("test")), Err("test"));
+        assert_eq!(Result::from(OR::Empty), Ok(None));
     }
 
     #[test]
     fn it_should_convert_detector_result_into_option() {
-        assert_eq!(OR::Found("test").into_option(), Some(Ok("test")));
-        assert_eq!(OR::Fail("test").into_option(), Some(Err("test")));
-        assert_eq!(OR::Empty.into_option(), None);
+        assert_eq!(Option::from(OR::Found("test")), Some(Ok("test")));
+        assert_eq!(Option::from(OR::Fail("test")), Some(Err("test")));
+        assert_eq!(Option::from(OR::Empty), Option::<Result<_, _>>::None);
+    }
+
+    #[test]
+    fn it_should_apply_cb_on_optional_result() {
+        assert_eq!(OR::Found("test").and_then(|_| Found(4)), Found(4));
+        assert_eq!(OR::Found("test").and_then(|_| OR::Fail("failed")), Fail("failed"));
+        assert_eq!(OR::Found("test").and_then(|_| OR::Empty), Empty);
+
+        assert_eq!(OR::Fail("test").and_then(|_| Found(4)), Fail("test"));
+        assert_eq!(OR::Fail("test").and_then(|_| OR::Fail("failed")), Fail("test"));
+        assert_eq!(OR::Fail("test").and_then(|_| OR::Empty), Fail("test"));
+
+        assert_eq!(OR::Empty.and_then(|_| Found(4)), Empty);
+        assert_eq!(OR::Empty.and_then(|_| OR::Fail("failed")), Empty);
+        assert_eq!(OR::Empty.and_then(|_| OR::Empty), Empty);
     }
 
     #[test]
