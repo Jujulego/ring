@@ -1,12 +1,13 @@
+use crate::constants::MANIFEST;
+use crate::{JsProject, PackageManifest};
+use ring_files::ManifestLoader;
+use ring_traits::{Detector, Project};
+use ring_utils::OptionalResult::{self, Empty, Found};
+use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_traits::{Detector, OptionalResult, Project};
-use ring_traits::OptionalResult::{Empty, Found};
-use ring_utils::{ManifestLoader, PathTree};
-use crate::constants::MANIFEST;
-use crate::{JsProject, PackageManifest};
 
 #[derive(Debug)]
 pub struct JsProjectDetector {
@@ -18,7 +19,7 @@ impl JsProjectDetector {
     pub fn new() -> JsProjectDetector {
         JsProjectDetector {
             cache: RefCell::new(PathTree::new()),
-            package_loader: ManifestLoader::new(MANIFEST)
+            package_loader: ManifestLoader::new(MANIFEST),
         }
     }
 
@@ -36,7 +37,7 @@ impl JsProjectDetector {
             })
     }
 
-    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item = anyhow::Result<Rc<JsProject>>> + 'a {
+    pub fn search_form<'a>(&'a self, path: &'a Path) -> impl Iterator<Item=anyhow::Result<Rc<JsProject>>> + 'a {
         info!("Searching js project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
@@ -54,7 +55,7 @@ impl Default for JsProjectDetector {
 
 impl Detector for JsProjectDetector {
     type Item = Rc<dyn Project>;
-    
+
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(res) = self.search_form(path).next() {
             res.map(|prj| prj as Rc<dyn Project>).into()

@@ -298,11 +298,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-files"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "ring-traits",
+ "ring-utils",
+ "tracing",
+]
+
+[[package]]
 name = "ring-js"
 version = "0.2.0"
 dependencies = [
  "anyhow",
  "glob",
+ "ring-files",
  "ring-traits",
  "ring-utils",
  "semver",
@@ -317,6 +328,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "glob",
+ "ring-files",
  "ring-traits",
  "ring-utils",
  "semver",
@@ -331,6 +343,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "mockall",
+ "ring-utils",
  "semver",
 ]
 
@@ -339,8 +352,7 @@ name = "ring-utils"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "ring-traits",
- "tracing",
+ "mockall",
 ]
 
 [[package]]
