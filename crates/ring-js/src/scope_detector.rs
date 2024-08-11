@@ -1,11 +1,11 @@
+use crate::constants::LOCKFILES;
+use crate::{JsProjectDetector, JsScope};
+use anyhow::Context;
+use ring_traits::{Detector, Project, Scope};
+use ring_utils::OptionalResult::{self, Empty, Fail, Found};
 use std::path::Path;
 use std::rc::Rc;
-use anyhow::Context;
 use tracing::{debug, trace};
-use ring_traits::{Detector, OptionalResult, Project, Scope};
-use ring_traits::OptionalResult::{Empty, Fail, Found};
-use crate::{JsProjectDetector, JsScope};
-use crate::constants::LOCKFILES;
 
 #[derive(Debug)]
 pub struct JsScopeDetector {
@@ -20,7 +20,7 @@ impl JsScopeDetector {
 
 impl Detector for JsScopeDetector {
     type Item = Rc<dyn Scope>;
-    
+
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         for project in self.project_detector.search_form(path) {
             match project {

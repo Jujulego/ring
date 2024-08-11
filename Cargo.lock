@@ -343,12 +343,17 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "mockall",
+ "ring-utils",
  "semver",
 ]
 
 [[package]]
 name = "ring-utils"
 version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "mockall",
+]
 
 [[package]]
 name = "ryu"

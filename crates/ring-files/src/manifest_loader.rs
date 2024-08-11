@@ -5,8 +5,8 @@ use std::path::Path;
 use std::rc::Rc;
 use anyhow::{anyhow, Context};
 use tracing::{debug, trace};
-use ring_traits::{Manifest, OptionalResult};
-use ring_utils::PathTree;
+use ring_traits::Manifest;
+use ring_utils::{OptionalResult, PathTree};
 
 #[derive(Debug)]
 pub struct ManifestLoader<M : Manifest> {

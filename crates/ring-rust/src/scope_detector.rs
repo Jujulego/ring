@@ -1,7 +1,7 @@
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 use ring_files::ManifestLoader;
-use ring_traits::OptionalResult::{Empty, Found};
-use ring_traits::{Detector, OptionalResult, Scope};
+use ring_traits::{Detector, Scope};
+use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;

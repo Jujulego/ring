@@ -1,8 +1,8 @@
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
 use ring_files::ManifestLoader;
-use ring_traits::OptionalResult::{Empty, Found};
-use ring_traits::{Detector, OptionalResult, Project};
+use ring_traits::{Detector, Project};
+use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;

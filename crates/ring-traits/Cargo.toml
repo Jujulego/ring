@@ -7,5 +7,7 @@ edition = "2021"
 anyhow = "1.0.86"
 semver = "1.0.23"
 
+ring-utils = { path = "../ring-utils" }
+
 [dev-dependencies]
 mockall = "0.13.0"

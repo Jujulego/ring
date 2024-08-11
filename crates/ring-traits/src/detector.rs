@@ -1,5 +1,5 @@
+use ring_utils::OptionalResult;
 use std::path::Path;
-use crate::optional_result::OptionalResult;
 
 pub trait Detector {
     type Item;
