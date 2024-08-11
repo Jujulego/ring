@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 semver = "1.0.23"
+
+[dev-dependencies]
+mockall = "0.13.0"

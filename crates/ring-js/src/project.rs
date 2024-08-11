@@ -1,23 +1,18 @@
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use semver::Version;
 use ring_traits::{Project, Tagged};
-use crate::constants::MANIFEST;
 use crate::package_manifest::PackageManifest;
 
 #[derive(Debug)]
 pub struct JsProject {
     root: PathBuf,
-    manifest: PackageManifest,
+    manifest: Rc<PackageManifest>,
 }
 
 impl JsProject {
-    pub fn new(root: PathBuf) -> anyhow::Result<JsProject> {
-        let manifest = PackageManifest::parse_file(&root.join(MANIFEST))?;
-        
-        Ok(JsProject {
-            root,
-            manifest,
-        })
+    pub fn new(root: PathBuf, manifest: Rc<PackageManifest>) -> JsProject {
+        JsProject { root, manifest }
     }
     
     pub fn manifest(&self) -> &PackageManifest {
