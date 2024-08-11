@@ -1,12 +1,13 @@
+use crate::constants::MANIFEST;
+use crate::{CargoManifest, RustProject};
+use ring_files::ManifestLoader;
+use ring_traits::OptionalResult::{Empty, Found};
+use ring_traits::{Detector, OptionalResult, Project};
+use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_traits::{Detector, OptionalResult, Project};
-use ring_traits::OptionalResult::{Empty, Found};
-use ring_utils::{ManifestLoader, PathTree};
-use crate::{CargoManifest, RustProject};
-use crate::constants::MANIFEST;
 
 #[derive(Debug)]
 pub struct RustProjectDetector {
@@ -59,7 +60,7 @@ impl Default for RustProjectDetector {
 
 impl Detector for RustProjectDetector {
     type Item = Rc<dyn Project>;
-    
+
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(res) = self.search_form(path).next() {
             res.map(|prj| prj as Rc<dyn Project>).into()
