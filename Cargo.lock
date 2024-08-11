@@ -298,6 +298,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-files"
+version = "0.2.0"
+
+[[package]]
 name = "ring-js"
 version = "0.2.0"
 dependencies = [
