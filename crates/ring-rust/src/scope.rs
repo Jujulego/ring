@@ -45,7 +45,7 @@ impl Scope for RustScope {
             .map(|path| {
                 path.map_err(|err| err.into())
                     .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.load_at(&path).into_result())
+                    .and_then(|path| self.project_detector.load_at(&path).into())
             })
             .filter_map(|result| match result {
                 Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),

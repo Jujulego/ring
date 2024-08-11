@@ -9,6 +9,7 @@ use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
 use ring_rust::RustProjectDetector;
 use ring_traits::ProjectDetector;
+use ring_utils::OptionalResult::{Empty, Fail, Found};
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -65,8 +66,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             let mut tags: Vec<&str> = Vec::new();
 
             for detector in detectors {
-                if let Some(project) = detector.detect_from(&entry.path()).into_result()? {
-                    tags.extend(project.tags());
+                match detector.detect_from(&entry.path()) {
+                    Found(project) => tags.extend(project.tags()),
+                    Fail(err) => return Err(err),
+                    Empty => continue,
                 }
             }
 
@@ -84,8 +87,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         let mut tags: Vec<&str> = Vec::new();
 
         for detector in detectors {
-            if let Some(project) = detector.detect_from(&path).into_result()? {
-                tags.extend(project.tags());
+            match detector.detect_from(&path) {
+                Found(project) => tags.extend(project.tags()),
+                Fail(err) => return Err(err),
+                Empty => continue,
             }
         }
 

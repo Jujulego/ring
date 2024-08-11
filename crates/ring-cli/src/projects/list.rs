@@ -8,6 +8,7 @@ use ring_cli_formatters::ListFormatter;
 use ring_js::{JsProjectDetector, JsScopeDetector};
 use ring_rust::{RustProjectDetector, RustScopeDetector};
 use ring_traits::ScopeDetector;
+use ring_utils::OptionalResult::{Empty, Fail, Found};
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -32,12 +33,16 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
 
     for detector in detectors {
-        if let Some(scope) = detector.detect_from(&path).into_result()? {
-            for project in scope.projects() {
-                let project = project?;
-                
-                list.add_row([&project.name(), &project.tags().join(", ")]);
+        match detector.detect_from(&path) {
+            Found(scope) => {
+                for project in scope.projects() {
+                    let project = project?;
+
+                    list.add_row([&project.name(), &project.tags().join(", ")]);
+                }
             }
+            Fail(err) => return Err(err),
+            Empty => continue,
         }
     }
 

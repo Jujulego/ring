@@ -14,3 +14,4 @@ ring-cli-formatters = { path = "../ring-cli-formatters" }
 ring-js = { path = "../ring-js" }
 ring-rust = { path = "../ring-rust" }
 ring-traits = { path = "../ring-traits" }
+ring-utils = { path = "../ring-utils" }
