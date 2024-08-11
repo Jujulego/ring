@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use crate::constants::LOCKFILES;
 use crate::{JsProjectDetector, JsScope};
 use anyhow::Context;
-use ring_traits::{Detector, Project, Scope};
+use ring_traits::{Detector, DetectAs, Project, Scope, Tagged};
 use ring_utils::OptionalResult::{self, Empty, Fail, Found};
 use std::path::Path;
 use std::rc::Rc;
@@ -68,10 +68,23 @@ impl JsScopeDetector {
 }
 
 impl Detector for JsScopeDetector {
-    type Item = Rc<dyn Scope>;
+    type Item = Rc<JsScope>;
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         self.search_from(path)
+    }
+}
+
+impl DetectAs<Rc<dyn Scope>> for JsScopeDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Scope>> {
+        self.detect_from(path)
             .map(|scp| scp as Rc<dyn Scope>)
+    }
+}
+
+impl DetectAs<Rc<dyn Tagged>> for JsScopeDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
+        self.detect_from(path)
+            .map(|scp| scp as Rc<dyn Tagged>)
     }
 }

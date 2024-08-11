@@ -1,6 +1,6 @@
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, Scope};
+use ring_traits::{Detector, DetectAs, Scope, Tagged};
 use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
@@ -53,10 +53,23 @@ impl RustScopeDetector {
 }
 
 impl Detector for RustScopeDetector {
-    type Item = Rc<dyn Scope>;
+    type Item = Rc<RustScope>;
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         self.search_form(path)
+    }
+}
+
+impl DetectAs<Rc<dyn Scope>> for RustScopeDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Scope>> {
+        self.detect_from(path)
             .map(|scp| scp as Rc<dyn Scope>)
+    }
+}
+
+impl DetectAs<Rc<dyn Tagged>> for RustScopeDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
+        self.detect_from(path)
+            .map(|scp| scp as Rc<dyn Tagged>)
     }
 }

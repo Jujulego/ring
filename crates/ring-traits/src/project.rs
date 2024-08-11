@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::rc::Rc;
 use semver::Version;
-use crate::{Detector, Tagged};
+use crate::{DetectAs, Tagged};
 
 pub trait Project : Tagged {
     /// Returns project root directory
@@ -14,4 +14,4 @@ pub trait Project : Tagged {
     fn version(&self) -> Option<&Version>;
 }
 
-pub type ProjectDetector = dyn Detector<Item = Rc<dyn Project>>;
+pub type ProjectDetector = dyn DetectAs<Rc<dyn Project>>;

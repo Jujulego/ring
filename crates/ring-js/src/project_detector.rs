@@ -1,7 +1,7 @@
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, Project};
+use ring_traits::{Detector, DetectAs, Project, Tagged};
 use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
@@ -55,10 +55,23 @@ impl Default for JsProjectDetector {
 }
 
 impl Detector for JsProjectDetector {
-    type Item = Rc<dyn Project>;
+    type Item = Rc<JsProject>;
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         self.search_form(path)
+    }
+}
+
+impl DetectAs<Rc<dyn Project>> for JsProjectDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Project>> {
+        self.detect_from(path)
             .map(|prj| prj as Rc<dyn Project>)
+    }
+}
+
+impl DetectAs<Rc<dyn Tagged>> for JsProjectDetector {
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
+        self.detect_from(path)
+            .map(|prj| prj as Rc<dyn Tagged>)
     }
 }

@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::rc::Rc;
-use crate::{Detector, Project, Tagged};
+use crate::{DetectAs, Project, Tagged};
 
 pub trait Scope : Tagged {
     /// Returns scope root directory
@@ -10,4 +10,4 @@ pub trait Scope : Tagged {
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a>;
 }
 
-pub type ScopeDetector = dyn Detector<Item = Rc<dyn Scope>>;
+pub type ScopeDetector = dyn DetectAs<Rc<dyn Scope>>;
