@@ -5,7 +5,9 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
-use colored::Colorize;
+use lscolors::LsColors;
+use owo_colors::colors::BrightBlack;
+use owo_colors::OwoColorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
 use ring_js::{JsProjectDetector, JsScopeDetector};
@@ -43,6 +45,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         &RustScopeDetector::new(rust_project_detector.clone())
     ];
 
+    let colors = LsColors::from_env().unwrap_or_default();
     let mut list = ListFormatter::new();
 
     if path.is_dir() {
@@ -55,20 +58,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             if !show_all && file_name.starts_with('.') {
                 continue;
             }
-            
-            let file_name = {
-                if let Ok(file_type) = entry.file_type() {
-                    if file_type.is_dir() {
-                        file_name.blue()
-                    } else if file_type.is_symlink() {
-                        file_name.cyan()
-                    } else {
-                        file_name.normal()
-                    }
-                } else {
-                    file_name.normal()
-                }
-            };
+
+            let file_style = colors.style_for(&entry)
+                .map(lscolors::Style::to_owo_colors_style)
+                .unwrap_or_default();
 
             let mut tags = BTreeSet::new();
 
@@ -83,10 +76,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             if !tags.is_empty() {
                 list.add_row([
                     &tags.iter().copied().collect::<Vec<&str>>().join("/"),
-                    &file_name,
+                    &file_name.style(file_style),
                 ]);
             } else {
-                list.add_row([&"none".bright_black(), &file_name]);
+                list.add_row([&"none".bright_black(), &file_name.style(file_style)]);
             }
         }
     } else {
@@ -107,7 +100,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 &file_name,
             ]);
         } else {
-            list.add_row([&"none".bright_black(), &file_name]);
+            list.add_row([&"none".fg::<BrightBlack>(), &file_name]);
         }
     }
     
