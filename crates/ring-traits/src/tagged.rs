@@ -1,9 +1,10 @@
 use std::rc::Rc;
+use ring_utils::Tag;
 use crate::DetectAs;
 
 pub trait Tagged {
     /// Return some tags on entity
-    fn tags(&self) -> &[&'static str];
+    fn tags(&self) -> Vec<Tag>;
 }
 
 pub type TaggedDetector = dyn DetectAs<Rc<dyn Tagged>>;

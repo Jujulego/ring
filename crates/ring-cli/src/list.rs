@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
+use itertools::Itertools;
 use lscolors::LsColors;
 use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
@@ -75,7 +76,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
             if !tags.is_empty() {
                 list.add_row([
-                    &tags.iter().copied().collect::<Vec<&str>>().join("/"),
+                    &tags.iter().join("/"),
                     &file_name.style(file_style),
                 ]);
             } else {
@@ -84,7 +85,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         }
     } else {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
-        let mut tags: BTreeSet<&str> = BTreeSet::new();
+        let mut tags = BTreeSet::new();
 
         for detector in detectors {
             match detector.detect_from_as(&path) {
@@ -96,7 +97,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
         if !tags.is_empty() {
             list.add_row([
-                &tags.iter().copied().collect::<Vec<&str>>().join("/"),
+                &tags.iter().join("/"),
                 &file_name,
             ]);
         } else {

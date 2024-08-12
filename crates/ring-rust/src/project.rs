@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use owo_colors::DynColors::Rgb;
+use owo_colors::Style;
 use semver::Version;
 use ring_traits::{Project, Tagged};
+use ring_utils::Tag;
 use crate::{CargoManifest, CargoPackage};
 
 #[derive(Debug)]
@@ -35,7 +38,7 @@ impl Project for RustProject {
 }
 
 impl Tagged for RustProject {
-    fn tags(&self) -> &[&'static str] {
-        &["rust"]
+    fn tags(&self) -> Vec<Tag> {
+        vec![Tag::with_style("rust".to_string(), Style::new().color(Rgb(227, 59, 38)))]
     }
 }

@@ -2,8 +2,11 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
+use owo_colors::DynColors::Rgb;
+use owo_colors::Style;
 use tracing::debug;
 use ring_traits::{Detector, Project, Scope, Tagged};
+use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 
 #[derive(Debug)]
@@ -56,7 +59,7 @@ impl Scope for RustScope {
 }
 
 impl Tagged for RustScope {
-    fn tags(&self) -> &[&'static str] {
-        &["rust"]
+    fn tags(&self) -> Vec<Tag> {
+        vec![Tag::with_style("rust".to_string(), Style::new().color(Rgb(227, 59, 38)))]
     }
 }

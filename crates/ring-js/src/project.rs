@@ -1,7 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use owo_colors::Style;
 use semver::Version;
 use ring_traits::{Project, Tagged};
+use ring_utils::Tag;
 use crate::package_manifest::PackageManifest;
 
 #[derive(Debug)]
@@ -35,7 +37,7 @@ impl Project for JsProject {
 }
 
 impl Tagged for JsProject {
-    fn tags(&self) -> &[&'static str] {
-        &["js"]
+    fn tags(&self) -> Vec<Tag> {
+        vec![Tag::with_style("js".to_string(), Style::new().yellow())]
     }
 }

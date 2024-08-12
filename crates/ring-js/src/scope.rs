@@ -2,8 +2,10 @@ use std::path::Path;
 use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
+use owo_colors::Style;
 use tracing::debug;
 use ring_traits::{Detector, Project, Scope, Tagged};
+use ring_utils::Tag;
 use crate::{JsProject, JsProjectDetector, PackageManager};
 
 #[derive(Debug)]
@@ -60,7 +62,7 @@ impl Scope for JsScope {
 }
 
 impl Tagged for JsScope {
-    fn tags(&self) -> &[&'static str] {
-        &["js"]
+    fn tags(&self) -> Vec<Tag> {
+        vec![Tag::with_style("js".to_string(), Style::new().yellow())]
     }
 }
