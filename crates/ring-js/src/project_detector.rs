@@ -1,7 +1,7 @@
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Project, Tagged};
+use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as};
 use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
@@ -22,8 +22,18 @@ impl JsProjectDetector {
             package_loader: ManifestLoader::new(MANIFEST),
         }
     }
+}
 
-    pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<JsProject>> {
+impl Default for JsProjectDetector {
+    fn default() -> Self {
+        JsProjectDetector::new()
+    }
+}
+
+impl Detector for JsProjectDetector {
+    type Item = Rc<JsProject>;
+
+    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(project) = self.cache.borrow().get(path) {
             debug!("Found js project {} at {} (cached)", project.name(), path.display());
             return Found(project.clone());
@@ -37,41 +47,16 @@ impl JsProjectDetector {
             })
     }
 
-    pub fn search_form(&self, path: &Path) -> OptionalResult<Rc<JsProject>> {
+    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching js project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         path.ancestors()
-            .map(|ancestor| self.load_at(ancestor))
+            .map(|ancestor| self.detect_at(ancestor))
             .find(|res| matches!(res, Found(_)))
             .unwrap_or(Empty)
     }
 }
 
-impl Default for JsProjectDetector {
-    fn default() -> Self {
-        JsProjectDetector::new()
-    }
-}
-
-impl Detector for JsProjectDetector {
-    type Item = Rc<JsProject>;
-
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
-        self.search_form(path)
-    }
-}
-
-impl DetectAs<Rc<dyn Project>> for JsProjectDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Project>> {
-        self.detect_from(path)
-            .map(|prj| prj as Rc<dyn Project>)
-    }
-}
-
-impl DetectAs<Rc<dyn Tagged>> for JsProjectDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
-        self.detect_from(path)
-            .map(|prj| prj as Rc<dyn Tagged>)
-    }
-}
+detect_as!(JsProjectDetector, Rc<dyn Tagged>);
+detect_as!(JsProjectDetector, Rc<dyn Project>);

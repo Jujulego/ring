@@ -1,6 +1,6 @@
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Scope, Tagged};
+use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as};
 use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
@@ -22,11 +22,15 @@ impl RustScopeDetector {
         }
     }
 
-    fn cargo_loader(&self) -> &ManifestLoader<CargoManifest> {
+    pub(crate) fn cargo_loader(&self) -> &ManifestLoader<CargoManifest> {
         self.project_detector.cargo_loader()
     }
+}
 
-    pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<RustScope>> {
+impl Detector for RustScopeDetector {
+    type Item = Rc<RustScope>;
+
+    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(scope) = self.cache.borrow().get(path) {
             debug!("Found rust scope at {} (cached)", path.display());
             return Found(scope.clone());
@@ -41,35 +45,16 @@ impl RustScopeDetector {
             })
     }
 
-    pub fn search_form(&self, path: &Path) -> OptionalResult<Rc<RustScope>> {
+    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching rust scope from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         path.ancestors()
-            .map(|anc| self.load_at(anc))
+            .map(|anc| self.detect_at(anc))
             .find(|res| matches!(res, Found(_)))
             .unwrap_or(Empty)
     }
 }
 
-impl Detector for RustScopeDetector {
-    type Item = Rc<RustScope>;
-
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
-        self.search_form(path)
-    }
-}
-
-impl DetectAs<Rc<dyn Scope>> for RustScopeDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Scope>> {
-        self.detect_from(path)
-            .map(|scp| scp as Rc<dyn Scope>)
-    }
-}
-
-impl DetectAs<Rc<dyn Tagged>> for RustScopeDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
-        self.detect_from(path)
-            .map(|scp| scp as Rc<dyn Tagged>)
-    }
-}
+detect_as!(RustScopeDetector, Rc<dyn Scope>);
+detect_as!(RustScopeDetector, Rc<dyn Tagged>);

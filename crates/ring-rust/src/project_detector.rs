@@ -1,7 +1,7 @@
 use crate::constants::MANIFEST;
 use crate::{CargoManifest, RustProject};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Project, Tagged};
+use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as};
 use ring_utils::OptionalResult::{self, Empty, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
@@ -26,8 +26,18 @@ impl RustProjectDetector {
     pub(crate) fn cargo_loader(&self) -> &ManifestLoader<CargoManifest> {
         &self.cargo_loader
     }
+}
 
-    pub fn load_at(&self, path: &Path) -> OptionalResult<Rc<RustProject>> {
+impl Default for RustProjectDetector {
+    fn default() -> Self {
+        RustProjectDetector::new()
+    }
+}
+
+impl Detector for RustProjectDetector {
+    type Item = Rc<RustProject>;
+
+    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(project) = self.cache.borrow().get(path) {
             debug!("Found rust project {} at {} (cached)", project.name(), path.display());
             return Found(project.clone());
@@ -42,41 +52,16 @@ impl RustProjectDetector {
             })
     }
 
-    pub fn search_form(&self, path: &Path) -> OptionalResult<Rc<RustProject>> {
+    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching rust project from {}", path.display());
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         path.ancestors()
-            .map(|anc| self.load_at(anc))
+            .map(|anc| self.detect_at(anc))
             .find(|res| matches!(res, Found(_)))
             .unwrap_or(Empty)
     }
 }
 
-impl Default for RustProjectDetector {
-    fn default() -> Self {
-        RustProjectDetector::new()
-    }
-}
-
-impl Detector for RustProjectDetector {
-    type Item = Rc<RustProject>;
-
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
-        self.search_form(path)
-    }
-}
-
-impl DetectAs<Rc<dyn Project>> for RustProjectDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Project>> {
-        self.detect_from(path)
-            .map(|prj| prj as Rc<dyn Project>)
-    }
-}
-
-impl DetectAs<Rc<dyn Tagged>> for RustProjectDetector {
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<Rc<dyn Tagged>> {
-        self.detect_from(path)
-            .map(|prj| prj as Rc<dyn Tagged>)
-    }
-}
+detect_as!(RustProjectDetector, Rc<dyn Project>);
+detect_as!(RustProjectDetector, Rc<dyn Tagged>);
