@@ -33,7 +33,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let mut list = ListFormatter::new();
 
     for detector in detectors {
-        match detector.detect_from(&path) {
+        match detector.detect_from_as(&path) {
             Found(scope) => {
                 for project in scope.projects() {
                     let project = project?;

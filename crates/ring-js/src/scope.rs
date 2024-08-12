@@ -3,7 +3,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
 use tracing::debug;
-use ring_traits::{Project, Scope, Tagged};
+use ring_traits::{Detector, Project, Scope, Tagged};
 use crate::{JsProject, JsProjectDetector, PackageManager};
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ impl Scope for JsScope {
             .map(|path| {
                 path.map_err(|err| err.into())
                     .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.load_at(&path).into())
+                    .and_then(|path| self.project_detector.detect_at(&path).into())
             })
             .filter_map(|result| match result {
                 Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),
