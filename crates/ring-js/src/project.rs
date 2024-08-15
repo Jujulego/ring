@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
-use owo_colors::Style;
-use semver::Version;
+use crate::constants::JS_TAG;
+use crate::package_manifest::PackageManifest;
 use ring_traits::{Project, Tagged};
 use ring_utils::Tag;
-use crate::package_manifest::PackageManifest;
+use semver::Version;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct JsProject {
@@ -37,7 +37,7 @@ impl Project for JsProject {
 }
 
 impl Tagged for JsProject {
-    fn tags(&self) -> Vec<Tag> {
-        vec![Tag::with_style("js".to_string(), Style::new().yellow())]
+    fn tags(&self) -> &[&'static Tag] {
+        &[&JS_TAG]
     }
 }

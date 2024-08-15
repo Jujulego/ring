@@ -15,6 +15,7 @@ use ring_js::{JsProjectDetector, JsScopeDetector};
 use ring_rust::{RustProjectDetector, RustScopeDetector};
 use ring_traits::TaggedDetector;
 use ring_utils::OptionalResult::{Empty, Fail, Found};
+use ring_utils::Tag;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -64,7 +65,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 .map(lscolors::Style::to_owo_colors_style)
                 .unwrap_or_default();
 
-            let mut tags = BTreeSet::new();
+            let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
             for detector in detectors {
                 match detector.detect_from_as(&entry.path()) {
@@ -85,7 +86,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         }
     } else {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
-        let mut tags = BTreeSet::new();
+        let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
         for detector in detectors {
             match detector.detect_from_as(&path) {
