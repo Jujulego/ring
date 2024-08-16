@@ -4,7 +4,9 @@ use anyhow::Context;
 use glob::glob;
 use tracing::debug;
 use ring_traits::{Detector, Project, Scope, Tagged};
+use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
+use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustScope {
@@ -56,7 +58,7 @@ impl Scope for RustScope {
 }
 
 impl Tagged for RustScope {
-    fn tags(&self) -> &[&'static str] {
-        &["rust"]
+    fn tags(&self) ->  &[&'static Tag] {
+        &[&RUST_TAG]
     }
 }

@@ -1,8 +1,10 @@
+use crate::constants::JS_TAG;
+use crate::package_manifest::PackageManifest;
+use ring_traits::{Project, Tagged};
+use ring_utils::Tag;
+use semver::Version;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use semver::Version;
-use ring_traits::{Project, Tagged};
-use crate::package_manifest::PackageManifest;
 
 #[derive(Debug)]
 pub struct JsProject {
@@ -35,7 +37,7 @@ impl Project for JsProject {
 }
 
 impl Tagged for JsProject {
-    fn tags(&self) -> &[&'static str] {
-        &["js"]
+    fn tags(&self) -> &[&'static Tag] {
+        &[&JS_TAG]
     }
 }

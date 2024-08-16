@@ -1,6 +1,7 @@
 use std::env;
 use anyhow::Context;
 use clap::Command;
+use itertools::Itertools;
 use tracing::warn;
 use ring_cli_formatters::ListFormatter;
 use ring_js::JsProjectDetector;
@@ -27,7 +28,10 @@ pub fn handle_command() -> anyhow::Result<()> {
     
     for detector in detectors {
         match detector.detect_from_as(&current_dir) {
-            Found(project) => list.add_row([&project.name(), &project.tags().join(", ")]),
+            Found(project) => list.add_row([
+                &project.name(),
+                &project.tags().iter().join("/")
+            ]),
             Fail(err) => return Err(err),
             Empty => continue,
         }

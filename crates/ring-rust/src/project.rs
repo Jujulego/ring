@@ -2,7 +2,9 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use semver::Version;
 use ring_traits::{Project, Tagged};
+use ring_utils::Tag;
 use crate::{CargoManifest, CargoPackage};
+use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustProject {
@@ -35,7 +37,7 @@ impl Project for RustProject {
 }
 
 impl Tagged for RustProject {
-    fn tags(&self) -> &[&'static str] {
-        &["rust"]
+    fn tags(&self) ->  &[&'static Tag] {
+        &[&RUST_TAG]
     }
 }

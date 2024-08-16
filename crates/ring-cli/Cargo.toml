@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.83"
 clap = { version = "4.5.4", features = ["cargo"] }
+itertools = "0.13.0"
 lscolors = { version = "0.18.0", features = ["owo-colors"] }
 owo-colors = "4.0.0"
 tracing = "0.1.40"

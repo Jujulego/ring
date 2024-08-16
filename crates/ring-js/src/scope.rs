@@ -1,10 +1,12 @@
-use std::path::Path;
-use std::rc::Rc;
+use crate::constants::JS_TAG;
+use crate::{JsProject, JsProjectDetector, PackageManager};
 use anyhow::Context;
 use glob::glob;
-use tracing::debug;
 use ring_traits::{Detector, Project, Scope, Tagged};
-use crate::{JsProject, JsProjectDetector, PackageManager};
+use ring_utils::Tag;
+use std::path::Path;
+use std::rc::Rc;
+use tracing::debug;
 
 #[derive(Debug)]
 pub struct JsScope {
@@ -32,7 +34,7 @@ impl Scope for JsScope {
         self.root_project.root()
     }
 
-    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
+    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a> {
         let patterns = self.root_project.manifest().workspaces.iter()
             .map(|pattern| self.root().join(pattern));
 
@@ -60,7 +62,7 @@ impl Scope for JsScope {
 }
 
 impl Tagged for JsScope {
-    fn tags(&self) -> &[&'static str] {
-        &["js"]
+    fn tags(&self) -> &[&'static Tag] {
+        &[&JS_TAG]
     }
 }

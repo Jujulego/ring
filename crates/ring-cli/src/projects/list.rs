@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use anyhow::Context;
 use clap::{arg, ArgMatches, Command, value_parser};
+use itertools::Itertools;
 use tracing::warn;
 use ring_cli_formatters::ListFormatter;
 use ring_js::{JsProjectDetector, JsScopeDetector};
@@ -38,7 +39,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
                 for project in scope.projects() {
                     let project = project?;
 
-                    list.add_row([&project.name(), &project.tags().join(", ")]);
+                    list.add_row([
+                        &project.name(),
+                        &project.tags().iter().join("/")
+                    ]);
                 }
             }
             Fail(err) => return Err(err),
