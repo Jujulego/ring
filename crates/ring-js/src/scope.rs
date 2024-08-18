@@ -11,13 +11,12 @@ use tracing::debug;
 #[derive(Debug)]
 pub struct JsScope {
     root_project: Rc<JsProject>,
-    package_manager: PackageManager,
     project_detector: Rc<JsProjectDetector>,
 }
 
 impl JsScope {
-    pub fn new(root_project: Rc<JsProject>, package_manager: PackageManager, project_detector: Rc<JsProjectDetector>) -> JsScope {
-        JsScope { root_project, package_manager, project_detector }
+    pub fn new(root_project: Rc<JsProject>, project_detector: Rc<JsProjectDetector>) -> JsScope {
+        JsScope { root_project, project_detector }
     }
 
     pub fn root_project(&self) -> &Rc<JsProject> {
@@ -25,7 +24,7 @@ impl JsScope {
     }
 
     pub fn package_manager(&self) -> &PackageManager {
-        &self.package_manager
+        self.root_project.package_manager()
     }
 }
 

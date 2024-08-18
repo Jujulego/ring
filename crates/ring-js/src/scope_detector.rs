@@ -1,12 +1,10 @@
 use std::cell::RefCell;
-use crate::constants::PACKAGE_MANAGERS;
 use crate::{JsProjectDetector, JsScope};
-use anyhow::Context;
-use ring_traits::{Detector, DetectAs, Project, Scope, Tagged, detect_as, detect_from};
-use ring_utils::OptionalResult::{self, Empty, Fail, Found};
+use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as, detect_from};
+use ring_utils::OptionalResult::{self, Found};
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{debug, info, trace};
+use tracing::{debug, info};
 use ring_utils::PathTree;
 
 #[derive(Debug)]
@@ -34,30 +32,12 @@ impl Detector for JsScopeDetector {
         }
 
         self.project_detector.detect_at(path)
-            .and_then(|prj| {
-                for package_manager in PACKAGE_MANAGERS {
-                    let lockfile = prj.root().join(package_manager.lockfile());
-                    trace!("Testing {}", lockfile.display());
-
-                    match lockfile.try_exists().with_context(|| format!("Unable to access {}", lockfile.display())) {
-                        Ok(true) => {
-                            debug!("Found lockfile {}", lockfile.display());
-                            debug!("Detected package manager {}", package_manager);
-                            debug!("Found js scope at {}", path.display());
-
-                            let scope = JsScope::new(prj, package_manager, self.project_detector.clone());
-                            return Found(Rc::new(scope));
-                        }
-                        Ok(false) => continue,
-                        Err(err) => {
-                            return Fail(err)
-                        }
-                    }
-                }
-
-                Empty
+            .filter(|prj| !prj.manifest().workspaces.is_empty())
+            .map(|prj| Rc::new(JsScope::new(prj, self.project_detector.clone())))
+            .inspect(|scp| {
+                debug!("Found js scope at {}", path.display());
+                self.cache.borrow_mut().set(path, scp.clone())
             })
-            .inspect(|scp| self.cache.borrow_mut().set(path, scp.clone()))
     }
     
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {

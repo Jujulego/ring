@@ -32,7 +32,7 @@ impl Detector for JsLockfileDetector {
 
     fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
         if let Some(&pm) = self.cache.borrow().get(path) {
-            debug!("Found {} js lockfile at {} (cached)", pm, path.display());
+            debug!("Found {} lockfile at {} (cached)", pm, path.display());
             return Found(pm);
         }
 
@@ -42,7 +42,7 @@ impl Detector for JsLockfileDetector {
 
             match lockfile.try_exists() {
                 Ok(true) => {
-                    debug!("Found {} js lockfile at {}", package_manager, path.display());
+                    debug!("Found {} lockfile at {}", package_manager, path.display());
                     self.cache.borrow_mut().set(path, package_manager);
 
                     return Found(package_manager);
