@@ -19,6 +19,10 @@ impl<T, E> OptionalResult<T, E> {
         }
     }
 
+    pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
+        if matches!(self, Empty) { Found(val) } else { self }
+    }
+
     pub fn filter<F>(self, f: F) -> OptionalResult<T, E>
     where
         F: FnOnce(&T) -> bool,
@@ -50,6 +54,12 @@ impl<T, E> OptionalResult<T, E> {
             Fail(err) => Fail(err),
             Empty => Empty,
         }
+    }
+}
+
+impl<T : Default, E> OptionalResult<T, E> {
+    pub fn fail_or_default(self) -> OptionalResult<T, E> {
+        self.fail_or(T::default())
     }
 }
 

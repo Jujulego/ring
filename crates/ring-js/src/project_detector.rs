@@ -8,10 +8,12 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
+use crate::lockfile_detector::JsLockfileDetector;
 
 #[derive(Debug)]
 pub struct JsProjectDetector {
     cache: RefCell<PathTree<Rc<JsProject>>>,
+    lockfile_detector: JsLockfileDetector,
     package_loader: ManifestLoader<PackageManifest>,
 }
 
@@ -19,6 +21,7 @@ impl JsProjectDetector {
     pub fn new() -> JsProjectDetector {
         JsProjectDetector {
             cache: RefCell::new(PathTree::new()),
+            lockfile_detector: JsLockfileDetector::new(),
             package_loader: ManifestLoader::new(MANIFEST),
         }
     }
@@ -40,7 +43,12 @@ impl Detector for JsProjectDetector {
         }
 
         self.package_loader.load(path)
-            .map(|mnf| Rc::new(JsProject::new(path.to_path_buf(), mnf)))
+            .and_then(|mnf|
+                self.lockfile_detector.detect_from(path)
+                    .fail_or_default()
+                    .map(|lck| (mnf, lck))
+            )
+            .map(|(mnf, lck)| Rc::new(JsProject::new(path.to_path_buf(), mnf, lck)))
             .inspect(|prj| {
                 debug!("Found js project {} at {}", prj.name(), path.display());
                 self.cache.borrow_mut().set(path, prj.clone());
