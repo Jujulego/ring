@@ -1,8 +1,8 @@
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as};
-use ring_utils::OptionalResult::{self, Empty, Found};
+use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as, detect_from};
+use ring_utils::OptionalResult::{self, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;
@@ -49,12 +49,7 @@ impl Detector for JsProjectDetector {
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching js project from {}", path.display());
-        let path = if path.is_file() { path.parent().unwrap() } else { path };
-
-        path.ancestors()
-            .map(|ancestor| self.detect_at(ancestor))
-            .find(|res| matches!(res, Found(_)))
-            .unwrap_or(Empty)
+        detect_from!(self, path)
     }
 }
 

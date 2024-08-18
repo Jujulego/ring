@@ -1,22 +1,6 @@
 use ring_utils::OptionalResult;
 use std::path::Path;
 
-pub trait Detector {
-    type Item;
-
-    /// Search item at given path
-    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item>;
-
-    /// Search item from given path (and ancestors)
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item>;
-}
-
-pub trait DetectAs<T> {
-    fn detect_at_as(&self, path: &Path) -> OptionalResult<T>;
-
-    fn detect_from_as(&self, path: &Path) -> OptionalResult<T>;
-}
-
 #[macro_export]
 macro_rules! detect_as {
     ($base:ident, $item:ty) => {
@@ -32,4 +16,36 @@ macro_rules! detect_as {
             }
         }
     };
+}
+
+/// Default implementation of Detector::detect_from 
+#[macro_export]
+macro_rules! detect_from {
+    ($detector:ident, $path:ident) => {{
+        use ring_utils::OptionalResult::{Found, Empty};
+        let path = if $path.is_file() { $path.parent().unwrap() } else { $path };
+
+        path.ancestors()
+            .map(|ancestor| $detector.detect_at(ancestor))
+            .find(|res| matches!(res, Found(_)))
+            .unwrap_or(Empty)
+    }};
+}
+
+pub trait Detector {
+    type Item;
+
+    /// Search item at given path
+    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item>;
+
+    /// Search item from given path (and ancestors)
+    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
+        detect_from!(self, path)
+    }
+}
+
+pub trait DetectAs<T> {
+    fn detect_at_as(&self, path: &Path) -> OptionalResult<T>;
+
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<T>;
 }

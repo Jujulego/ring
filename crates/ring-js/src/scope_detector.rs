@@ -1,8 +1,8 @@
 use std::cell::RefCell;
-use crate::constants::LOCKFILES;
+use crate::constants::PACKAGE_MANAGERS;
 use crate::{JsProjectDetector, JsScope};
 use anyhow::Context;
-use ring_traits::{Detector, DetectAs, Project, Scope, Tagged, detect_as};
+use ring_traits::{Detector, DetectAs, Project, Scope, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Empty, Fail, Found};
 use std::path::Path;
 use std::rc::Rc;
@@ -35,8 +35,8 @@ impl Detector for JsScopeDetector {
 
         self.project_detector.detect_at(path)
             .and_then(|prj| {
-                for (package_manager, lockfile) in LOCKFILES {
-                    let lockfile = prj.root().join(lockfile);
+                for package_manager in PACKAGE_MANAGERS {
+                    let lockfile = prj.root().join(package_manager.lockfile());
                     trace!("Testing {}", lockfile.display());
 
                     match lockfile.try_exists().with_context(|| format!("Unable to access {}", lockfile.display())) {
@@ -62,12 +62,7 @@ impl Detector for JsScopeDetector {
     
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching js scope from {}", path.display());
-        let path = if path.is_file() { path.parent().unwrap() } else { path };
-
-        path.ancestors()
-            .map(|anc| self.detect_at(anc))
-            .find(|res| matches!(res, Found(_)))
-            .unwrap_or(Empty)
+        detect_from!(self, path)
     }
 }
 

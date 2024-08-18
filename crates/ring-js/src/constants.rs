@@ -4,10 +4,10 @@ use ring_utils::Tag;
 use crate::PackageManager;
 
 pub const MANIFEST: &str = "package.json";
-pub const LOCKFILES: [(PackageManager, &str); 3] = [
-    (PackageManager::NPM, "package-lock.json"),
-    (PackageManager::PNPM, "pnpm-lock.yaml"),
-    (PackageManager::Yarn, "yarn.lock")
+pub const PACKAGE_MANAGERS: [PackageManager; 3] = [
+    PackageManager::NPM,
+    PackageManager::PNPM,
+    PackageManager::Yarn,
 ];
 
 pub const JS_TAG: Tag = Tag::with_color("js", Ansi(AnsiColors::Yellow));
