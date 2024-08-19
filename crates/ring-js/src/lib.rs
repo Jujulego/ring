@@ -1,4 +1,5 @@
 mod constants;
+mod lockfile_detector;
 mod package_manager;
 mod package_manifest;
 mod project;

@@ -5,20 +5,26 @@ use ring_utils::Tag;
 use semver::Version;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use crate::PackageManager;
 
 #[derive(Debug)]
 pub struct JsProject {
     root: PathBuf,
     manifest: Rc<PackageManifest>,
+    package_manager: PackageManager,
 }
 
 impl JsProject {
-    pub fn new(root: PathBuf, manifest: Rc<PackageManifest>) -> JsProject {
-        JsProject { root, manifest }
+    pub fn new(root: PathBuf, manifest: Rc<PackageManifest>, package_manager: PackageManager) -> JsProject {
+        JsProject { root, manifest, package_manager }
     }
     
     pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
+    }
+    
+    pub fn package_manager(&self) -> &PackageManager {
+        &self.package_manager
     }
 }
 

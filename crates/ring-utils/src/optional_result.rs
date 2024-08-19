@@ -19,6 +19,10 @@ impl<T, E> OptionalResult<T, E> {
         }
     }
 
+    pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
+        if matches!(self, Empty) { Found(val) } else { self }
+    }
+
     pub fn filter<F>(self, f: F) -> OptionalResult<T, E>
     where
         F: FnOnce(&T) -> bool,
@@ -50,6 +54,12 @@ impl<T, E> OptionalResult<T, E> {
             Fail(err) => Fail(err),
             Empty => Empty,
         }
+    }
+}
+
+impl<T : Default, E> OptionalResult<T, E> {
+    pub fn fail_or_default(self) -> OptionalResult<T, E> {
+        self.fail_or(T::default())
     }
 }
 
@@ -139,6 +149,20 @@ mod tests {
         assert_eq!(OR::Empty.and_then(|_| Found(4)), Empty);
         assert_eq!(OR::Empty.and_then(|_| OR::Fail("failed")), Empty);
         assert_eq!(OR::Empty.and_then(|_| OR::Empty), Empty);
+    }
+
+    #[test]
+    fn it_should_replace_empty_with_given_value() {
+        assert_eq!(OR::Found("test").fail_or("was empty"), Found("test"));
+        assert_eq!(OR::Fail("test").fail_or("was empty"), Fail("test"));
+        assert_eq!(OR::Empty.fail_or("was empty"), Found("was empty"));
+    }
+
+    #[test]
+    fn it_should_replace_empty_with_default_value() {
+        assert_eq!(OR::Found("test").fail_or_default(), Found("test"));
+        assert_eq!(OR::Fail("test").fail_or_default(), Fail("test"));
+        assert_eq!(OR::Empty.fail_or_default(), Found(""));
     }
 
     #[test]
