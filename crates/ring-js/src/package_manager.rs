@@ -27,3 +27,22 @@ impl Display for PackageManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_return_lockfile_name() {
+        assert_eq!(PackageManager::NPM.lockfile(), "package-lock.json");
+        assert_eq!(PackageManager::PNPM.lockfile(), "pnpm-lock.yaml");
+        assert_eq!(PackageManager::Yarn.lockfile(), "yarn.lock");
+    }
+
+    #[test]
+    fn it_should_display_package_manager_name() {
+        assert_eq!(format!("{}", PackageManager::NPM), "npm");
+        assert_eq!(format!("{}", PackageManager::PNPM), "pnpm");
+        assert_eq!(format!("{}", PackageManager::Yarn), "yarn");
+    }
+}

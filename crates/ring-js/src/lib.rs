@@ -1,11 +1,11 @@
 mod constants;
+mod lockfile_detector;
 mod package_manager;
 mod package_manifest;
 mod project;
 mod project_detector;
 mod scope;
 mod scope_detector;
-mod lockfile_detector;
 
 pub use package_manager::PackageManager;
 pub use package_manifest::PackageManifest;
