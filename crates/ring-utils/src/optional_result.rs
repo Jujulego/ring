@@ -152,6 +152,20 @@ mod tests {
     }
 
     #[test]
+    fn it_should_replace_empty_with_given_value() {
+        assert_eq!(OR::Found("test").fail_or("was empty"), Found("test"));
+        assert_eq!(OR::Fail("test").fail_or("was empty"), Fail("test"));
+        assert_eq!(OR::Empty.fail_or("was empty"), Found("was empty"));
+    }
+
+    #[test]
+    fn it_should_replace_empty_with_default_value() {
+        assert_eq!(OR::Found("test").fail_or_default(), Found("test"));
+        assert_eq!(OR::Fail("test").fail_or_default(), Fail("test"));
+        assert_eq!(OR::Empty.fail_or_default(), Found(""));
+    }
+
+    #[test]
     fn it_should_filter_optional_result() {
         assert_eq!(OR::Found("test").filter(|_| true), Found("test"));
         assert_eq!(OR::Found("test").filter(|_| false), Empty);
