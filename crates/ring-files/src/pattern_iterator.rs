@@ -1,7 +1,18 @@
+use anyhow::anyhow;
 use std::iter::FusedIterator;
 use std::path::{Path, PathBuf};
 
 pub trait PatternIterator : Iterator {
+    #[cfg(feature = "glob")]
+    #[inline]
+    fn glob(self) -> GlobFiles<Self>
+    where
+        Self: Sized,
+        Self::Item: AsRef<str>
+    {
+        GlobFiles::new(self)
+    }
+
     /// Prepends each patterns with given base
     /// 
     /// # Examples
@@ -39,6 +50,72 @@ pub trait PatternIterator : Iterator {
 }
 
 impl<I: Iterator> PatternIterator for I {}
+
+#[cfg(feature = "glob")]
+pub struct GlobFiles<I: Iterator>
+where
+    I::Item: AsRef<str>
+{
+    iter: I,
+    paths: Option<glob::Paths>,
+}
+
+#[cfg(feature = "glob")]
+impl<I: Iterator> GlobFiles<I>
+where
+    I::Item: AsRef<str>
+{
+    fn new(iter: I) -> GlobFiles<I> {
+        GlobFiles {
+            iter,
+            paths: None,
+        }
+    }
+}
+
+#[cfg(feature = "glob")]
+impl<I: Iterator> Iterator for GlobFiles<I>
+where
+    I::Item: AsRef<str>
+{
+    type Item = anyhow::Result<PathBuf>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(paths) = &mut self.paths {
+                match paths.next() {
+                    Some(Ok(path)) => break Some(Ok(path)),
+                    Some(Err(err)) => {
+                        let context = format!("Unable to access {}", err.path().display());
+                        break Some(Err(anyhow!(err.into_error()).context(context)))
+                    },
+                    None => {
+                        self.paths = None;
+                    }
+                }
+            }
+
+            if let Some(pattern) = self.iter.next() {
+                match glob::glob(pattern.as_ref()) {
+                    Ok(paths) => {
+                        self.paths = Some(paths);
+                    }
+                    Err(err) => break Some(Err(
+                        anyhow!(err).context(format!("Error while parsing pattern {}", pattern.as_ref()))
+                    )),
+                }
+            } else {
+                break None;
+            }
+        }
+    }
+}
+
+#[cfg(feature = "glob")]
+impl<I: FusedIterator> FusedIterator for GlobFiles<I>
+where
+    I::Item: AsRef<str>
+{}
 
 pub struct RelativePatterns<I: Iterator>
 where

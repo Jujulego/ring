@@ -4,7 +4,7 @@ use anyhow::Context;
 use glob::glob;
 use tracing::debug;
 use ring_files::PatternIterator;
-use ring_traits::{Detector, Project, Scope, Tagged};
+use ring_traits::{DetectAs, Detector, Project, Scope, Tagged};
 use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 use crate::constants::RUST_TAG;
@@ -32,22 +32,19 @@ impl Scope for RustScope {
     }
 
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.workspace().members.iter();
-
-        Box::new(patterns.relative_to(&self.root)
+        let projects = self.workspace().members.iter()
+            .relative_to(self.root())
             .inspect(|pattern| debug!("Search rust project matching {pattern}"))
-            .filter_map(|pattern| glob(&pattern).ok())
-            .flatten()
-            .map(|path| {
-                path.map_err(|err| err.into())
-                    .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.detect_at(&path).into())
-            })
-            .filter_map(|result| match result {
-                Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),
-                Ok(None) => None,
-                Err(err) => Some(Err(err)),
+            .glob()
+            .map(|path| path.and_then(|path| {
+                path.canonicalize().with_context(|| format!("Unable to access {}", path.display()))
             }))
+            .filter_map(|path| match path {
+                Ok(path) => self.project_detector.detect_at_as(&path).into(),
+                Err(err) => Some(Err(err)),
+            });
+
+        Box::new(projects)
     }
 }
 
