@@ -38,6 +38,10 @@ impl Default for RustModule {
 }
 
 impl Module for RustModule {
+    fn name(&self) -> &'static str {
+        "rust"
+    }
+    
     fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
         vec![
             self.project_detector.clone()

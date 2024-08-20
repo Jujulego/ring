@@ -3,6 +3,8 @@ use crate::{ProjectDetector, ScopeDetector};
 use crate::tagged::TaggedDetector;
 
 pub trait Module {
+    fn name(&self) -> &'static str;
+    
     #[inline]
     fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
         vec![]

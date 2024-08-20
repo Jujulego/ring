@@ -41,6 +41,10 @@ impl Default for JsModule {
 }
 
 impl Module for JsModule {
+    fn name(&self) -> &'static str {
+        "js"
+    }
+
     fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
         vec![
             self.project_detector.clone()

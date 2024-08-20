@@ -6,6 +6,7 @@ use tracing_subscriber::FmtSubscriber;
 use ring_core::RingCore;
 
 mod list;
+mod modules;
 mod projects;
 
 fn main() -> Result<()> {
@@ -15,6 +16,7 @@ fn main() -> Result<()> {
         .subcommand_required(true)
         .subcommands([
             list::build_command(),
+            modules::build_command(),
             projects::build_command()
         ])
         .arg(arg!(-v --verbose)
@@ -43,6 +45,7 @@ fn main() -> Result<()> {
     
     match args.subcommand() {
         Some(("list", args)) => list::handle_command(&core, args),
+        Some(("modules", args)) => modules::handle_command(&core, args),
         Some(("projects", args)) => projects::handle_command(&core, args),
         _ => unreachable!()
     }
