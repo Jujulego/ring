@@ -53,10 +53,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
             let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
             for project in detector.detect_from(&entry.path()) {
-                match project {
-                    Ok(project) => tags.extend(project.tags()),
-                    Err(err) => return Err(err),
-                }
+                tags.extend(project?.tags());
             }
 
             if !tags.is_empty() {
@@ -73,10 +70,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
         for project in detector.detect_from(&path) {
-            match project {
-                Ok(project) => tags.extend(project.tags()),
-                Err(err) => return Err(err),
-            }
+            tags.extend(project?.tags());
         }
 
         if !tags.is_empty() {
