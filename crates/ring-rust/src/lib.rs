@@ -9,7 +9,7 @@ use std::rc::Rc;
 pub use cargo_manifest::{CargoManifest, CargoPackage, CargoWorkspace};
 pub use project::RustProject;
 pub use project_detector::RustProjectDetector;
-use ring_traits::{Module, TaggedDetector};
+use ring_traits::{Module, ProjectDetector, TaggedDetector};
 pub use scope::RustScope;
 pub use scope_detector::RustScopeDetector;
 
@@ -38,6 +38,12 @@ impl Default for RustModule {
 }
 
 impl Module for RustModule {
+    fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
+        vec![
+            self.project_detector.clone()
+        ]
+    }
+
     fn tagged_detectors(&self) -> Vec<Rc<TaggedDetector>> {
         vec![
             self.project_detector.clone(),

@@ -14,7 +14,7 @@ pub use project_detector::JsProjectDetector;
 pub use scope::JsScope;
 pub use scope_detector::JsScopeDetector;
 use std::rc::Rc;
-use ring_traits::{Module, TaggedDetector};
+use ring_traits::{Module, ProjectDetector, TaggedDetector};
 
 // Module
 #[derive(Debug)]
@@ -41,6 +41,12 @@ impl Default for JsModule {
 }
 
 impl Module for JsModule {
+    fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
+        vec![
+            self.project_detector.clone()
+        ]
+    }
+
     fn tagged_detectors(&self) -> Vec<Rc<TaggedDetector>> {
         vec![
             self.project_detector.clone(),

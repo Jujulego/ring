@@ -43,7 +43,7 @@ fn main() -> Result<()> {
     
     match args.subcommand() {
         Some(("list", args)) => list::handle_command(&core, args),
-        Some(("projects", args)) => projects::handle_command(args),
+        Some(("projects", args)) => projects::handle_command(&core, args),
         _ => unreachable!()
     }
 }

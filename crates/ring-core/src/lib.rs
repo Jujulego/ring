@@ -1,5 +1,5 @@
 pub use combined_detector::CombinedDetector;
-use ring_traits::{Module, Tagged};
+use ring_traits::{Module, Project, Tagged};
 use std::rc::Rc;
 
 #[cfg(feature = "js")]
@@ -26,6 +26,15 @@ impl RingCore {
             #[cfg(feature = "js")]   &self.js_module,
             #[cfg(feature = "rust")] &self.rust_module,
         ]
+    }
+
+    pub fn project_detector(&self) -> CombinedDetector<Rc<dyn Project>> {
+        CombinedDetector::new(
+            self.modules()
+                .iter()
+                .flat_map(|module| module.project_detectors())
+                .collect(),
+        )
     }
 
     pub fn tagged_detector(&self) -> CombinedDetector<Rc<dyn Tagged>> {
