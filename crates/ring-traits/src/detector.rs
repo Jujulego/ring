@@ -49,3 +49,15 @@ pub trait DetectAs<T> {
 
     fn detect_from_as(&self, path: &Path) -> OptionalResult<T>;
 }
+
+impl<D : Detector> DetectAs<D::Item> for D {
+    #[inline]
+    fn detect_at_as(&self, path: &Path) -> OptionalResult<D::Item> {
+        self.detect_at(path)
+    }
+
+    #[inline]
+    fn detect_from_as(&self, path: &Path) -> OptionalResult<D::Item> {
+        self.detect_from(path)
+    }
+}
