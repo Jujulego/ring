@@ -4,14 +4,16 @@ use std::rc::Rc;
 use ring_traits::DetectAs;
 use ring_utils::OptionalResult;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CombinedDetector<T> {
     detectors: Vec<Rc<dyn DetectAs<T>>>,
 }
 
 impl<T> CombinedDetector<T> {
-    pub fn new(detectors: Vec<Rc<dyn DetectAs<T>>>) -> CombinedDetector<T> {
-        CombinedDetector { detectors }
+    pub fn new() -> CombinedDetector<T> {
+        CombinedDetector {
+            detectors: Vec::new()
+        }
     }
 
     pub fn detect_from<'a>(&'a self, path: &'a Path) -> Iter<'a, T> {
@@ -26,6 +28,10 @@ impl<T> CombinedDetector<T> {
             detectors: self.detectors.as_slice(),
             strategy: DetectStrategy::At(path)
         }
+    }
+    
+    pub fn push(&mut self, detector: Rc<dyn DetectAs<T>>) {
+        self.detectors.push(detector);
     }
 }
 

@@ -3,6 +3,11 @@ name = "ring-cli"
 version = "0.2.1"
 edition = "2021"
 
+[features]
+default = ["js", "rust"]
+js = ["ring-core/js"]
+rust = ["ring-core/rust"]
+
 [dependencies]
 anyhow = "1.0.83"
 clap = { version = "4.5.4", features = ["cargo"] }

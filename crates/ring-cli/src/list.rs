@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
-use std::rc::Rc;
 use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
 use itertools::Itertools;
@@ -11,10 +10,7 @@ use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
-use ring_core::CombinedDetector;
-use ring_js::{JsProjectDetector, JsScopeDetector};
-use ring_rust::{RustProjectDetector, RustScopeDetector};
-use ring_traits::Tagged;
+use ring_core::build_tagged_detector;
 use ring_utils::Tag;
 
 pub fn build_command() -> Command {
@@ -37,17 +33,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
-    let js_project_detector = Rc::new(JsProjectDetector::new());
-    let js_scope_detector = Rc::new(JsScopeDetector::new(js_project_detector.clone()));
-    let rust_project_detector = Rc::new(RustProjectDetector::new());
-    let rust_scope_detector = Rc::new(RustScopeDetector::new(rust_project_detector.clone()));
-
-    let detector: CombinedDetector<Rc<dyn Tagged>> = CombinedDetector::new(vec![
-        js_project_detector,
-        js_scope_detector,
-        rust_project_detector,
-        rust_scope_detector,
-    ]);
+    let detector = build_tagged_detector();
 
     let colors = LsColors::from_env().unwrap_or_default();
     let mut list = ListFormatter::new();
