@@ -27,7 +27,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        run: rustup toolchain install stable --profile minimal --component clippy
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -63,7 +65,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+          targets: ${{ matrix.target }}
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
@@ -77,11 +82,8 @@ jobs:
       - name: Run tests
         run: cargo --locked llvm-cov --lcov --output-path codecov-unit.json nextest --workspace --all-features --profile ci
 
-      - name: Test docs
-        run: cargo --locked test --doc
-
       - name: Upload coverage to Codecov
-        if: ${{ !cancelled() && !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
+        if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
         uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
@@ -95,4 +97,31 @@ jobs:
         with:
           files: target/nextest/ci/junit.xml
           flags: unit,${{ matrix.name }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  docs-tests:
+    name: Documentation tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Test docs
+        run: cargo --locked llvm-cov --lcov --output-path codecov-docs.json test --doc
+
+      - name: Upload coverage to Codecov
+        if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          files: codecov-docs.json
+          flags: docs
           token: ${{ secrets.CODECOV_TOKEN }}
