@@ -2,6 +2,7 @@ use crate::constants::JS_TAG;
 use crate::{JsProject, JsProjectDetector, PackageManager};
 use anyhow::Context;
 use glob::glob;
+use ring_files::PatternIterator;
 use ring_traits::{Detector, Project, Scope, Tagged};
 use ring_utils::Tag;
 use std::path::Path;
@@ -33,19 +34,13 @@ impl Scope for JsScope {
         self.root_project.root()
     }
 
-    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a> {
+    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
         let patterns = self.root_project.manifest().workspaces.iter()
-            .map(|pattern| self.root().join(pattern));
+            .relative_to(self.root());
 
         Box::new(patterns
-            .inspect(|pattern| debug!("Search js project matching {}", pattern.display()))
-            .filter_map(|pattern| {
-                #[cfg(windows)]
-                { glob(&pattern.to_str().unwrap()[4..]).ok() }
-
-                #[cfg(not(windows))]
-                { glob(pattern.to_str().unwrap()).ok() }
-            })
+            .inspect(|pattern| debug!("Search js project matching {pattern}"))
+            .filter_map(|pattern| glob(&pattern).ok())
             .flatten()
             .map(|path| {
                 path.map_err(|err| err.into())
