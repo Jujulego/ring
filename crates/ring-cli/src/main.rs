@@ -37,7 +37,7 @@ fn main() -> Result<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-    
+
     // Handle subcommands
     let core = RingCore::new();
     

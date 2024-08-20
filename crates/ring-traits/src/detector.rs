@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use ring_utils::OptionalResult;
 use std::path::Path;
 
@@ -33,7 +32,7 @@ macro_rules! detect_from {
     }};
 }
 
-pub trait Detector : Debug {
+pub trait Detector {
     type Item;
 
     /// Search item at given path
@@ -45,7 +44,7 @@ pub trait Detector : Debug {
     }
 }
 
-pub trait DetectAs<T> : Debug {
+pub trait DetectAs<T> {
     fn detect_at_as(&self, path: &Path) -> OptionalResult<T>;
 
     fn detect_from_as(&self, path: &Path) -> OptionalResult<T>;

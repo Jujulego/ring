@@ -14,3 +14,6 @@ ring-js = { path = "../ring-js", optional = true }
 ring-rust = { path = "../ring-rust", optional = true }
 ring-traits = { path = "../ring-traits" }
 ring-utils = { path = "../ring-utils" }
+
+[dev-dependencies]
+mockall = "0.13.0"

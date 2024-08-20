@@ -12,10 +12,8 @@ mod combined_detector;
 
 #[derive(Debug, Default)]
 pub struct RingCore {
-    #[cfg(feature = "js")]
-    js_module: JsModule,
-    #[cfg(feature = "rust")]
-    rust_module: RustModule,
+    #[cfg(feature = "js")]   js_module: JsModule,
+    #[cfg(feature = "rust")] rust_module: RustModule,
 }
 
 impl RingCore {
@@ -25,10 +23,8 @@ impl RingCore {
 
     pub fn modules(&self) -> Vec<&dyn Module> {
         vec![
-            #[cfg(feature = "js")]
-            &self.js_module,
-            #[cfg(feature = "rust")]
-            &self.rust_module,
+            #[cfg(feature = "js")]   &self.js_module,
+            #[cfg(feature = "rust")] &self.rust_module,
         ]
     }
 
