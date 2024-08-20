@@ -1,6 +1,6 @@
-use crate::DetectAs;
-use ring_utils::Tag;
 use std::rc::Rc;
+use ring_utils::Tag;
+use crate::DetectAs;
 
 pub trait Tagged {
     /// Return some tags on entity

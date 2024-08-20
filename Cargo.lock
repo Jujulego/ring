@@ -324,6 +324,7 @@ dependencies = [
  "lscolors",
  "owo-colors",
  "ring-cli-formatters",
+ "ring-core",
  "ring-js",
  "ring-rust",
  "ring-traits",
@@ -338,6 +339,18 @@ version = "0.1.0"
 dependencies = [
  "textwrap",
  "unicode-width",
+]
+
+[[package]]
+name = "ring-core"
+version = "0.2.1"
+dependencies = [
+ "anyhow",
+ "mockall",
+ "ring-js",
+ "ring-rust",
+ "ring-traits",
+ "ring-utils",
 ]
 
 [[package]]

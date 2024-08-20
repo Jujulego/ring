@@ -3,6 +3,11 @@ name = "ring-cli"
 version = "0.2.1"
 edition = "2021"
 
+[features]
+default = ["js", "rust"]
+js = ["ring-core/js"]
+rust = ["ring-core/rust"]
+
 [dependencies]
 anyhow = "1.0.83"
 clap = { version = "4.5.4", features = ["cargo"] }
@@ -13,6 +18,7 @@ tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
 ring-cli-formatters = { path = "../ring-cli-formatters" }
+ring-core = { path = "../ring-core" }
 ring-js = { path = "../ring-js" }
 ring-rust = { path = "../ring-rust" }
 ring-traits = { path = "../ring-traits" }
