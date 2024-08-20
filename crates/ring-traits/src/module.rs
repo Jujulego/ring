@@ -1,10 +1,15 @@
 use std::rc::Rc;
-use crate::ProjectDetector;
+use crate::{ProjectDetector, ScopeDetector};
 use crate::tagged::TaggedDetector;
 
 pub trait Module {
     #[inline]
     fn project_detectors(&self) -> Vec<Rc<ProjectDetector>> {
+        vec![]
+    }
+    
+    #[inline]
+    fn scope_detectors(&self) -> Vec<Rc<ScopeDetector>> {
         vec![]
     }
     

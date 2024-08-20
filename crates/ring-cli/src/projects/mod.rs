@@ -18,7 +18,7 @@ pub fn build_command() -> Command {
 pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
         Some(("current", _)) => current::handle_command(core),
-        Some(("list", args)) => list::handle_command(args),
+        Some(("list", args)) => list::handle_command(core, args),
         _ => unreachable!()
     }
 }
