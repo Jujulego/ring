@@ -186,7 +186,13 @@ mod tests {
             detector
         });
 
-        let combined = CombinedDetector::new(vec![detector_a, detector_b]);
+        let detector_empty = Rc::new({
+            let mut detector = MockDetector::new();
+            detector.expect_detect_at_as().returning(|_| Empty);
+            detector
+        });
+
+        let combined = CombinedDetector::new(vec![detector_a, detector_b, detector_empty]);
 
         let results: Vec<_> = combined.detect_at(Path::new("test")).rev().collect();
 
