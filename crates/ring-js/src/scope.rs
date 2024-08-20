@@ -35,10 +35,9 @@ impl Scope for JsScope {
     }
 
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.root_project.manifest().workspaces.iter()
-            .relative_to(self.root());
+        let patterns = self.root_project.manifest().workspaces.iter();
 
-        Box::new(patterns
+        Box::new(patterns.relative_to(self.root())
             .inspect(|pattern| debug!("Search js project matching {pattern}"))
             .filter_map(|pattern| glob(&pattern).ok())
             .flatten()

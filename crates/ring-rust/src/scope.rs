@@ -3,6 +3,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use glob::glob;
 use tracing::debug;
+use ring_files::PatternIterator;
 use ring_traits::{Detector, Project, Scope, Tagged};
 use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
@@ -31,18 +32,11 @@ impl Scope for RustScope {
     }
 
     fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.workspace().members.iter()
-            .map(|pattern| self.root.join(pattern));
+        let patterns = self.workspace().members.iter();
 
-        Box::new(patterns
-            .inspect(|pattern| debug!("Search rust project matching {}", pattern.display()))
-            .filter_map(|pattern| {
-                #[cfg(windows)]
-                { glob(&pattern.to_str().unwrap()[4..]).ok() }
-
-                #[cfg(not(windows))]
-                { glob(pattern.to_str().unwrap()).ok() }
-            })
+        Box::new(patterns.relative_to(&self.root)
+            .inspect(|pattern| debug!("Search rust project matching {pattern}"))
+            .filter_map(|pattern| glob(&pattern).ok())
             .flatten()
             .map(|path| {
                 path.map_err(|err| err.into())
