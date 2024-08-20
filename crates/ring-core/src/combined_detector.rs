@@ -10,10 +10,8 @@ pub struct CombinedDetector<T> {
 }
 
 impl<T> CombinedDetector<T> {
-    pub fn new() -> CombinedDetector<T> {
-        CombinedDetector {
-            detectors: Vec::new()
-        }
+    pub fn new(detectors: Vec<Rc<dyn DetectAs<T>>>) -> CombinedDetector<T> {
+        CombinedDetector { detectors }
     }
 
     pub fn detect_from<'a>(&'a self, path: &'a Path) -> Iter<'a, T> {
@@ -28,10 +26,6 @@ impl<T> CombinedDetector<T> {
             detectors: self.detectors.as_slice(),
             strategy: DetectStrategy::At(path)
         }
-    }
-    
-    pub fn push(&mut self, detector: Rc<dyn DetectAs<T>>) {
-        self.detectors.push(detector);
     }
 }
 
