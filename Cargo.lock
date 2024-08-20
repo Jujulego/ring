@@ -336,6 +336,7 @@ name = "ring-core"
 version = "0.2.1"
 dependencies = [
  "anyhow",
+ "mockall",
  "ring-js",
  "ring-rust",
  "ring-traits",
