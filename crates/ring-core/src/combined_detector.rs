@@ -127,7 +127,7 @@ mod tests {
         ]);
 
         let results: Vec<_> = combined.detect_at(Path::new("test")).collect();
-        
+
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].as_ref().ok(), Some(&"a"));
         assert_eq!(results[1].as_ref().ok(), Some(&"b"));
@@ -165,7 +165,7 @@ mod tests {
         ]);
 
         let results: Vec<_> = combined.detect_from(Path::new("test")).collect();
-        
+
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].as_ref().ok(), Some(&"a"));
         assert_eq!(results[1].as_ref().ok(), Some(&"b"));

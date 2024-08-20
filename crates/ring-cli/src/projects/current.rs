@@ -4,37 +4,28 @@ use clap::Command;
 use itertools::Itertools;
 use tracing::warn;
 use ring_cli_formatters::ListFormatter;
-use ring_js::JsProjectDetector;
-use ring_rust::RustProjectDetector;
-use ring_traits::ProjectDetector;
-use ring_utils::OptionalResult::{Empty, Fail, Found};
+use ring_core::RingCore;
 
 pub fn build_command() -> Command {
     Command::new("current")
         .visible_alias("pwd")
 }
 
-pub fn handle_command() -> anyhow::Result<()> {
+pub fn handle_command(core: &RingCore) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
     let current_dir = current_dir.canonicalize()
         .with_context(|| format!("Unable to access {}", current_dir.display()))?;
 
-    let detectors: [&ProjectDetector; 2] = [
-        &JsProjectDetector::new(),
-        &RustProjectDetector::new()
-    ];
-
+    let detector = core.project_detector();
     let mut list = ListFormatter::new();
     
-    for detector in detectors {
-        match detector.detect_from_as(&current_dir) {
-            Found(project) => list.add_row([
-                &project.name(),
-                &project.tags().iter().join("/")
-            ]),
-            Fail(err) => return Err(err),
-            Empty => continue,
-        }
+    for project in detector.detect_from(&current_dir) {
+        let project = project?;
+        
+        list.add_row([
+            &project.name(),
+            &project.tags().iter().join("/")
+        ]);
     }
 
     if !list.is_empty() {

@@ -1,24 +1,21 @@
-mod current;
 mod list;
 
 use clap::{ArgMatches, Command};
 use ring_core::RingCore;
 
 pub fn build_command() -> Command {
-    Command::new("projects")
-        .aliases(["project"])
-        .visible_aliases(["prj"])
+    Command::new("modules")
+        .aliases(["module"])
+        .visible_aliases(["mod"])
         .subcommand_required(true)
         .subcommands([
-            current::build_command(),
-            list::build_command(),
+            list::build_command()
         ])
 }
 
 pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
-        Some(("current", _)) => current::handle_command(core),
-        Some(("list", args)) => list::handle_command(core, args),
+        Some(("list", _)) => list::handle_command(core),
         _ => unreachable!()
     }
 }

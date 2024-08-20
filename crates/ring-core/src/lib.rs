@@ -1,33 +1,54 @@
 pub use combined_detector::CombinedDetector;
-use ring_traits::{Tagged, TaggedDetector};
+use ring_traits::{Module, Project, Scope, Tagged};
 use std::rc::Rc;
 
 #[cfg(feature = "js")]
-use ring_js::{JsProjectDetector, JsScopeDetector};
+use ring_js::JsModule;
 
 #[cfg(feature = "rust")]
-use ring_rust::{RustProjectDetector, RustScopeDetector};
+use ring_rust::RustModule;
 
 mod combined_detector;
 
-pub fn build_tagged_detector() -> CombinedDetector<Rc<dyn Tagged>> {
-    let mut tagged_detectors: Vec<Rc<TaggedDetector>> = Vec::new();
+#[derive(Debug, Default)]
+pub struct RingCore {
+    #[cfg(feature = "js")]   js_module: JsModule,
+    #[cfg(feature = "rust")] rust_module: RustModule,
+}
 
-    #[cfg(feature = "js")] {
-        let js_project_detector: Rc<JsProjectDetector> = Rc::new(JsProjectDetector::new());
-        let js_scope_detector = Rc::new(JsScopeDetector::new(js_project_detector.clone()));
-
-        tagged_detectors.push(js_project_detector);
-        tagged_detectors.push(js_scope_detector);
+impl RingCore {
+    pub fn new() -> RingCore {
+        Default::default()
     }
 
-    #[cfg(feature = "rust")] {
-        let rust_project_detector = Rc::new(RustProjectDetector::new());
-        let rust_scope_detector = Rc::new(RustScopeDetector::new(rust_project_detector.clone()));
-
-        tagged_detectors.push(rust_project_detector);
-        tagged_detectors.push(rust_scope_detector);
+    pub fn modules(&self) -> Vec<&dyn Module> {
+        vec![
+            #[cfg(feature = "js")]   &self.js_module,
+            #[cfg(feature = "rust")] &self.rust_module,
+        ]
     }
 
-    CombinedDetector::new(tagged_detectors)
+    pub fn project_detector(&self) -> CombinedDetector<Rc<dyn Project>> {
+        CombinedDetector::new(
+            self.modules().iter()
+                .flat_map(|module| module.project_detectors())
+                .collect(),
+        )
+    }
+
+    pub fn scope_detector(&self) -> CombinedDetector<Rc<dyn Scope>> {
+        CombinedDetector::new(
+            self.modules().iter()
+                .flat_map(|module| module.scope_detectors())
+                .collect(),
+        )
+    }
+
+    pub fn tagged_detector(&self) -> CombinedDetector<Rc<dyn Tagged>> {
+        CombinedDetector::new(
+            self.modules().iter()
+                .flat_map(|module| module.tagged_detectors())
+                .collect(),
+        )
+    }
 }
