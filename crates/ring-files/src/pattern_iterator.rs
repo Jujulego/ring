@@ -2,12 +2,39 @@ use std::iter::FusedIterator;
 use std::path::{Path, PathBuf};
 
 pub trait PatternIterator : Iterator {
-    fn relative_to(self, base: &Path) -> RelativePatterns<Self>
+    /// Prepends each patterns with given base
+    /// 
+    /// # Examples
+    /// 
+    /// Basic usage:
+    /// 
+    /// ```
+    /// use ring_files::PatternIterator;
+    /// 
+    /// // Note: this example does work on Windows
+    /// let patterns = vec!["crates/*", "scripts"];
+    /// let prepended = patterns.iter().relative_to("/example").collect::<Vec<String>>();
+    /// 
+    /// assert_eq!(prepended, &["/example/crates/*", "/example/scripts"]);
+    /// ```
+    /// 
+    /// It does not prepend absolute patterns:
+    /// 
+    /// ```
+    /// use ring_files::PatternIterator;
+    /// 
+    /// let patterns = vec!["/crates/*", "/scripts"];
+    /// let prepended = patterns.iter().relative_to("/example").collect::<Vec<String>>();
+    /// 
+    /// assert_eq!(prepended, &["/crates/*", "/scripts"]);
+    /// ```
+    #[inline]
+    fn relative_to<P: AsRef<Path>>(self, base: P) -> RelativePatterns<Self>
     where
         Self: Sized,
         Self::Item: AsRef<Path>
     {
-        RelativePatterns::new(self, base)
+        RelativePatterns::new(self, base.as_ref())
     }
 }
 
