@@ -10,7 +10,7 @@ use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
-use ring_core::build_tagged_detector;
+use ring_core::RingCore;
 use ring_utils::Tag;
 
 pub fn build_command() -> Command {
@@ -22,7 +22,7 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
+pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
         .unwrap_or(&current_dir);
@@ -33,7 +33,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List directory files
-    let detector = build_tagged_detector();
+    let detector = core.tagged_detector();
 
     let colors = LsColors::from_env().unwrap_or_default();
     let mut list = ListFormatter::new();

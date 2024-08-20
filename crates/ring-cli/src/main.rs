@@ -3,6 +3,7 @@ use anyhow::Result;
 use clap::{arg, ArgAction, command};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
+use ring_core::RingCore;
 
 mod list;
 mod projects;
@@ -36,10 +37,12 @@ fn main() -> Result<()> {
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
-
+    
     // Handle subcommands
+    let core = RingCore::new();
+    
     match args.subcommand() {
-        Some(("list", args)) => list::handle_command(args),
+        Some(("list", args)) => list::handle_command(&core, args),
         Some(("projects", args)) => projects::handle_command(args),
         _ => unreachable!()
     }
