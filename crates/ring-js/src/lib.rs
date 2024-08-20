@@ -14,6 +14,7 @@ pub use project_detector::JsProjectDetector;
 pub use scope::JsScope;
 pub use scope_detector::JsScopeDetector;
 use std::rc::Rc;
+use tracing::debug;
 use ring_traits::{Module, ProjectDetector, ScopeDetector, TaggedDetector};
 
 // Module
@@ -25,6 +26,7 @@ pub struct JsModule {
 
 impl JsModule {
     pub fn new() -> JsModule {
+        debug!("Initializing js module");
         let project_detector = Rc::new(JsProjectDetector::new());
         
         JsModule {

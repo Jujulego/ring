@@ -8,7 +8,6 @@ use itertools::Itertools;
 use lscolors::LsColors;
 use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
-use tracing::info;
 use ring_cli_formatters::ListFormatter;
 use ring_core::RingCore;
 use ring_utils::Tag;
@@ -39,8 +38,6 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
     let mut list = ListFormatter::new();
 
     if path.is_dir() {
-        info!("Searching project root from {}", path.display());
-        
         for entry in read_dir(path)? {
             let entry = entry?;
             let file_name = entry.file_name().to_str().unwrap().to_string();

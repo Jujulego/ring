@@ -6,6 +6,7 @@ mod scope;
 mod scope_detector;
 
 use std::rc::Rc;
+use tracing::debug;
 pub use cargo_manifest::{CargoManifest, CargoPackage, CargoWorkspace};
 pub use project::RustProject;
 pub use project_detector::RustProjectDetector;
@@ -22,6 +23,7 @@ pub struct RustModule {
 
 impl RustModule {
     pub fn new() -> RustModule {
+        debug!("Initializing rust module");
         let project_detector = Rc::new(RustProjectDetector::new());
 
         RustModule {
