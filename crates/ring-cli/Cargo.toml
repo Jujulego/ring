@@ -13,6 +13,7 @@ tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
 ring-cli-formatters = { path = "../ring-cli-formatters" }
+ring-core = { path = "../ring-core" }
 ring-js = { path = "../ring-js" }
 ring-rust = { path = "../ring-rust" }
 ring-traits = { path = "../ring-traits" }

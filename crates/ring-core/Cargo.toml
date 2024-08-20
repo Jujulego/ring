@@ -1,0 +1,17 @@
+[package]
+name = "ring-core"
+version = "0.2.1"
+edition = "2021"
+
+[features]
+default = []
+js = ["dep:ring-js"]
+rust = ["dep:ring-rust"]
+
+[dependencies]
+anyhow = "1.0.83"
+
+ring-js = { path = "../ring-js", optional = true }
+ring-rust = { path = "../ring-rust", optional = true }
+ring-traits = { path = "../ring-traits" }
+ring-utils = { path = "../ring-utils" }

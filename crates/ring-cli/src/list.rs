@@ -11,10 +11,10 @@ use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
 use tracing::info;
 use ring_cli_formatters::ListFormatter;
+use ring_core::CombinedDetector;
 use ring_js::{JsProjectDetector, JsScopeDetector};
 use ring_rust::{RustProjectDetector, RustScopeDetector};
-use ring_traits::TaggedDetector;
-use ring_utils::OptionalResult::{Empty, Fail, Found};
+use ring_traits::Tagged;
 use ring_utils::Tag;
 
 pub fn build_command() -> Command {
@@ -38,14 +38,16 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
     // List directory files
     let js_project_detector = Rc::new(JsProjectDetector::new());
+    let js_scope_detector = Rc::new(JsScopeDetector::new(js_project_detector.clone()));
     let rust_project_detector = Rc::new(RustProjectDetector::new());
+    let rust_scope_detector = Rc::new(RustScopeDetector::new(rust_project_detector.clone()));
 
-    let detectors: [&TaggedDetector; 4] = [
-        js_project_detector.as_ref(),
-        &JsScopeDetector::new(js_project_detector.clone()),
-        rust_project_detector.as_ref(),
-        &RustScopeDetector::new(rust_project_detector.clone())
-    ];
+    let detector: CombinedDetector<Rc<dyn Tagged>> = CombinedDetector::new(vec![
+        js_project_detector,
+        js_scope_detector,
+        rust_project_detector,
+        rust_scope_detector,
+    ]);
 
     let colors = LsColors::from_env().unwrap_or_default();
     let mut list = ListFormatter::new();
@@ -67,11 +69,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
             let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
-            for detector in detectors {
-                match detector.detect_from_as(&entry.path()) {
-                    Found(project) => tags.extend(project.tags()),
-                    Fail(err) => return Err(err),
-                    Empty => continue,
+            for project in detector.detect_from(&entry.path()) {
+                match project {
+                    Ok(project) => tags.extend(project.tags()),
+                    Err(err) => return Err(err),
                 }
             }
 
@@ -88,11 +89,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
         let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
-        for detector in detectors {
-            match detector.detect_from_as(&path) {
-                Found(project) => tags.extend(project.tags()),
-                Fail(err) => return Err(err),
-                Empty => continue,
+        for project in detector.detect_from(&path) {
+            match project {
+                Ok(project) => tags.extend(project.tags()),
+                Err(err) => return Err(err),
             }
         }
 
