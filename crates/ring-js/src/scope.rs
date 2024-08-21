@@ -1,12 +1,11 @@
 use crate::constants::JS_TAG;
 use crate::{JsProject, JsProjectDetector, PackageManager};
-use anyhow::Context;
-use glob::glob;
-use ring_traits::{Detector, Project, Scope, Tagged};
+use ring_files::PatternIterator;
+use ring_traits::{Project, ProjectIterator, Scope, Tagged};
 use ring_utils::Tag;
 use std::path::Path;
 use std::rc::Rc;
-use tracing::debug;
+use tracing::{debug, warn};
 
 #[derive(Debug)]
 pub struct JsScope {
@@ -16,7 +15,10 @@ pub struct JsScope {
 
 impl JsScope {
     pub fn new(root_project: Rc<JsProject>, project_detector: Rc<JsProjectDetector>) -> JsScope {
-        JsScope { root_project, project_detector }
+        JsScope {
+            root_project,
+            project_detector,
+        }
     }
 
     pub fn root_project(&self) -> &Rc<JsProject> {
@@ -33,30 +35,18 @@ impl Scope for JsScope {
         self.root_project.root()
     }
 
-    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.root_project.manifest().workspaces.iter()
-            .map(|pattern| self.root().join(pattern));
+    fn projects(&self) -> Box<ProjectIterator> {
+        let projects = self.root_project.manifest().workspaces.iter()
+            .relative_to(self.root())
+            .inspect(|pattern| debug!("Search js project matching {pattern}"))
+            .glob_search()
+            .filter_map(|result| result
+                .inspect_err(|err| warn!("Error while loading scope project {:#}", err))
+                .ok()
+            )
+            .detect_at(self.project_detector.clone());
 
-        Box::new(patterns
-            .inspect(|pattern| debug!("Search js project matching {}", pattern.display()))
-            .filter_map(|pattern| {
-                #[cfg(windows)]
-                { glob(&pattern.to_str().unwrap()[4..]).ok() }
-
-                #[cfg(not(windows))]
-                { glob(pattern.to_str().unwrap()).ok() }
-            })
-            .flatten()
-            .map(|path| {
-                path.map_err(|err| err.into())
-                    .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.detect_at(&path).into())
-            })
-            .filter_map(|result| match result {
-                Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),
-                Ok(None) => None,
-                Err(err) => Some(Err(err)),
-            }))
+        Box::new(projects)
     }
 }
 

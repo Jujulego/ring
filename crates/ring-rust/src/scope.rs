@@ -1,9 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::Context;
-use glob::glob;
-use tracing::debug;
-use ring_traits::{Detector, Project, Scope, Tagged};
+use tracing::{debug, warn};
+use ring_files::PatternIterator;
+use ring_traits::{ProjectIterator, Scope, Tagged};
 use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 use crate::constants::RUST_TAG;
@@ -30,30 +29,18 @@ impl Scope for RustScope {
         &self.root
     }
 
-    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
-        let patterns = self.workspace().members.iter()
-            .map(|pattern| self.root.join(pattern));
+    fn projects(&self) -> Box<ProjectIterator> {
+        let projects = self.workspace().members.iter()
+            .relative_to(self.root())
+            .inspect(|pattern| debug!("Search rust project matching {pattern}"))
+            .glob_search()
+            .filter_map(|result| result
+                .inspect_err(|err| warn!("Error while loading scope project {:#}", err))
+                .ok()
+            )
+            .detect_at(self.project_detector.clone());
 
-        Box::new(patterns
-            .inspect(|pattern| debug!("Search rust project matching {}", pattern.display()))
-            .filter_map(|pattern| {
-                #[cfg(windows)]
-                { glob(&pattern.to_str().unwrap()[4..]).ok() }
-
-                #[cfg(not(windows))]
-                { glob(pattern.to_str().unwrap()).ok() }
-            })
-            .flatten()
-            .map(|path| {
-                path.map_err(|err| err.into())
-                    .and_then(|path| path.canonicalize().with_context(|| format!("Unable to access {}", path.display())))
-                    .and_then(|path| self.project_detector.detect_at(&path).into())
-            })
-            .filter_map(|result| match result {
-                Ok(Some(prj)) => Some(Ok(prj as Rc<dyn Project>)),
-                Ok(None) => None,
-                Err(err) => Some(Err(err)),
-            }))
+        Box::new(projects)
     }
 }
 
