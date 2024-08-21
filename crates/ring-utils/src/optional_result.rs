@@ -10,7 +10,7 @@ use crate::OptionalResult::{Empty, Fail, Found};
 ///
 /// assert_eq!(Found::<&str, ()>("test"), Some(Ok("test")));
 /// assert_eq!(Empty::<&str, ()>, None::<Result<_, _>>);
-/// assert_eq!(Fail::<&str, &str>("failed"), Some(Err("failed")));
+/// assert_eq!(Fail::<&str, ()>(()), Some(Err(())));
 /// ```
 ///
 /// `OptionalResult<T, E>` is the same as `Result<Option<T>, E>`
@@ -19,7 +19,7 @@ use crate::OptionalResult::{Empty, Fail, Found};
 ///
 /// assert_eq!(Found::<&str, ()>("test"), Ok(Some("test")));
 /// assert_eq!(Empty::<&str, ()>, Ok(None));
-/// assert_eq!(Fail::<&str, &str>("failed"), Err::<Option<_>, _>("failed"));
+/// assert_eq!(Fail::<&str, ()>(()), Err::<Option<_>, _>(()));
 /// ```
 #[derive(Debug, Eq)]
 pub enum OptionalResult<T, E = anyhow::Error> {
@@ -72,7 +72,7 @@ impl<T, E> OptionalResult<T, E> {
     ///
     /// assert_eq!(Found::<i32, ()>(2).fail_or(42), Found(2));
     /// assert_eq!(Empty::<i32, ()>.fail_or(42), Found(42));
-    /// assert_eq!(Fail::<i32, &str>("early").fail_or(42), Fail("early"));
+    /// assert_eq!(Fail::<i32, ()>(()).fail_or(42), Fail(()));
     /// ```
     pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
         if matches!(self, Empty) { Found(val) } else { self }
@@ -88,7 +88,7 @@ impl<T, E> OptionalResult<T, E> {
     ///
     /// assert_eq!(Found::<i32, ()>(2).fail_or_default(), Found(2));
     /// assert_eq!(Empty::<i32, ()>.fail_or_default(), Found(0));
-    /// assert_eq!(Fail::<i32, &str>("early").fail_or_default(), Fail("early"));
+    /// assert_eq!(Fail::<i32, ()>(()).fail_or_default(), Fail(()));
     /// ```
     pub fn fail_or_default(self) -> OptionalResult<T, E>
     where
@@ -97,12 +97,32 @@ impl<T, E> OptionalResult<T, E> {
         self.fail_or(T::default())
     }
 
-    pub fn filter<F>(self, f: F) -> OptionalResult<T, E>
+    /// Returns [`Empty`] if the optional result is [`Empty`], [`Fail`] if it is [`Fail`] otherwise
+    /// calls `predicate` with the wrapped value and returns:
+    ///
+    /// - [`Found(val)`] if `predicate` returns `true` (where `val` is the wrapped value), and
+    /// - [`Empty`] if `predicate` returns `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// fn is_even(n: &i32) -> bool {
+    ///     n % 2 == 0
+    /// }
+    ///
+    /// assert_eq!(Found::<_, ()>(2).filter(is_even), Found(2));
+    /// assert_eq!(Found::<_, ()>(1).filter(is_even), Empty);
+    /// assert_eq!(Empty::<_, ()>.filter(is_even), Empty);
+    /// assert_eq!(Fail::<_, ()>(()).filter(is_even), Fail(()));
+    /// ```
+    pub fn filter<F>(self, predicate: F) -> OptionalResult<T, E>
     where
         F: FnOnce(&T) -> bool,
     {
         match self {
-            Found(val) if f(&val) => Found(val),
+            Found(val) if predicate(&val) => Found(val),
             Found(_) | Empty => Empty,
             Fail(err) => Fail(err),
         }
@@ -271,18 +291,6 @@ mod tests {
         assert_eq!(Option::from(OR::Found("test")), Some(Ok("test")));
         assert_eq!(Option::from(OR::Fail("test")), Some(Err("test")));
         assert_eq!(Option::from(OR::Empty), Option::<Result<_, _>>::None);
-    }
-
-    #[test]
-    fn it_should_filter_optional_result() {
-        assert_eq!(OR::Found("test").filter(|_| true), Found("test"));
-        assert_eq!(OR::Found("test").filter(|_| false), Empty);
-
-        assert_eq!(OR::Fail("test").filter(|_| true), Fail("test"));
-        assert_eq!(OR::Fail("test").filter(|_| false), Fail("test"));
-
-        assert_eq!(OR::Empty.filter(|_| true), Empty);
-        assert_eq!(OR::Empty.filter(|_| false), Empty);
     }
 
     #[test]
