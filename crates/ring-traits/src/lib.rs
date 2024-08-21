@@ -8,6 +8,6 @@ mod tagged;
 pub use detector::{DetectAs, Detector};
 pub use manifest::Manifest;
 pub use module::Module;
-pub use project::{Project, ProjectDetector};
+pub use project::{Project, ProjectDetector, ProjectIterator};
 pub use scope::{Scope, ScopeDetector};
 pub use tagged::{Tagged, TaggedDetector};

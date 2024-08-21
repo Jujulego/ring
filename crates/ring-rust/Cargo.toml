@@ -5,13 +5,12 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.86"
-glob = "0.3.1"
 owo-colors = "4.0.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
 toml = "0.8.19"
 tracing = "0.1.40"
 
-ring-files = { path = "../ring-files" }
+ring-files = { path = "../ring-files", features = ["glob"] }
 ring-traits = { path = "../ring-traits" }
 ring-utils = { path = "../ring-utils" }

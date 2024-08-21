@@ -1,10 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::Context;
-use glob::glob;
-use tracing::debug;
+use tracing::{debug, warn};
 use ring_files::PatternIterator;
-use ring_traits::{DetectAs, Detector, Project, Scope, Tagged};
+use ring_traits::{ProjectIterator, Scope, Tagged};
 use ring_utils::Tag;
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 use crate::constants::RUST_TAG;
@@ -31,18 +29,16 @@ impl Scope for RustScope {
         &self.root
     }
 
-    fn projects<'a>(&'a self) -> Box<dyn Iterator<Item=anyhow::Result<Rc<dyn Project>>> + 'a> {
+    fn projects(&self) -> Box<ProjectIterator> {
         let projects = self.workspace().members.iter()
             .relative_to(self.root())
             .inspect(|pattern| debug!("Search rust project matching {pattern}"))
-            .glob()
-            .map(|path| path.and_then(|path| {
-                path.canonicalize().with_context(|| format!("Unable to access {}", path.display()))
-            }))
-            .filter_map(|path| match path {
-                Ok(path) => self.project_detector.detect_at_as(&path).into(),
-                Err(err) => Some(Err(err)),
-            });
+            .glob_search()
+            .filter_map(|result| result
+                .inspect_err(|err| warn!("Error while loading scope project {:#}", err))
+                .ok()
+            )
+            .detect_at(self.project_detector.clone());
 
         Box::new(projects)
     }

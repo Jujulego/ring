@@ -15,3 +15,4 @@ pub trait Project : Tagged {
 }
 
 pub type ProjectDetector = dyn DetectAs<Rc<dyn Project>>;
+pub type ProjectIterator<'a> = dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a;

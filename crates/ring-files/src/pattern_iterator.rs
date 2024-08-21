@@ -1,16 +1,30 @@
 use anyhow::anyhow;
 use std::iter::FusedIterator;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
+use ring_traits::DetectAs;
+use ring_utils::OptionalResult;
 
 pub trait PatternIterator : Iterator {
+    /// Uses given detector on each emitted canonical path
+    #[inline]
+    fn detect_at<T>(self, detector: Rc<dyn DetectAs<T>>) -> DetectedAt<Self, T>
+    where
+        Self: Sized,
+        Self::Item: AsRef<Path>
+    {
+        DetectedAt::new(self, detector)
+    }
+
+    /// Uses the glob crate to search files matching each emitted pattern
     #[cfg(feature = "glob")]
     #[inline]
-    fn glob(self) -> GlobFiles<Self>
+    fn glob_search(self) -> GlobSearch<Self>
     where
         Self: Sized,
         Self::Item: AsRef<str>
     {
-        GlobFiles::new(self)
+        GlobSearch::new(self)
     }
 
     /// Prepends each patterns with given base
@@ -51,8 +65,55 @@ pub trait PatternIterator : Iterator {
 
 impl<I: Iterator> PatternIterator for I {}
 
+pub struct DetectedAt<I: Iterator, T>
+where
+    I::Item: AsRef<Path>
+{
+    iter: I,
+    detector: Rc<dyn DetectAs<T>>
+}
+
+impl<I: Iterator, T> DetectedAt<I, T>
+where
+    I::Item: AsRef<Path>
+{
+    fn new(iter: I, detector: Rc<dyn DetectAs<T>>) -> DetectedAt<I, T> {
+        DetectedAt { iter, detector }
+    }
+}
+
+impl<I: Iterator, T> Iterator for DetectedAt<I, T>
+where
+    I::Item: AsRef<Path>
+{
+    type Item = anyhow::Result<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let path = self.iter.next()?;
+            let path = match path.as_ref().canonicalize() {
+                Ok(p) => { p }
+                Err(err) => {
+                    return Some(Err(anyhow!(err).context(format!("Unable to access {}", path.as_ref().display()))))
+                }
+            };
+
+            match self.detector.detect_at_as(&path) {
+                OptionalResult::Found(item) => return Some(Ok(item)),
+                OptionalResult::Fail(err) => return Some(Err(err)),
+                OptionalResult::Empty => continue
+            }
+        }
+    }
+}
+
+impl<I: FusedIterator, T> FusedIterator for DetectedAt<I, T>
+where
+    I::Item: AsRef<Path>
+{}
+
 #[cfg(feature = "glob")]
-pub struct GlobFiles<I: Iterator>
+pub struct GlobSearch<I: Iterator>
 where
     I::Item: AsRef<str>
 {
@@ -61,12 +122,12 @@ where
 }
 
 #[cfg(feature = "glob")]
-impl<I: Iterator> GlobFiles<I>
+impl<I: Iterator> GlobSearch<I>
 where
     I::Item: AsRef<str>
 {
-    fn new(iter: I) -> GlobFiles<I> {
-        GlobFiles {
+    fn new(iter: I) -> GlobSearch<I> {
+        GlobSearch {
             iter,
             paths: None,
         }
@@ -74,7 +135,7 @@ where
 }
 
 #[cfg(feature = "glob")]
-impl<I: Iterator> Iterator for GlobFiles<I>
+impl<I: Iterator> Iterator for GlobSearch<I>
 where
     I::Item: AsRef<str>
 {
@@ -112,7 +173,7 @@ where
 }
 
 #[cfg(feature = "glob")]
-impl<I: FusedIterator> FusedIterator for GlobFiles<I>
+impl<I: FusedIterator> FusedIterator for GlobSearch<I>
 where
     I::Item: AsRef<str>
 {}

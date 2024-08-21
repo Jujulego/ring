@@ -391,7 +391,6 @@ name = "ring-rust"
 version = "0.2.1"
 dependencies = [
  "anyhow",
- "glob",
  "owo-colors",
  "ring-files",
  "ring-traits",
