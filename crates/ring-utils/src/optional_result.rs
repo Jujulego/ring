@@ -171,6 +171,7 @@ impl<T, E> OptionalResult<T, E> {
     /// let result = Empty::<&str, ()>.inspect(|txt| println!("hello {txt}"));
     /// let result = Fail::<&str, ()>(()).inspect(|txt| println!("hello {txt}"));
     /// ```
+    #[inline]
     pub fn inspect(self, f: impl FnOnce(&T)) -> OptionalResult<T, E> {
         if let Found(ref val) = self {
             f(val);
@@ -191,6 +192,7 @@ impl<T, E> OptionalResult<T, E> {
     /// assert_eq!(Empty::<&str, ()>.map(|s| s.len()), Empty);
     /// assert_eq!(Fail::<&str, ()>(()).map(|s| s.len()), Fail(()));
     /// ```
+    #[inline]
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> OptionalResult<U, E> {
         match self {
             Found(data) => Found(f(data)),
@@ -211,12 +213,14 @@ impl<T, E> OptionalResult<T, E> {
 /// assert_eq!(result, Empty);
 /// ```
 impl<T, E> Default for OptionalResult<T, E> {
+    #[inline]
     fn default() -> Self {
         Empty
     }
 }
 
 impl<T, E> From<Result<T, E>> for OptionalResult<T, E> {
+    #[inline]
     fn from(res: Result<T, E>) -> Self {
         match res {
             Ok(val) => Found(val),
@@ -226,6 +230,7 @@ impl<T, E> From<Result<T, E>> for OptionalResult<T, E> {
 }
 
 impl<T, E> From<OptionalResult<T, E>> for Result<Option<T>, E> {
+    #[inline]
     fn from(res: OptionalResult<T, E>) -> Self {
         match res {
             Found(val) => Ok(Some(val)),
@@ -236,6 +241,7 @@ impl<T, E> From<OptionalResult<T, E>> for Result<Option<T>, E> {
 }
 
 impl<T, E> From<Option<T>> for OptionalResult<T, E> {
+    #[inline]
     fn from(opt: Option<T>) -> Self {
         match opt {
             Some(val) => Found(val),
@@ -245,6 +251,7 @@ impl<T, E> From<Option<T>> for OptionalResult<T, E> {
 }
 
 impl<T, E> From<OptionalResult<T, E>> for Option<Result<T, E>> {
+    #[inline]
     fn from(res: OptionalResult<T, E>) -> Self {
         match res {
             Found(val) => Some(Ok(val)),
@@ -255,21 +262,12 @@ impl<T, E> From<OptionalResult<T, E>> for Option<Result<T, E>> {
 }
 
 impl<T: PartialEq, E: PartialEq> PartialEq for OptionalResult<T, E> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Found(s), Found(o)) => *s == *o,
             (Fail(s), Fail(o)) => *s == *o,
             (Empty, Empty) => true,
-            (_, _) => false
-        }
-    }
-}
-
-impl<T: PartialEq, E> PartialEq<Option<T>> for OptionalResult<T, E> {
-    fn eq(&self, other: &Option<T>) -> bool {
-        match (self, other) {
-            (Found(s), Some(o)) => *s == *o,
-            (Empty, None) => true,
             (_, _) => false
         }
     }
@@ -281,16 +279,6 @@ impl<T: PartialEq, E: PartialEq> PartialEq<Option<Result<T, E>>> for OptionalRes
             (Found(s), Some(Ok(o))) => *s == *o,
             (Fail(s), Some(Err(o))) => *s == *o,
             (Empty, None) => true,
-            (_, _) => false
-        }
-    }
-}
-
-impl<T: PartialEq, E: PartialEq> PartialEq<Result<T, E>> for OptionalResult<T, E> {
-    fn eq(&self, other: &Result<T, E>) -> bool {
-        match (self, other) {
-            (Found(s), Ok(o)) => *s == *o,
-            (Fail(s), Err(o)) => *s == *o,
             (_, _) => false
         }
     }
