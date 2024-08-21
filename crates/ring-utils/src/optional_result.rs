@@ -2,7 +2,7 @@ use crate::OptionalResult::{Empty, Fail, Found};
 
 /// Combination of Option and Result
 ///
-/// # Example
+/// # Examples
 ///
 /// `OptionalResult<T, E>` is the same as `Option<Result<T, E>>`
 /// ```
@@ -131,6 +131,16 @@ impl<T, E> OptionalResult<T, E> {
     }
 }
 
+/// Default value for OptionalResult is [`Empty`]
+///
+/// # Examples
+///
+/// ```
+/// use ring_utils::OptionalResult::{self, *};
+///
+/// let result: OptionalResult<(), ()> = Default::default();
+/// assert_eq!(result, Empty);
+/// ```
 impl<T, E> Default for OptionalResult<T, E> {
     fn default() -> Self {
         Empty
