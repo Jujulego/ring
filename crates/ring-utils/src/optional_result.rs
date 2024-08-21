@@ -1,6 +1,29 @@
 use crate::OptionalResult::{Empty, Fail, Found};
 
-#[derive(Debug, Eq, PartialEq)]
+/// Combination of Option and Result
+///
+/// # Example
+///
+/// `OptionalResult<T, E>` is the same as `Option<Result<T, E>>`
+/// ```
+/// use ring_utils::OptionalResult;
+/// type OR = OptionalResult<&'static str, &'static str>;
+///
+/// assert_eq!(OR::Found("test"), Some(Ok("test")));
+/// assert_eq!(OR::Fail("failed"), Some(Err("failed")));
+/// assert_eq!(OR::Empty, None::<Result<_, _>>);
+/// ```
+///
+/// `OptionalResult<T, E>` is the same as `Result<Option<T>, E>`
+/// ```
+/// use ring_utils::OptionalResult;
+/// type OR = OptionalResult<&'static str, &'static str>;
+///
+/// assert_eq!(OR::Found("test"), Ok(Some("test")));
+/// assert_eq!(OR::Fail("failed"), Err::<Option<_>, _>("failed"));
+/// assert_eq!(OR::Empty, Ok(None));
+/// ```
+#[derive(Debug, Eq)]
 pub enum OptionalResult<T, E = anyhow::Error> {
     Found(T),
     Fail(E),
@@ -8,6 +31,28 @@ pub enum OptionalResult<T, E = anyhow::Error> {
 }
 
 impl<T, E> OptionalResult<T, E> {
+    /// Returns [`Empty`] if the optional result is [`Empty`], [`Fail`] if it is [`Fail`] otherwise
+    /// calls `f` with the wrapped value and return the result.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// fn euclidean_divide(a: i32, b: i32) -> OptionalResult<i32, &'static str> {
+    ///     match (a, b) {
+    ///         (_, 0) => Fail("Cannot divide by 0"),
+    ///         (a, b) if a % b == 0 => Found(a / b),
+    ///         (_, _) => Empty,
+    ///     }
+    /// }
+    ///
+    /// assert_eq!(Found(4).and_then(|n| euclidean_divide(n, 2)), Found(2));
+    /// assert_eq!(Found(4).and_then(|n| euclidean_divide(n, 3)), Empty);
+    /// assert_eq!(Found(4).and_then(|n| euclidean_divide(n, 0)), Fail("Cannot divide by 0"));
+    /// assert_eq!(Empty.and_then(|n| euclidean_divide(n, 2)), Empty);
+    /// assert_eq!(Fail("early").and_then(|n| euclidean_divide(n, 2)), Fail("early"));
+    /// ```
     pub fn and_then<R, F>(self, f: F) -> OptionalResult<R, E>
     where
         F: FnOnce(T) -> OptionalResult<R, E>,
@@ -21,6 +66,13 @@ impl<T, E> OptionalResult<T, E> {
 
     pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
         if matches!(self, Empty) { Found(val) } else { self }
+    }
+
+    pub fn fail_or_default(self) -> OptionalResult<T, E>
+    where
+        T: Default
+    {
+        self.fail_or(T::default())
     }
 
     pub fn filter<F>(self, f: F) -> OptionalResult<T, E>
@@ -57,9 +109,9 @@ impl<T, E> OptionalResult<T, E> {
     }
 }
 
-impl<T : Default, E> OptionalResult<T, E> {
-    pub fn fail_or_default(self) -> OptionalResult<T, E> {
-        self.fail_or(T::default())
+impl<T, E> Default for OptionalResult<T, E> {
+    fn default() -> Self {
+        Empty
     }
 }
 
@@ -97,6 +149,59 @@ impl<T, E> From<OptionalResult<T, E>> for Option<Result<T, E>> {
             Found(val) => Some(Ok(val)),
             Fail(err) => Some(Err(err)),
             Empty => None,
+        }
+    }
+}
+
+impl<T: PartialEq, E: PartialEq> PartialEq for OptionalResult<T, E> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Found(s), Found(o)) => *s == *o,
+            (Fail(s), Fail(o)) => *s == *o,
+            (Empty, Empty) => true,
+            (_, _) => false
+        }
+    }
+}
+
+impl<T: PartialEq, E> PartialEq<Option<T>> for OptionalResult<T, E> {
+    fn eq(&self, other: &Option<T>) -> bool {
+        match (self, other) {
+            (Found(s), Some(o)) => *s == *o,
+            (Empty, None) => true,
+            (_, _) => false
+        }
+    }
+}
+
+impl<T: PartialEq, E: PartialEq> PartialEq<Option<Result<T, E>>> for OptionalResult<T, E> {
+    fn eq(&self, other: &Option<Result<T, E>>) -> bool {
+        match (self, other) {
+            (Found(s), Some(Ok(o))) => *s == *o,
+            (Fail(s), Some(Err(o))) => *s == *o,
+            (Empty, None) => true,
+            (_, _) => false
+        }
+    }
+}
+
+impl<T: PartialEq, E: PartialEq> PartialEq<Result<T, E>> for OptionalResult<T, E> {
+    fn eq(&self, other: &Result<T, E>) -> bool {
+        match (self, other) {
+            (Found(s), Ok(o)) => *s == *o,
+            (Fail(s), Err(o)) => *s == *o,
+            (_, _) => false
+        }
+    }
+}
+
+impl<T: PartialEq, E: PartialEq> PartialEq<Result<Option<T>, E>> for OptionalResult<T, E> {
+    fn eq(&self, other: &Result<Option<T>, E>) -> bool {
+        match (self, other) {
+            (Found(s), Ok(Some(o))) => *s == *o,
+            (Fail(s), Err(o)) => *s == *o,
+            (Empty, Ok(None)) => true,
+            (_, _) => false
         }
     }
 }
