@@ -322,7 +322,7 @@ dependencies = [
 
 [[package]]
 name = "ring-cli"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -349,7 +349,7 @@ dependencies = [
 
 [[package]]
 name = "ring-core"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "mockall",
@@ -361,7 +361,7 @@ dependencies = [
 
 [[package]]
 name = "ring-files"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "dunce",
@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "ring-js"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "owo-colors",
@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "ring-rust"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "owo-colors",
@@ -403,7 +403,7 @@ dependencies = [
 
 [[package]]
 name = "ring-traits"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "mockall",
@@ -413,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "ring-utils"
-version = "0.2.1"
+version = "0.0.0"
 dependencies = [
  "anyhow",
  "mockall",

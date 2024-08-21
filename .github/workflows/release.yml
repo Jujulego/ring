@@ -17,34 +17,38 @@ jobs:
           - name: linux-amd64
             runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary: ring-cli
 
           - name: win-amd64
             runner: windows-latest
             target: x86_64-pc-windows-msvc
-            binary: ring-cli.exe
 
           - name: macos-amd64
             runner: macos-latest
             target: x86_64-apple-darwin
-            binary: ring-cli
 
           - name: macos-arm64
             runner: macos-latest
             target: aarch64-apple-darwin
-            binary: ring-cli
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Rust
-        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
+      - name: Read tag
+        id: info
+        shell: bash
+        run: |
+          tag=`echo '${{ github.ref }}' | cut -d / -f 3-`
+          echo version=`echo $tag | cut -d _ -f 2` >> $GITHUB_OUTPUT
 
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Build executable
         run: cargo --locked build --release --bin ring-cli --target ${{ matrix.target }}
+        env:
+          RING_CLI_VERSION: ${{ steps.info.outputs.version }} (${{ matrix.target }})
 
       - name: Rename binary
         id: rename
@@ -86,7 +90,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.info.outputs.version }}
-          draft: true
           generate_release_notes: true
           files: |
             build-linux-amd64/ring-linux-amd64

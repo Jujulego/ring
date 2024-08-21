@@ -1,0 +1,2 @@
+[env]
+RING_CLI_VERSION = "v0.0.0-dev"

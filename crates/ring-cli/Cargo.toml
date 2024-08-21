@@ -1,6 +1,6 @@
 [package]
 name = "ring-cli"
-version = "0.2.1"
+version = "0.0.0"
 edition = "2021"
 
 [features]
@@ -10,7 +10,7 @@ rust = ["ring-core/rust"]
 
 [dependencies]
 anyhow = "1.0.83"
-clap = { version = "4.5.4", features = ["cargo"] }
+clap = "4.5.4"
 itertools = "0.13.0"
 lscolors = { version = "0.19.0", features = ["owo-colors"] }
 owo-colors = "4.0.0"

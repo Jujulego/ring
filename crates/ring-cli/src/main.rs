@@ -1,6 +1,6 @@
 use std::io;
 use anyhow::Result;
-use clap::{arg, ArgAction, command};
+use clap::{arg, ArgAction, Command};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 use ring_core::RingCore;
@@ -10,8 +10,9 @@ mod modules;
 mod projects;
 
 fn main() -> Result<()> {
-    // Parse args
-    let args = command!("ring")
+    // Setup commands
+    let args = Command::new("ring")
+        .version(env!("RING_CLI_VERSION"))
         .propagate_version(true)
         .subcommand_required(true)
         .subcommands([
