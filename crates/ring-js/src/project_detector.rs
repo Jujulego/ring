@@ -45,7 +45,7 @@ impl Detector for JsProjectDetector {
         self.package_loader.load(path)
             .and_then(|mnf|
                 self.lockfile_detector.detect_from(path)
-                    .fail_or_default()
+                    .result_or_default()
                     .map(|lck| (mnf, lck))
             )
             .map(|(mnf, lck)| Rc::new(JsProject::new(path.to_path_buf(), mnf, lck)))

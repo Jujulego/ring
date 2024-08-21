@@ -22,6 +22,7 @@ use crate::OptionalResult::{Empty, Fail, Found};
 /// assert_eq!(Fail::<&str, ()>(()), Err::<Option<_>, _>(()));
 /// ```
 #[derive(Debug, Eq)]
+#[must_use = "this `OptionalResult` may be an `Fail` variant, which should be handled"]
 pub enum OptionalResult<T, E = anyhow::Error> {
     Found(T),
     Fail(E),
@@ -51,50 +52,75 @@ impl<T, E> OptionalResult<T, E> {
     /// assert_eq!(Empty.and_then(|n| euclidean_divide(n, 2)), Empty);
     /// assert_eq!(Fail("early").and_then(|n| euclidean_divide(n, 2)), Fail("early"));
     /// ```
-    pub fn and_then<R, F>(self, f: F) -> OptionalResult<R, E>
-    where
-        F: FnOnce(T) -> OptionalResult<R, E>,
-    {
+    #[inline]
+    pub fn and_then<U, R: Into<OptionalResult<U, E>>>(self, f: impl FnOnce(T) -> R) -> OptionalResult<U, E> {
         match self {
-            Found(val) => f(val),
+            Found(val) => f(val).into(),
             Fail(err) => Fail(err),
             Empty => Empty,
         }
     }
 
-    /// Returns given value if the optional result is [`Empty`], otherwise it keeps the
-    /// current value
+    /// Returns [`Ok`] if the optional result is [`Found`], [`Err`] if it is [`Fail`] otherwise
+    /// calls `f` and return the result wrapped in [`Ok`].
     ///
     /// # Examples
     ///
     /// ```
     /// use ring_utils::OptionalResult::{self, *};
     ///
-    /// assert_eq!(Found::<i32, ()>(2).fail_or(42), Found(2));
-    /// assert_eq!(Empty::<i32, ()>.fail_or(42), Found(42));
-    /// assert_eq!(Fail::<i32, ()>(()).fail_or(42), Fail(()));
+    /// assert_eq!(Found::<i32, ()>(2).result_or_else(|| 42), Ok(2));
+    /// assert_eq!(Empty::<i32, ()>.result_or_else(|| 42), Ok(42));
+    /// assert_eq!(Fail::<i32, ()>(()).result_or_else(|| 42), Err(()));
     /// ```
-    pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
-        if matches!(self, Empty) { Found(val) } else { self }
+    #[inline]
+    pub fn result_or_else(self, f: impl FnOnce() -> T) -> Result<T, E> {
+        match self {
+            Found(val) => Ok(val),
+            Fail(err) => Err(err),
+            Empty => Ok(f()),
+        }
     }
 
-    /// Returns default value if the optional result is [`Empty`], otherwise it keeps the
-    /// current value
+    /// Returns [`Ok`] if the optional result is [`Found`], [`Err`] if it is [`Fail`] otherwise
+    /// returns `val` wrapped in [`Ok`].
     ///
     /// # Examples
     ///
     /// ```
     /// use ring_utils::OptionalResult::{self, *};
     ///
-    /// assert_eq!(Found::<i32, ()>(2).fail_or_default(), Found(2));
-    /// assert_eq!(Empty::<i32, ()>.fail_or_default(), Found(0));
-    /// assert_eq!(Fail::<i32, ()>(()).fail_or_default(), Fail(()));
+    /// assert_eq!(Found::<i32, ()>(2).result_or(42), Ok(2));
+    /// assert_eq!(Empty::<i32, ()>.result_or(42), Ok(42));
+    /// assert_eq!(Fail::<i32, ()>(()).result_or(42), Err(()));
     /// ```
-    pub fn fail_or_default(self) -> OptionalResult<T, E>
+    #[inline]
+    pub fn result_or(self, val: T) -> Result<T, E> {
+        match self {
+            Found(val) => Ok(val),
+            Fail(err) => Err(err),
+            Empty => Ok(val),
+        }
+    }
+
+    /// Returns [`Ok`] if the optional result is [`Found`], [`Err`] if it is [`Fail`] otherwise
+    /// calls `Default::default` and return the result wrapped in [`Ok`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// assert_eq!(Found::<i32, ()>(2).result_or_default(), Ok(2));
+    /// assert_eq!(Empty::<i32, ()>.result_or_default(), Ok(0));
+    /// assert_eq!(Fail::<i32, ()>(()).result_or_default(), Err(()));
+    /// ```
+    #[inline]
+    pub fn result_or_default(self) -> Result<T, E>
     where
         T: Default
     {
-        self.fail_or(T::default())
+        self.result_or_else(T::default)
     }
 
     /// Returns [`Empty`] if the optional result is [`Empty`], [`Fail`] if it is [`Fail`] otherwise
@@ -117,6 +143,7 @@ impl<T, E> OptionalResult<T, E> {
     /// assert_eq!(Empty::<_, ()>.filter(is_even), Empty);
     /// assert_eq!(Fail::<_, ()>(()).filter(is_even), Fail(()));
     /// ```
+    #[inline]
     pub fn filter<F>(self, predicate: F) -> OptionalResult<T, E>
     where
         F: FnOnce(&T) -> bool,
