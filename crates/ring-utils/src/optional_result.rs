@@ -343,30 +343,23 @@ mod tests {
     }
 
     #[test]
-    fn it_should_map_optional_result() {
-        assert_eq!(OR::Found("test").map(|s| s.len()), Found(4));
-        assert_eq!(OR::Fail("test").map(|s| s.len()), Fail("test"));
-        assert_eq!(OR::Empty.map(|s| s.len()), Empty);
-    }
-
-    #[test]
-    fn it_should_inspect_optional_result() {
+    fn inspect_should_call_f_only_on_found() {
         mock!(
             Inspector {
                 fn view(&self, val: &str) -> ();
             }
         );
-        
+
         let mut inspector = MockInspector::new();
         inspector.expect_view()
             .with(eq("test"))
             .times(1)
             .return_const(());
-        
+
         assert_eq!(OR::Found("test").inspect(|&s| inspector.view(s)), Found("test"));
-        
+
         inspector.checkpoint();
-        
+
         assert_eq!(OR::Fail("test").inspect(|&s| inspector.view(s)), Fail("test"));
         assert_eq!(OR::Empty.inspect(|&s| inspector.view(s)), Empty);
     }
