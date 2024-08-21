@@ -6,22 +6,20 @@ use crate::OptionalResult::{Empty, Fail, Found};
 ///
 /// `OptionalResult<T, E>` is the same as `Option<Result<T, E>>`
 /// ```
-/// use ring_utils::OptionalResult;
-/// type OR = OptionalResult<&'static str, &'static str>;
+/// use ring_utils::OptionalResult::{self, *};
 ///
-/// assert_eq!(OR::Found("test"), Some(Ok("test")));
-/// assert_eq!(OR::Fail("failed"), Some(Err("failed")));
-/// assert_eq!(OR::Empty, None::<Result<_, _>>);
+/// assert_eq!(Found::<&str, ()>("test"), Some(Ok("test")));
+/// assert_eq!(Empty::<&str, ()>, None::<Result<_, _>>);
+/// assert_eq!(Fail::<&str, &str>("failed"), Some(Err("failed")));
 /// ```
 ///
 /// `OptionalResult<T, E>` is the same as `Result<Option<T>, E>`
 /// ```
-/// use ring_utils::OptionalResult;
-/// type OR = OptionalResult<&'static str, &'static str>;
+/// use ring_utils::OptionalResult::{self, *};
 ///
-/// assert_eq!(OR::Found("test"), Ok(Some("test")));
-/// assert_eq!(OR::Fail("failed"), Err::<Option<_>, _>("failed"));
-/// assert_eq!(OR::Empty, Ok(None));
+/// assert_eq!(Found::<&str, ()>("test"), Ok(Some("test")));
+/// assert_eq!(Empty::<&str, ()>, Ok(None));
+/// assert_eq!(Fail::<&str, &str>("failed"), Err::<Option<_>, _>("failed"));
 /// ```
 #[derive(Debug, Eq)]
 pub enum OptionalResult<T, E = anyhow::Error> {
@@ -64,10 +62,34 @@ impl<T, E> OptionalResult<T, E> {
         }
     }
 
+    /// Returns given value if the optional result is [`Empty`], otherwise it keeps the
+    /// current value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// assert_eq!(Found::<i32, ()>(2).fail_or(42), Found(2));
+    /// assert_eq!(Empty::<i32, ()>.fail_or(42), Found(42));
+    /// assert_eq!(Fail::<i32, &str>("early").fail_or(42), Fail("early"));
+    /// ```
     pub fn fail_or(self, val: T) -> OptionalResult<T, E> {
         if matches!(self, Empty) { Found(val) } else { self }
     }
 
+    /// Returns default value if the optional result is [`Empty`], otherwise it keeps the
+    /// current value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// assert_eq!(Found::<i32, ()>(2).fail_or_default(), Found(2));
+    /// assert_eq!(Empty::<i32, ()>.fail_or_default(), Found(0));
+    /// assert_eq!(Fail::<i32, &str>("early").fail_or_default(), Fail("early"));
+    /// ```
     pub fn fail_or_default(self) -> OptionalResult<T, E>
     where
         T: Default
@@ -239,35 +261,6 @@ mod tests {
         assert_eq!(Option::from(OR::Found("test")), Some(Ok("test")));
         assert_eq!(Option::from(OR::Fail("test")), Some(Err("test")));
         assert_eq!(Option::from(OR::Empty), Option::<Result<_, _>>::None);
-    }
-
-    #[test]
-    fn it_should_apply_cb_on_optional_result() {
-        assert_eq!(OR::Found("test").and_then(|_| Found(4)), Found(4));
-        assert_eq!(OR::Found("test").and_then(|_| OR::Fail("failed")), Fail("failed"));
-        assert_eq!(OR::Found("test").and_then(|_| OR::Empty), Empty);
-
-        assert_eq!(OR::Fail("test").and_then(|_| Found(4)), Fail("test"));
-        assert_eq!(OR::Fail("test").and_then(|_| OR::Fail("failed")), Fail("test"));
-        assert_eq!(OR::Fail("test").and_then(|_| OR::Empty), Fail("test"));
-
-        assert_eq!(OR::Empty.and_then(|_| Found(4)), Empty);
-        assert_eq!(OR::Empty.and_then(|_| OR::Fail("failed")), Empty);
-        assert_eq!(OR::Empty.and_then(|_| OR::Empty), Empty);
-    }
-
-    #[test]
-    fn it_should_replace_empty_with_given_value() {
-        assert_eq!(OR::Found("test").fail_or("was empty"), Found("test"));
-        assert_eq!(OR::Fail("test").fail_or("was empty"), Fail("test"));
-        assert_eq!(OR::Empty.fail_or("was empty"), Found("was empty"));
-    }
-
-    #[test]
-    fn it_should_replace_empty_with_default_value() {
-        assert_eq!(OR::Found("test").fail_or_default(), Found("test"));
-        assert_eq!(OR::Fail("test").fail_or_default(), Fail("test"));
-        assert_eq!(OR::Empty.fail_or_default(), Found(""));
     }
 
     #[test]
