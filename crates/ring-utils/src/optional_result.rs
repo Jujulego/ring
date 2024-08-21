@@ -155,21 +155,43 @@ impl<T, E> OptionalResult<T, E> {
         }
     }
 
-    pub fn inspect<F>(self, f: F) -> OptionalResult<T, E>
-    where
-        F: FnOnce(&T),
-    {
-        if let Found(val) = &self {
+    /// Calls a function with a reference to the contained value if [`Found`]
+    ///
+    /// Returns the original optional result
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// // prints "hello world"
+    /// let result = Found::<&str, ()>("world").inspect(|txt| println!("hello {txt}"));
+    ///
+    /// // prints nothing
+    /// let result = Empty::<&str, ()>.inspect(|txt| println!("hello {txt}"));
+    /// let result = Fail::<&str, ()>(()).inspect(|txt| println!("hello {txt}"));
+    /// ```
+    pub fn inspect(self, f: impl FnOnce(&T)) -> OptionalResult<T, E> {
+        if let Found(ref val) = self {
             f(val);
         }
 
         self
     }
 
-    pub fn map<R, F>(self, f: F) -> OptionalResult<R, E>
-    where
-        F: FnOnce(T) -> R,
-    {
+    /// Apply a function to the contained value (if [`Found`]) mapping `OptionalResult<T, E>` to
+    /// `OptionalResult<U, E>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// assert_eq!(Found::<&str, ()>("test").map(|s| s.len()), Found(4));
+    /// assert_eq!(Empty::<&str, ()>.map(|s| s.len()), Empty);
+    /// assert_eq!(Fail::<&str, ()>(()).map(|s| s.len()), Fail(()));
+    /// ```
+    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> OptionalResult<U, E> {
         match self {
             Found(data) => Found(f(data)),
             Fail(err) => Fail(err),
