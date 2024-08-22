@@ -72,6 +72,54 @@ jobs:
           path: ${{ steps.rename.outputs.binary }}
           if-no-files-found: 'error'
 
+  npm-publish:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    environment: npm
+    needs: [build]
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read tag
+        id: info
+        run: |
+          tag=`echo '${{ github.ref }}' | cut -d / -f 3-`
+          echo version=`echo $tag | cut -d _ -f 2` >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: https://registry.npmjs.org
+          cache: yarn
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate native packages
+        run:
+          node ./scripts/npm-native-packages.js
+          node ./scripts/npm-cli-version.js ${{ steps.info.outputs.version }}
+        
+          cp build-linux-amd64/ring-linux-amd64 npm/ring-linux-amd64/bin/ring
+          cp build-windows-amd64/ring-windows-amd64.exe npm/ring-macos-amd64/bin/ring.exe
+          cp build-macos-amd64/ring-macos-amd64 npm/ring-macos-amd64/bin/ring
+          cp build-macos-arm64/ring-macos-arm64 npm/ring-macos-arm64/bin/ring
+
+      - name: Publish packages
+        run:
+          cd ${{ github.workspace }}/npm/ring && yarn npm publish --access public --tag ${{ github.ref_name }} --tolerate-republish
+          cd ${{ github.workspace }}/npm/ring-linux-amd64 && yarn npm publish --access public --tag ${{ github.ref_name }} --tolerate-republish
+          cd ${{ github.workspace }}/npm/ring-windows-amd64 && yarn npm publish --access public --tag ${{ github.ref_name }} --tolerate-republish
+          cd ${{ github.workspace }}/npm/ring-macos-amd64 && yarn npm publish --access public --tag ${{ github.ref_name }} --tolerate-republish
+          cd ${{ github.workspace }}/npm/ring-macos-arm64 && yarn npm publish --access public --tag ${{ github.ref_name }} --tolerate-republish
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   release-notes:
     name: Release notes
     runs-on: ubuntu-latest

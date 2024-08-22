@@ -30,10 +30,9 @@ const humanizedArchLookup = {
 
 for (const { platform, arch } of targets) {
   template.name = `@jujulego/ring-${platform}-${arch}`;
-  template.description = `Ring ${platform} ${arch} binary.`;
+  template.description = `Ring ${platform} ${humanizedArchLookup[arch]} binary.`;
   template.os = [nodeOsLookup[platform]];
   template.cpu = [nodeArchLookup[arch]];
-  //template.version = version;
 
   const outputPath = path.resolve(__dirname, '..', 'npm', `ring-${platform}-${arch}`);
   fs.rmSync(outputPath, { recursive: true, force: true });

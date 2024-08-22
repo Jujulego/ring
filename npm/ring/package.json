@@ -1,18 +1,20 @@
 {
   "name": "@jujulego/ring",
   "description": "One ring to rule them all, one ring to find them, one ring to bring them all and in the darkness bind them.",
-  "version": "0.0.0-dev",
+  "version": "0.2.2",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Jujulego/ring.git"
   },
-  "files": ["./bin"],
+  "files": [
+    "./bin"
+  ],
   "bin": "./bin/ring",
   "optionalDependencies": {
-    "@jujulego/ring-linux-amd64": "0.0.0-dev",
-    "@jujulego/ring-windows-amd64": "0.0.0-dev",
-    "@jujulego/ring-macos-amd64": "0.0.0-dev",
-    "@jujulego/ring-macos-arm64": "0.0.0-dev"
+    "@jujulego/ring-linux-amd64": "0.2.2",
+    "@jujulego/ring-windows-amd64": "0.2.2",
+    "@jujulego/ring-macos-amd64": "0.2.2",
+    "@jujulego/ring-macos-arm64": "0.2.2"
   }
 }
