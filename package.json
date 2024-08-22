@@ -1,0 +1,14 @@
+{
+  "name": "ring",
+  "author": "Julien Capellari <julien.capellari@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jujulego/ring.git"
+  },
+  "workspaces": [
+    "npm/*"
+  ],
+  "packageManager": "yarn@4.4.0"
+}

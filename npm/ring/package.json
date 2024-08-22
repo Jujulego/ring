@@ -1,0 +1,21 @@
+{
+  "name": "@jujulego/ring",
+  "author": "Julien Capellari <julien.capellari@gmail.com>",
+  "description": "One ring to rule them all, one ring to find them, one ring to bring them all and in the darkness bind them.",
+  "version": "0.0.0-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jujulego/ring.git"
+  },
+  "files": [
+    "./bin"
+  ],
+  "bin": "./bin/ring",
+  "optionalDependencies": {
+    "@jujulego/ring-linux-amd64": "0.0.0-dev",
+    "@jujulego/ring-macos-amd64": "0.0.0-dev",
+    "@jujulego/ring-macos-arm64": "0.0.0-dev",
+    "@jujulego/ring-windows-amd64": "0.0.0-dev"
+  }
+}
