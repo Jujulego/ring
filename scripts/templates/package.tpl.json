@@ -1,0 +1,14 @@
+{
+  "name": "@jujulego/ring-{{platform}}-{{arch}}",
+  "description": "Ring {{platform}} {{arch}} binary.",
+  "version": "0.0.0-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jujulego/ring.git"
+  },
+  "files": ["./bin"],
+  "os": ["{{platform}}"],
+  "cpu": ["{{arch}}"],
+  "preferUnplugged": true
+}
