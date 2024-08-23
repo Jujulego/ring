@@ -52,7 +52,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
 
             let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
-            for project in detector.detect_from(&entry.path()) {
+            for project in detector.detect_at(&entry.path()) {
                 tags.extend(project?.tags());
             }
 
@@ -69,7 +69,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
         let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
-        for project in detector.detect_from(&path) {
+        for project in detector.detect_at(&path) {
             tags.extend(project?.tags());
         }
 

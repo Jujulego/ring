@@ -6,7 +6,7 @@ macro_rules! detect_as {
     ($base:ident, $item:ty) => {
         impl DetectAs<$item> for $base {
             fn detect_at_as(&self, path: &Path) -> OptionalResult<$item> {
-                self.detect_from(path)
+                self.detect_at(path)
                     .map(|prj| prj as $item)
             }
 
