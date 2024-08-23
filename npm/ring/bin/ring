@@ -37,7 +37,7 @@ function getBinaryPath() {
 
   let { platform, arch } = process;
   // Node uses `win32` but we want to use `windows` for consistency with
-  // our package naming conventions (i.e. `ring-windows-amd64`).
+  // our package naming conventions (i.e. `@jujulego/ring-windows-amd64`).
   if (platform === 'win32') {
     platform = 'windows';
   }
@@ -51,7 +51,7 @@ function getBinaryPath() {
   if (correctBinary !== null) {
     try {
       return require.resolve(`${correctBinary}`);
-    } catch (e) {}
+    } catch {} // eslint-disable-line no-empty
   }
 
   // 2. Both Windows and macOS ARM boxes can run x64 binaries. Attempt to run under emulation.
@@ -62,9 +62,9 @@ function getBinaryPath() {
       console.warn(`Ring detected that you're running:\n${platform} ${resolvedArch}.`);
       console.warn(`We were not able to find the binary at:\n${correctBinary}`);
       console.warn(`We found a possibly-compatible binary at:\n${alternateBinary}`);
-      console.warn(`We will attempt to run that binary.`);
+      console.warn('We will attempt to run that binary.');
       return resolvedPath;
-    } catch (e) {}
+    } catch {} // eslint-disable-line no-empty
   }
 
   // We are not going to run `ring` this invocation.
@@ -79,7 +79,7 @@ function getBinaryPath() {
   console.error();
   console.error('***');
   console.error();
-  console.error(`Ring failed to start.`);
+  console.error('Ring failed to start.');
   console.error();
   console.error(`Ring detected that you are running:\n${platform} ${resolvedArch}`);
 
@@ -106,7 +106,7 @@ function getBinaryPath() {
     console.error();
     console.error(`We were not able to find the binary at:\n${correctBinary}`);
     console.error();
-    console.error(`We looked for it at:`);
+    console.error('We looked for it at:');
     console.error(require.resolve.paths(correctBinary).join('\n'));
   }
   if (alternateBinary !== null) {
@@ -116,7 +116,7 @@ function getBinaryPath() {
     console.error(`Your platform (${platform}) can sometimes run x86 under emulation.`);
     console.error(`We did not find a possibly-compatible binary at:\n${alternateBinary}`);
     console.error();
-    console.error(`We looked for it at:`);
+    console.error('We looked for it at:');
     console.error(require.resolve.paths(alternateBinary).join('\n'));
   }
 
@@ -128,7 +128,7 @@ function getBinaryPath() {
   const otherInstalled = definitelyWrongBinaries.filter(binaryPath => {
     try {
       return require.resolve(binaryPath);
-    } catch (e) {}
+    } catch {} // eslint-disable-line no-empty
   });
 
   console.error();
@@ -140,11 +140,11 @@ function getBinaryPath() {
     console.error('This typically indicates an error in sharing of pre-resolved node_modules across platforms.');
     console.error('One common reason for this is copying files to Docker.');
     console.error();
-    console.error(`We found these unnecessary binaries:`);
+    console.error('We found these unnecessary binaries:');
     console.error(otherInstalled.join('\n'));
   } else {
-    console.error(`We did not find any binaries on this system.`);
-    console.error(`This can happen if you run installation with the --no-optional flag.`);
+    console.error('We did not find any binaries on this system.');
+    console.error('This can happen if you run installation with the --no-optional flag.');
   }
 
   // Check to see if we have partially-populated dependencies in the npm lockfile.
@@ -168,7 +168,7 @@ function getBinaryPath() {
         // If we don't show up in the lockfile it's the wrong lockfile.
         if (hasPackage(sourceObject, 'ring')) {
           // Check to see if all of `ring-<PLATFORM>-<ARCH>` is included.
-          const hasAllPackages = availablePackages.every(package => hasPackage(sourceObject, package));
+          const hasAllPackages = availablePackages.every((pkg) => hasPackage(sourceObject, pkg));
           if (!hasAllPackages) {
             console.error();
             console.error('***');
@@ -179,14 +179,14 @@ function getBinaryPath() {
             // Let's build their repair command:
             let version = '';
             let environment = '';
-            if (parsedLockfile?.packages[""]?.dependencies?.["@jujulego/ring"]) {
-              version = `@${parsedLockfile.packages[""].dependencies?.["@jujulego/ring"]}`;
+            if (parsedLockfile?.packages['']?.dependencies?.['@jujulego/ring']) {
+              version = `@${parsedLockfile.packages[''].dependencies?.['@jujulego/ring']}`;
               environment = ' --save-prod';
-            } else if (parsedLockfile?.packages[""]?.devDependencies?.["@jujulego/ring"]) {
-              version = `@${parsedLockfile.packages[""].devDependencies?.["@jujulego/ring"]}`;
+            } else if (parsedLockfile?.packages['']?.devDependencies?.['@jujulego/ring']) {
+              version = `@${parsedLockfile.packages[''].devDependencies?.['@jujulego/ring']}`;
               environment = ' --save-dev';
-            } else if (parsedLockfile?.packages[""]?.optionalDependencies?.["@jujulego/ring"]) {
-              version = `@${parsedLockfile.packages[""].optionalDependencies?.["@jujulego/ring"]}`;
+            } else if (parsedLockfile?.packages['']?.optionalDependencies?.['@jujulego/ring']) {
+              version = `@${parsedLockfile.packages[''].optionalDependencies?.['@jujulego/ring']}`;
               environment = ' --save-optional';
             }
 
@@ -194,23 +194,23 @@ function getBinaryPath() {
             console.error('To resolve this issue for your repository, run:');
             console.error(`npm install ring${version} --package-lock-only${environment} && npm install`);
             console.error();
-            console.error(`You will need to commit the updated lockfile.`);
+            console.error('You will need to commit the updated lockfile.');
           }
           break;
         }
         break;
-      } catch (e) {}
+      } catch {} // eslint-disable-line no-empty
 
       let next = path.join(current, '..', '..', 'package-lock.json');
       previous = current;
       current = next;
     }
-  } catch (e) {}
+  } catch {} // eslint-disable-line no-empty
 
   console.error();
   console.error('***');
   console.error();
-  console.error(`If you believe this is an error, please include this message in your report.`);
+  console.error('If you believe this is an error, please include this message in your report.');
 
   process.exit(1);
 }

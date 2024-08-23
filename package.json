@@ -1,6 +1,7 @@
 {
   "name": "ring",
   "author": "Julien Capellari <julien.capellari@gmail.com>",
+  "type": "module",
   "license": "MIT",
   "private": true,
   "repository": {
@@ -10,5 +11,14 @@
   "workspaces": [
     "npm/*"
   ],
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@microsoft/eslint-formatter-sarif": "3.1.0",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0"
+  },
   "packageManager": "yarn@4.4.0"
 }

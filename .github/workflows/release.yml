@@ -103,12 +103,17 @@ jobs:
       - name: Generate native packages
         run: |
           node ./scripts/npm-native-packages.js
-          node ./scripts/npm-cli-version.js ${{ steps.info.outputs.version }}
         
           mv build-linux-amd64/ring-linux-amd64 npm/ring-linux-amd64/bin/ring
           mv build-windows-amd64/ring-windows-amd64.exe npm/ring-windows-amd64/bin/ring.exe
           mv build-macos-amd64/ring-macos-amd64 npm/ring-macos-amd64/bin/ring
           mv build-macos-arm64/ring-macos-arm64 npm/ring-macos-arm64/bin/ring
+
+      - name: Install js dependencies
+        run: yarn install --immutable
+
+      - name: Set packages version
+        run: node ./scripts/npm-cli-version.js ${{ steps.info.outputs.version }}
 
       - name: Publish packages
         run: |
