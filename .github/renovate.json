@@ -11,6 +11,10 @@
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
+    },
+    {
+      "matchPackageNames": ["@jujulego/ring", "@jujulego/ring-*"],
+      "allowedVersions": "0.0.0-dev"
     }
   ],
   "js": {
