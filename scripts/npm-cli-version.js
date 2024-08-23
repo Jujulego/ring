@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 const version = process.argv[2]?.replace(/^v/, '') ?? '0.0.0-dev';
 const packages = ['ring'];
@@ -9,7 +9,7 @@ const packages = ['ring'];
 while (packages.length) {
   const name = packages.pop();
 
-  const manifestPath = path.resolve(__dirname, '..', 'npm', name, 'package.json');
+  const manifestPath = path.resolve(import.meta.dirname, '..', 'npm', name, 'package.json');
   const manifest = require(manifestPath);
 
   manifest.version = version;
