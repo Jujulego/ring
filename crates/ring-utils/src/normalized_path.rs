@@ -170,17 +170,7 @@ impl<T: ?Sized + AsRef<Path>> From<&T> for NormalizedPathBuf {
     ///
     /// Allocates a [`NormalizedPathBuf`] and copies the data into it.
     fn from(value: &T) -> Self {
-        let mut components = value.as_ref().components().peekable();
-        let mut inner = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
-            components.next();
-            PathBuf::from(c.as_os_str())
-        } else {
-            PathBuf::new()
-        };
-
-        components.for_each(|c| normalized_push(&mut inner, c));
-
-        NormalizedPathBuf { inner }
+        value.as_ref().normalize()
     }
 }
 
@@ -195,5 +185,25 @@ impl<P: AsRef<Path>> FromIterator<P> for NormalizedPathBuf {
 impl PartialEq<&Path> for NormalizedPathBuf {
     fn eq(&self, other: &&Path) -> bool {
         self.components().eq(other.components())
+    }
+}
+
+pub trait Normalize {
+    fn normalize(&self) -> NormalizedPathBuf;
+}
+
+impl Normalize for Path {
+    fn normalize(&self) -> NormalizedPathBuf {
+        let mut components = self.components().peekable();
+        let mut inner = if let Some(c @ Component::Prefix(..)) = components.peek().cloned() {
+            components.next();
+            PathBuf::from(c.as_os_str())
+        } else {
+            PathBuf::new()
+        };
+
+        components.for_each(|c| normalized_push(&mut inner, c));
+
+        NormalizedPathBuf { inner }
     }
 }
