@@ -13,7 +13,7 @@
   ],
   "bin": "./bin/ring",
   "optionalDependencies": {
-    "@jujulego/ring-linux-amd64": "0.0.0-dev",
+    "@jujulego/ring-linux-amd64": "0.2.5",
     "@jujulego/ring-macos-amd64": "0.0.0-dev",
     "@jujulego/ring-macos-arm64": "0.0.0-dev",
     "@jujulego/ring-windows-amd64": "0.0.0-dev"
