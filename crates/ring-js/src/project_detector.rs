@@ -37,6 +37,8 @@ impl Detector for JsProjectDetector {
     type Item = Rc<JsProject>;
 
     fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+        let path = if path.is_file() { path.parent().unwrap() } else { path };
+        
         if let Some(project) = self.cache.borrow().get(path) {
             debug!("Found js project {} at {} (cached)", project.name(), path.display());
             return Found(project.clone());

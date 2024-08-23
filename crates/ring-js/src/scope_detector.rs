@@ -26,6 +26,8 @@ impl Detector for JsScopeDetector {
     type Item = Rc<JsScope>;
 
     fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+        let path = if path.is_file() { path.parent().unwrap() } else { path };
+
         if let Some(scope) = self.cache.borrow().get(path) {
             debug!("Found js scope at {} (cached)", path.display());
             return Found(scope.clone());
