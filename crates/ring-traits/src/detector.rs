@@ -6,7 +6,7 @@ macro_rules! detect_as {
     ($base:ident, $item:ty) => {
         impl DetectAs<$item> for $base {
             fn detect_at_as(&self, path: &Path) -> OptionalResult<$item> {
-                self.detect_from(path)
+                self.detect_at(path)
                     .map(|prj| prj as $item)
             }
 
@@ -23,9 +23,8 @@ macro_rules! detect_as {
 macro_rules! detect_from {
     ($detector:ident, $path:ident) => {{
         use ring_utils::OptionalResult::{Found, Empty};
-        let path = if $path.is_file() { $path.parent().unwrap() } else { $path };
 
-        path.ancestors()
+        $path.ancestors()
             .map(|ancestor| $detector.detect_at(ancestor))
             .find(|res| matches!(res, Found(_)))
             .unwrap_or(Empty)

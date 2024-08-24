@@ -1,7 +1,7 @@
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as};
-use ring_utils::OptionalResult::{self, Empty, Found};
+use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as, detect_from};
+use ring_utils::OptionalResult::{self, Found};
 use ring_utils::PathTree;
 use std::cell::RefCell;
 use std::path::Path;
@@ -31,6 +31,8 @@ impl Detector for RustScopeDetector {
     type Item = Rc<RustScope>;
 
     fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+        let path = if path.is_file() { path.parent().unwrap() } else { path };
+
         if let Some(scope) = self.cache.borrow().get(path) {
             debug!("Found rust scope at {} (cached)", path.display());
             return Found(scope.clone());
@@ -47,12 +49,7 @@ impl Detector for RustScopeDetector {
 
     fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
         info!("Searching rust scope from {}", path.display());
-        let path = if path.is_file() { path.parent().unwrap() } else { path };
-
-        path.ancestors()
-            .map(|anc| self.detect_at(anc))
-            .find(|res| matches!(res, Found(_)))
-            .unwrap_or(Empty)
+        detect_from!(self, path)
     }
 }
 

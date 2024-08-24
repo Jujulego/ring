@@ -31,6 +31,8 @@ impl Detector for JsLockfileDetector {
     type Item = PackageManager;
 
     fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+        let path = if path.is_file() { path.parent().unwrap() } else { path };
+
         if let Some(&pm) = self.cache.borrow().get(path) {
             debug!("Found {} lockfile at {} (cached)", pm, path.display());
             return Found(pm);
