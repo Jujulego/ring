@@ -203,8 +203,8 @@ impl NormalizedPath {
     /// use std::path::Path;
     /// use ring_utils::Normalize;
     ///
-    /// let os_str = Path::new("/example/../foo.txt").normalize().as_os_str();
-    /// assert_eq!(os_str, std::ffi::OsStr::new("foo.txt"));
+    /// let path = Path::new("/example/../foo.txt").normalize();
+    /// assert_eq!(path.as_os_str(), std::ffi::OsStr::new("/foo.txt"));
     /// ```
     #[must_use]
     #[inline]
