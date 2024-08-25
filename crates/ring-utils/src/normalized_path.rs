@@ -41,12 +41,12 @@ impl<'a> NormalizedComponent<'a> {
     /// # Examples
     ///
     /// ```
-    /// use std::path::Path;
+    /// use std::path::{Path, MAIN_SEPARATOR_STR};
     /// use ring_utils::Normalize;
     ///
     /// let path = Path::new("/tmp/foo/bar.txt").normalize();
     /// let components: Vec<_> = path.components().map(|comp| comp.as_os_str()).collect();
-    /// assert_eq!(&components, &["/", "tmp", "foo", "bar.txt"]);
+    /// assert_eq!(&components, &[MAIN_SEPARATOR_STR, "tmp", "foo", "bar.txt"]);
     /// ```
     #[must_use = "`self` will be dropped if the result is not used"]
     pub fn as_os_str(self) -> &'a OsStr {
@@ -105,34 +105,59 @@ impl<'a> PartialEq<Component<'a>> for NormalizedComponent<'a> {
 /// An iterator over the [`NormalizedComponent`]s of a [`NormalizedPath`].
 ///
 /// See [`Components`] for more details
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use ring_utils::Normalize;
+///
+/// let path = Path::new("/tmp/foo/bar.txt").normalize();
+///
+/// for component in path.components() {
+///     println!("{component:?}");
+/// }
+/// ```
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct NormalizedComponents<'a> {
     inner: Components<'a>,
 }
 
 impl<'a> NormalizedComponents<'a> {
     /// Extracts a slice corresponding to the portion of the path remaining for iteration.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let path = Path::new("/tmp/foo/bar.txt").normalize();
+    /// let mut components = path.components();
+    /// components.next();
+    /// components.next();
+    ///
+    /// assert_eq!(Path::new("foo/bar.txt"), components.as_path());
+    /// ```
     #[must_use]
-    pub fn as_path(&self) -> &'a NormalizedPath {
-        NormalizedPath::new(self.inner.as_path())
-    }
-}
-
-impl AsRef<NormalizedPath> for NormalizedComponents<'_> {
-    fn as_ref(&self) -> &NormalizedPath {
-        self.as_path()
+    #[inline]
+    pub fn as_path(&self) -> &'a Path {
+        self.inner.as_path()
     }
 }
 
 impl AsRef<OsStr> for NormalizedComponents<'_> {
+    #[inline]
     fn as_ref(&self) -> &OsStr {
         self.as_path().as_os_str()
     }
 }
 
 impl AsRef<Path> for NormalizedComponents<'_> {
+    #[inline]
     fn as_ref(&self) -> &Path {
-        self.as_path().as_path()
+        self.as_path()
     }
 }
 
@@ -153,6 +178,7 @@ impl<'a> DoubleEndedIterator for NormalizedComponents<'a> {
 impl FusedIterator for NormalizedComponents<'_> {}
 
 impl<'a> PartialEq for NormalizedComponents<'a> {
+    #[inline]
     fn eq(&self, other: &NormalizedComponents<'a>) -> bool {
         self.inner == other.inner
     }
@@ -161,6 +187,7 @@ impl<'a> PartialEq for NormalizedComponents<'a> {
 impl Eq for NormalizedComponents<'_> {}
 
 impl<'a> PartialEq<Components<'a>> for NormalizedComponents<'a> {
+    #[inline]
     fn eq(&self, other: &Components<'a>) -> bool {
         self.inner == *other
     }
@@ -171,7 +198,25 @@ impl<'a> PartialEq<Components<'a>> for NormalizedComponents<'a> {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// An iterator over [`NormalizedPath`] and its ancestors.
+///
+/// See [`Ancestors`] for more details.
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use ring_utils::Normalize;
+///
+/// let path = Path::new("/foo/bar").normalize();
+///
+/// for ancestor in path.ancestors() {
+///     println!("{}", ancestor.display());
+/// }
+/// ```
+///
+/// [`Ancestors`]: std::path::Ancestors
 #[derive(Clone, Copy, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct NormalizedAncestors<'a> {
     next: Option<&'a NormalizedPath>,
 }
@@ -284,6 +329,11 @@ impl NormalizedPath {
         NormalizedComponents { inner: self.inner.components() }
     }
 
+    #[inline]
+    pub fn display(&self) -> std::path::Display<'_> {
+        self.inner.display()
+    }
+
     /// Returns path without its final component, if there is one.
     ///
     /// See [`Path::parent`] for more details
@@ -305,6 +355,16 @@ impl NormalizedPath {
     #[inline]
     pub fn parent(&self) -> Option<&NormalizedPath> {
         self.inner.parent().map(NormalizedPath::new)
+    }
+
+    #[inline]
+    pub fn file_name(&self) -> Option<&OsStr> {
+        self.inner.file_name()
+    }
+
+    #[inline]
+    pub fn extension(&self) -> Option<&OsStr> {
+        self.inner.extension()
     }
 }
 
@@ -346,13 +406,48 @@ impl PartialEq<NormalizedPathBuf> for &NormalizedPath {
 ///
 /// # Examples
 ///
+/// You can use [`push`] to build up a `PathBuf` from
+/// components:
+///
+/// ```
+/// use ring_utils::NormalizedPathBuf;
+/// use std::path::Path;
+///
+/// let mut path = NormalizedPathBuf::new();
+///
+/// path.push(r"/");
+/// path.push("tmp");
+/// path.push("..");
+/// path.push("foo");
+/// path.push("bar");
+///
+/// path.set_extension("txt");
+///
+/// assert_eq!(path, Path::new("/foo/bar.txt"));
+/// ```
+///
+/// However, [`push`] is best used for dynamic situations. This is a better way
+/// to do this when you know all of the components ahead of time:
+///
+/// ```
+/// use ring_utils::NormalizedPathBuf;
+/// use std::path::Path;
+///
+/// let path: NormalizedPathBuf = ["/", "tmp", "..", "foo", "bar.txt"].iter().collect();
+///
+/// assert_eq!(path, Path::new("/foo/bar.txt"));
+/// ```
+///
+/// We can still do better than this! Since these are all strings, we can use
+/// [`Normalize`]:
+///
 /// ```
 /// use ring_utils::Normalize;
 /// use std::path::Path;
 ///
-/// let path = Path::new("/example/bar/baz/../foo").normalize();
+/// let path = Path::new("/tmp/../foo/bar.txt").normalize();
 ///
-/// assert_eq!(path, Path::new("/example/bar/foo"));
+/// assert_eq!(path, Path::new("/foo/bar.txt"));
 /// ```
 #[derive(Clone, Default, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct NormalizedPathBuf {
@@ -361,8 +456,7 @@ pub struct NormalizedPathBuf {
 
 fn normalized_push(path: &mut PathBuf, component: Component) {
     match component {
-        Component::Prefix(..) => unreachable!(),
-        Component::RootDir => {
+        Component::Prefix(..) | Component::RootDir => {
             path.push(component.as_os_str());
         }
         Component::CurDir => {}
@@ -385,20 +479,50 @@ impl NormalizedPathBuf {
     ///
     /// let path = NormalizedPathBuf::new();
     /// ```
+    #[must_use]
     #[inline]
     pub fn new() -> NormalizedPathBuf {
         NormalizedPathBuf { inner: PathBuf::new() }
     }
 
-    /// Removes the last component of the path
+    /// Coerces to a [`NormalizedPath`] slice.
+    #[must_use]
     #[inline]
-    pub fn pop(&mut self) {
-        self.inner.pop();
+    pub fn as_path(&self) -> &NormalizedPath {
+        self
     }
 
     /// Extends `self` with `path`.
     ///
     /// If `path` is absolute, it replaces the current path.
+    ///
+    /// See [`Path::push`] for more details.
+    ///
+    /// # Examples
+    ///
+    /// Pushing a relative path extends the existing path:
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let mut path = Path::new("/tmp").normalize();
+    /// path.push("file.bk");
+    ///
+    /// assert_eq!(path, Path::new("/tmp/file.bk"));
+    /// ```
+    ///
+    /// Pushing an absolute path replaces the existing path:
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let mut path = Path::new("/tmp").normalize();
+    /// path.push("/etc");
+    ///
+    /// assert_eq!(path, Path::new("/etc"));
+    /// ```
     #[inline]
     pub fn push<P: AsRef<Path>>(&mut self, path: P) {
         self._push(path.as_ref())
@@ -410,6 +534,38 @@ impl NormalizedPathBuf {
         }
 
         path.components().for_each(|c| normalized_push(&mut self.inner, c));
+    }
+
+    /// Removes the last component of the path.
+    ///
+    /// Returns `false` if nothing is done. Otherwise, returns `true`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let mut p = Path::new("/spirited/away.rs").normalize();
+    ///
+    /// p.pop();
+    /// assert_eq!(p, Path::new("/spirited"));
+    /// p.pop();
+    /// assert_eq!(p, Path::new("/"));
+    /// ```
+    #[inline]
+    pub fn pop(&mut self) -> bool {
+        self.inner.pop()
+    }
+
+    #[inline]
+    pub fn set_file_name<S: AsRef<OsStr>>(&mut self, file_name: S) {
+        self.inner.set_file_name(file_name);
+    }
+
+    #[inline]
+    pub fn set_extension<S: AsRef<OsStr>>(&mut self, file_name: S) {
+        self.inner.set_extension(file_name);
     }
 }
 
