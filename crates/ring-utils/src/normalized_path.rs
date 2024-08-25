@@ -12,6 +12,22 @@ use std::path::{Component, Components, Path, PathBuf, PrefixComponent, MAIN_SEPA
 /// A single normalized component of a path.
 ///
 /// See [`Component`] for more details
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use ring_utils::{Normalize, NormalizedComponent};
+///
+/// let path = Path::new("/tmp/foo/bar.txt").normalize();
+/// let components = path.components().collect::<Vec<_>>();
+/// assert_eq!(&components, &[
+///   NormalizedComponent::RootDir,
+///   NormalizedComponent::Normal("tmp".as_ref()),
+///   NormalizedComponent::Normal("foo".as_ref()),
+///   NormalizedComponent::Normal("bar.txt".as_ref()),
+/// ]);
+/// ```
 #[derive(Clone, Copy, Debug, Hash, PartialEq, PartialOrd, Eq, Ord)]
 pub enum NormalizedComponent<'a> {
     Prefix(PrefixComponent<'a>),
@@ -21,6 +37,17 @@ pub enum NormalizedComponent<'a> {
 
 impl<'a> NormalizedComponent<'a> {
     /// Extracts the underlying [`OsStr`] slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let path = Path::new("/tmp/foo/bar.txt").normalize();
+    /// let components: Vec<_> = path.components().map(|comp| comp.as_os_str()).collect();
+    /// assert_eq!(&components, &["/", "tmp", "foo", "bar.txt"]);
+    /// ```
     #[must_use = "`self` will be dropped if the result is not used"]
     pub fn as_os_str(self) -> &'a OsStr {
         match self {
