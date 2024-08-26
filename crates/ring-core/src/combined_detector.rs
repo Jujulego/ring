@@ -1,7 +1,6 @@
 use ring_traits::DetectAs;
-use ring_utils::OptionalResult;
+use ring_utils::{NormalizedPath, OptionalResult};
 use std::iter::FusedIterator;
-use std::path::Path;
 use std::rc::Rc;
 
 #[derive(Default)]
@@ -14,32 +13,33 @@ impl<T> CombinedDetector<T> {
         CombinedDetector { detectors }
     }
 
-    pub fn detect_from<'a>(&'a self, path: &'a Path) -> Iter<'a, T> {
+    pub fn detect_from<'a, P: AsRef<NormalizedPath>>(&'a self, path: &'a P) -> Iter<'a, T> {
         Iter {
             detectors: self.detectors.as_slice(),
-            strategy: DetectStrategy::From(path),
+            strategy: DetectStrategy::From(path.as_ref()),
         }
     }
 
-    pub fn detect_at<'a>(&'a self, path: &'a Path) -> Iter<'a, T> {
+    pub fn detect_at<'a, P: AsRef<NormalizedPath>>(&'a self, path: &'a P) -> Iter<'a, T> {
         Iter {
             detectors: self.detectors.as_slice(),
-            strategy: DetectStrategy::At(path),
+            strategy: DetectStrategy::At(path.as_ref()),
         }
     }
 }
 
 #[derive(Debug)]
 enum DetectStrategy<'a> {
-    From(&'a Path),
-    At(&'a Path),
+    From(&'a NormalizedPath),
+    At(&'a NormalizedPath),
 }
 
 impl<'a> DetectStrategy<'a> {
     fn apply<T>(&self, detector: &Rc<dyn DetectAs<T>>) -> OptionalResult<T> {
+        // TODO: pass a normalized path to detector
         match self {
-            DetectStrategy::From(path) => detector.detect_from_as(path),
-            DetectStrategy::At(path) => detector.detect_at_as(path),
+            DetectStrategy::From(path) => detector.detect_from_as(path.as_ref()),
+            DetectStrategy::At(path) => detector.detect_at_as(path.as_ref()),
         }
     }
 }
@@ -81,10 +81,12 @@ impl<'a, T> FusedIterator for Iter<'a, T> {}
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
     use super::*;
     use anyhow::anyhow;
     use mockall::mock;
     use ring_traits::DetectAs;
+    use ring_utils::Normalize;
     use ring_utils::OptionalResult::{Empty, Fail, Found};
 
     mock!(
@@ -126,7 +128,7 @@ mod tests {
             detector_a, detector_b, detector_empty, detector_fail
         ]);
 
-        let results: Vec<_> = combined.detect_at(Path::new("test")).collect();
+        let results: Vec<_> = combined.detect_at(&Path::new("/test").normalize()).collect();
 
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].as_ref().ok(), Some(&"a"));
@@ -164,7 +166,7 @@ mod tests {
             detector_a, detector_b, detector_empty, detector_fail
         ]);
 
-        let results: Vec<_> = combined.detect_from(Path::new("test")).collect();
+        let results: Vec<_> = combined.detect_from(&Path::new("/test").normalize()).collect();
 
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].as_ref().ok(), Some(&"a"));
@@ -194,7 +196,7 @@ mod tests {
 
         let combined = CombinedDetector::new(vec![detector_a, detector_b, detector_empty]);
 
-        let results: Vec<_> = combined.detect_at(Path::new("test")).rev().collect();
+        let results: Vec<_> = combined.detect_at(&Path::new("/test").normalize()).rev().collect();
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].as_ref().ok(), Some(&"b"));

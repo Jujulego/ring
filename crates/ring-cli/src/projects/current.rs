@@ -17,8 +17,7 @@ pub fn handle_command(core: &RingCore) -> anyhow::Result<()> {
     let detector = core.project_detector();
     let mut list = ListFormatter::new();
 
-    // TODO: pass a normalized path to detector
-    for project in detector.detect_from(current_dir.as_ref()) {
+    for project in detector.detect_from(&current_dir) {
         let project = project?;
         
         list.add_row([

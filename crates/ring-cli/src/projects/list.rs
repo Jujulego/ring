@@ -23,8 +23,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
     let detector = core.scope_detector();
     let mut list = ListFormatter::new();
 
-    // TODO: pass a normalized path to detector
-    for scope in detector.detect_from(path.as_ref()) {
+    for scope in detector.detect_from(&path) {
         let scope = scope?;
         
         for project in scope.projects() {
