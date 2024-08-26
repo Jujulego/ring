@@ -261,6 +261,16 @@ impl NormalizedPath {
     }
 
     /// Yields the underlying [`Path`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let path = Path::new("/example/../foo.txt").normalize();
+    /// assert_eq!(path.as_path(), Path::new("/foo.txt"));
+    /// ```
     #[must_use]
     #[inline]
     pub fn as_path(&self) -> &Path {
@@ -272,11 +282,12 @@ impl NormalizedPath {
     /// # Examples
     ///
     /// ```
+    /// use std::ffi::OsStr;
     /// use std::path::Path;
     /// use ring_utils::Normalize;
     ///
     /// let path = Path::new("/example/../foo.txt").normalize();
-    /// assert_eq!(path.as_os_str(), std::ffi::OsStr::new("/foo.txt"));
+    /// assert_eq!(path.as_os_str(), OsStr::new("/foo.txt"));
     /// ```
     #[must_use]
     #[inline]
@@ -514,13 +525,6 @@ impl NormalizedPathBuf {
     #[inline]
     pub fn new() -> NormalizedPathBuf {
         NormalizedPathBuf { inner: PathBuf::new() }
-    }
-
-    /// Coerces to a [`NormalizedPath`] slice.
-    #[must_use]
-    #[inline]
-    pub fn as_path(&self) -> &NormalizedPath {
-        self
     }
 
     /// Extends `self` with `path`.
@@ -837,6 +841,15 @@ mod tests {
         assert_eq!(components.next_back(), None);
     }
 
+    #[test]
+    #[cfg(windows)]
+    fn it_should_os_str_representing_path_prefix() {
+        let path = Path::new(r"C:\foo\bar").normalize();
+        let prefix = path.components().next().unwrap();
+        
+        assert_eq!(prefix.as_os_str(), OsStr::new("C:"))
+    }
+    
     #[test]
     fn it_should_compare_every_normalized_components() {
         let path = Path::new("/foo/bar").normalize();
