@@ -721,8 +721,22 @@ impl<P: ?Sized + AsRef<Path>> PartialEq<P> for NormalizedPathBuf {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait Normalize : AsRef<Path> {
+    /// Builds a normalized path for current path object
     fn normalize(&self) -> NormalizedPathBuf;
 
+    /// Computes a normalized path from self using given base.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let base = Path::new("/test").normalize();
+    /// assert_eq!(Path::new("./foo").resolve(&base), Path::new("/test/foo"));
+    /// assert_eq!(Path::new("../foo").resolve(&base), Path::new("/foo"));
+    /// assert_eq!(Path::new("/bar").resolve(&base), Path::new("/bar"));
+    /// ```
     #[must_use = "allocated path will be lost if left unused"]
     fn resolve(&self, base: &NormalizedPath) -> NormalizedPathBuf {
         let mut ret = NormalizedPathBuf::from(base);
@@ -732,6 +746,7 @@ pub trait Normalize : AsRef<Path> {
 }
 
 impl Normalize for NormalizedPathBuf {
+    /// Builds a new normalized path by cloning `self`
     fn normalize(&self) -> NormalizedPathBuf {
         self.clone()
     }
@@ -811,25 +826,25 @@ mod tests {
         assert_ne!(NormalizedComponent::Normal("test".as_ref()), Component::ParentDir);
         assert_eq!(NormalizedComponent::Normal("test".as_ref()), Component::Normal("test".as_ref()));
     }
-    
+
     #[test]
     fn it_should_normalize_given_path() {
         assert_eq!(absolute_path!("/foo/baz/../bar").normalize(), absolute_path!("/foo/bar"));
         assert_eq!(absolute_path!("/foo/baz/./bar").normalize(), absolute_path!("/foo/baz/bar"));
     }
-    
+
     #[test]
     #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
     fn it_cannot_normalize_a_path_starting_with_a_normal_component() {
         let _ = Path::new("foo/bar").normalize();
     }
-    
+
     #[test]
     #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
     fn it_cannot_normalize_a_path_starting_with_a_cur_dir_component() {
         let _ = Path::new("./foo/bar").normalize();
     }
-    
+
     #[test]
     #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
     fn it_cannot_normalize_a_path_starting_with_a_parent_dir_component() {
