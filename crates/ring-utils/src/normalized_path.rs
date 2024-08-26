@@ -423,21 +423,9 @@ impl AsRef<Path> for &NormalizedPath {
     }
 }
 
-impl PartialEq<Path> for NormalizedPath {
-    fn eq(&self, other: &Path) -> bool {
-        self.components().eq(other.components())
-    }
-}
-
-impl PartialEq<PathBuf> for &NormalizedPath {
-    fn eq(&self, other: &PathBuf) -> bool {
-        self.components().eq(other.components())
-    }
-}
-
-impl PartialEq<NormalizedPathBuf> for &NormalizedPath {
-    fn eq(&self, other: &NormalizedPathBuf) -> bool {
-        self.components().eq(other.components())
+impl<P: ?Sized + AsRef<Path>> PartialEq<P> for NormalizedPath {
+    fn eq(&self, other: &P) -> bool {
+        self.components().eq(other.as_ref().components())
     }
 }
 
@@ -492,7 +480,7 @@ impl PartialEq<NormalizedPathBuf> for &NormalizedPath {
 ///
 /// assert_eq!(path, Path::new("/foo/bar.txt"));
 /// ```
-#[derive(Clone, Default, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Debug, Eq, Ord, PartialOrd)]
 pub struct NormalizedPathBuf {
     inner: PathBuf,
 }
@@ -722,8 +710,8 @@ impl<P: AsRef<Path>> Extend<P> for NormalizedPathBuf {
     }
 }
 
-impl<P: ?Sized + AsRef<Path>> PartialEq<&P> for NormalizedPathBuf {
-    fn eq(&self, other: &&P) -> bool {
+impl<P: ?Sized + AsRef<Path>> PartialEq<P> for NormalizedPathBuf {
+    fn eq(&self, other: &P) -> bool {
         self.components().eq(other.as_ref().components())
     }
 }
@@ -735,6 +723,7 @@ impl<P: ?Sized + AsRef<Path>> PartialEq<&P> for NormalizedPathBuf {
 pub trait Normalize : AsRef<Path> {
     fn normalize(&self) -> NormalizedPathBuf;
 
+    #[must_use = "allocated path will be lost if left unused"]
     fn resolve(&self, base: &NormalizedPath) -> NormalizedPathBuf {
         let mut ret = NormalizedPathBuf::from(base);
         ret._push(self.as_ref());
@@ -763,6 +752,7 @@ impl Normalize for Path {
     /// let path = Path::new("/foo/baz/../bar").normalize();
     /// assert_eq!(path, Path::new("/foo/bar"));
     /// ```
+    #[must_use = "allocated path will be lost if left unused"]
     fn normalize(&self) -> NormalizedPathBuf {
         let mut components = self.components().peekable();
         let mut inner = match components.peek().cloned() {
@@ -788,6 +778,7 @@ impl Normalize for Path {
 
 #[cfg(test)]
 mod tests {
+    use crate::absolute_path;
     use super::*;
 
     #[test]
@@ -819,5 +810,29 @@ mod tests {
         assert_ne!(NormalizedComponent::Normal("test".as_ref()), Component::CurDir);
         assert_ne!(NormalizedComponent::Normal("test".as_ref()), Component::ParentDir);
         assert_eq!(NormalizedComponent::Normal("test".as_ref()), Component::Normal("test".as_ref()));
+    }
+    
+    #[test]
+    fn it_should_normalize_given_path() {
+        assert_eq!(absolute_path!("/foo/baz/../bar").normalize(), absolute_path!("/foo/bar"));
+        assert_eq!(absolute_path!("/foo/baz/./bar").normalize(), absolute_path!("/foo/baz/bar"));
+    }
+    
+    #[test]
+    #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
+    fn it_cannot_normalize_a_path_starting_with_a_normal_component() {
+        let _ = Path::new("foo/bar").normalize();
+    }
+    
+    #[test]
+    #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
+    fn it_cannot_normalize_a_path_starting_with_a_cur_dir_component() {
+        let _ = Path::new("./foo/bar").normalize();
+    }
+    
+    #[test]
+    #[should_panic(expected = "normalized path must start with either a RootDir or a Prefix")]
+    fn it_cannot_normalize_a_path_starting_with_a_parent_dir_component() {
+        let _ = Path::new("../foo/bar").normalize();
     }
 }
