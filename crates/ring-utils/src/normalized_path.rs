@@ -821,6 +821,31 @@ mod tests {
     }
 
     #[test]
+    fn it_should_iterate_over_path_components() {
+        let path = Path::new("/foo/bar").normalize();
+
+        let mut components = path.components();
+        assert_eq!(components.next(), Some(NormalizedComponent::RootDir));
+        assert_eq!(components.next(), Some(NormalizedComponent::Normal(OsStr::new("foo"))));
+        assert_eq!(components.next(), Some(NormalizedComponent::Normal(OsStr::new("bar"))));
+        assert_eq!(components.next(), None);
+
+        let mut components = path.components();
+        assert_eq!(components.next_back(), Some(NormalizedComponent::Normal(OsStr::new("bar"))));
+        assert_eq!(components.next_back(), Some(NormalizedComponent::Normal(OsStr::new("foo"))));
+        assert_eq!(components.next_back(), Some(NormalizedComponent::RootDir));
+        assert_eq!(components.next_back(), None);
+    }
+
+    #[test]
+    fn it_should_compare_every_normalized_components() {
+        let path = Path::new("/foo/bar").normalize();
+
+        assert_eq!(path.components(), path.components());
+        assert_eq!(path.components(), Path::new("/foo/bar").components());
+    }
+
+    #[test]
     fn it_should_normalize_given_path() {
         assert_eq!(absolute_path!("/foo/baz/../bar").normalize(), absolute_path!("/foo/bar"));
         assert_eq!(absolute_path!("/foo/baz/./bar").normalize(), absolute_path!("/foo/baz/bar"));
