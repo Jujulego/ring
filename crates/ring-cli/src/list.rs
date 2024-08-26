@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
-use anyhow::Context;
 use clap::{arg, ArgAction, ArgMatches, Command, value_parser};
 use itertools::Itertools;
 use lscolors::LsColors;
@@ -10,7 +9,7 @@ use owo_colors::colors::BrightBlack;
 use owo_colors::OwoColorize;
 use ring_cli_formatters::ListFormatter;
 use ring_core::RingCore;
-use ring_utils::Tag;
+use ring_utils::{Normalize, Tag};
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -22,12 +21,10 @@ pub fn build_command() -> Command {
 }
 
 pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
-    let current_dir = env::current_dir()?;
+    let current_dir = env::current_dir()?.normalize();
     let path = args.get_one::<PathBuf>("path")
-        .unwrap_or(&current_dir);
-
-    let path = current_dir.join(path).canonicalize()
-        .with_context(|| format!("Unable to access {}", path.display()))?;
+        .map(|path| path.resolve(&current_dir))
+        .unwrap_or(current_dir);
 
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
@@ -69,7 +66,8 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
         let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
 
-        for project in detector.detect_at(&path) {
+        // TODO: pass a normalized path to detector
+        for project in detector.detect_at(path.as_ref()) {
             tags.extend(project?.tags());
         }
 

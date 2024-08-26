@@ -359,6 +359,24 @@ impl NormalizedPath {
         self.inner.display()
     }
 
+    /// Returns `true` if the path exists on disk and is pointing at a directory.
+    ///
+    /// See [`Path::is_dir`] for more details
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Path::new("/is_a_directory/").normalize().is_dir(), true);
+    /// assert_eq!(Path::new("/a_file.txt").normalize().is_dir(), false);
+    /// ```
+    #[inline]
+    pub fn is_dir(&self) -> bool {
+        self.inner.is_dir()
+    }
+
     /// Returns path without its final component, if there is one.
     ///
     /// See [`Path::parent`] for more details

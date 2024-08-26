@@ -1,11 +1,11 @@
 use std::env;
 use std::path::PathBuf;
-use anyhow::Context;
 use clap::{arg, ArgMatches, Command, value_parser};
 use itertools::Itertools;
 use tracing::warn;
 use ring_cli_formatters::ListFormatter;
 use ring_core::RingCore;
+use ring_utils::Normalize;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -15,17 +15,16 @@ pub fn build_command() -> Command {
 }
 
 pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
-    let current_dir = env::current_dir()?;
+    let current_dir = env::current_dir()?.normalize();
     let path = args.get_one::<PathBuf>("path")
-        .unwrap_or(&current_dir);
-
-    let path = current_dir.join(path).canonicalize()
-        .with_context(|| format!("Unable to access {}", path.display()))?;
+        .map(|path| path.resolve(&current_dir))
+        .unwrap_or(current_dir);
 
     let detector = core.scope_detector();
     let mut list = ListFormatter::new();
 
-    for scope in detector.detect_from(&path) {
+    // TODO: pass a normalized path to detector
+    for scope in detector.detect_from(path.as_ref()) {
         let scope = scope?;
         
         for project in scope.projects() {

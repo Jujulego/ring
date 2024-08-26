@@ -1,10 +1,10 @@
 use std::env;
-use anyhow::Context;
 use clap::Command;
 use itertools::Itertools;
 use tracing::warn;
 use ring_cli_formatters::ListFormatter;
 use ring_core::RingCore;
+use ring_utils::Normalize;
 
 pub fn build_command() -> Command {
     Command::new("current")
@@ -12,14 +12,13 @@ pub fn build_command() -> Command {
 }
 
 pub fn handle_command(core: &RingCore) -> anyhow::Result<()> {
-    let current_dir = env::current_dir()?;
-    let current_dir = current_dir.canonicalize()
-        .with_context(|| format!("Unable to access {}", current_dir.display()))?;
+    let current_dir = env::current_dir()?.normalize();
 
     let detector = core.project_detector();
     let mut list = ListFormatter::new();
-    
-    for project in detector.detect_from(&current_dir) {
+
+    // TODO: pass a normalized path to detector
+    for project in detector.detect_from(current_dir.as_ref()) {
         let project = project?;
         
         list.add_row([
