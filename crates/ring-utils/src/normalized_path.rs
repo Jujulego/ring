@@ -745,13 +745,6 @@ pub trait Normalize : AsRef<Path> {
     }
 }
 
-impl Normalize for NormalizedPathBuf {
-    /// Builds a new normalized path by cloning `self`
-    fn normalize(&self) -> NormalizedPathBuf {
-        self.clone()
-    }
-}
-
 impl Normalize for Path {
     /// Builds a normalized path for current path object
     ///
