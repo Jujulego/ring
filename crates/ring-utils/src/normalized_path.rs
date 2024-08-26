@@ -329,6 +329,20 @@ impl NormalizedPath {
         NormalizedComponents { inner: self.inner.components() }
     }
 
+    /// Returns an object that implements [`Display`] for safely printing paths.
+    ///
+    /// For more details see [`Path::display`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let path = Path::new("/tmp/foo.rs").normalize();
+    ///
+    /// println!("{}", path.display());
+    /// ```
     #[inline]
     pub fn display(&self) -> std::path::Display<'_> {
         self.inner.display()
@@ -357,11 +371,40 @@ impl NormalizedPath {
         self.inner.parent().map(NormalizedPath::new)
     }
 
+    /// Returns the final component of the `Path`, if there is one.
+    ///
+    /// For more details see [`Path::file_name`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use std::ffi::OsStr;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Some(OsStr::new("foo.txt")), Path::new("/tmp/foo.txt").normalize().file_name());
+    /// assert_eq!(None, Path::new("/").normalize().file_name());
+    /// ```
     #[inline]
     pub fn file_name(&self) -> Option<&OsStr> {
         self.inner.file_name()
     }
 
+    /// Extracts the extension (without the leading dot) of [`self.file_name`], if possible.
+    ///
+    /// For more details see [`Path::extension`].
+    ///
+    /// [`self.file_name`]: Path::file_name
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Some("rs".as_ref()), Path::new("/foo.rs").normalize().extension());
+    /// assert_eq!(Some("gz".as_ref()), Path::new("/foo.tar.gz").normalize().extension());
+    /// ```
     #[inline]
     pub fn extension(&self) -> Option<&OsStr> {
         self.inner.extension()
@@ -380,8 +423,8 @@ impl AsRef<Path> for &NormalizedPath {
     }
 }
 
-impl PartialEq<&Path> for &NormalizedPath {
-    fn eq(&self, other: &&Path) -> bool {
+impl PartialEq<Path> for NormalizedPath {
+    fn eq(&self, other: &Path) -> bool {
         self.components().eq(other.components())
     }
 }
@@ -558,11 +601,69 @@ impl NormalizedPathBuf {
         self.inner.pop()
     }
 
+    /// Updates [`self.file_name`] to `file_name`.
+    ///
+    /// For more details see [`PathBuf::set_file_name`]
+    ///
+    /// [`self.file_name`]: Path::file_name
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let mut buf = Path::new("/").normalize();
+    /// assert!(buf.file_name() == None);
+    ///
+    /// buf.set_file_name("foo.txt");
+    /// assert!(buf == Path::new("/foo.txt"));
+    /// assert!(buf.file_name().is_some());
+    ///
+    /// buf.set_file_name("bar.txt");
+    /// assert!(buf == Path::new("/bar.txt"));
+    ///
+    /// buf.set_file_name("baz");
+    /// assert!(buf == Path::new("/baz"));
+    /// ```
     #[inline]
     pub fn set_file_name<S: AsRef<OsStr>>(&mut self, file_name: S) {
         self.inner.set_file_name(file_name);
     }
 
+    /// Updates [`self.extension`] to `Some(extension)` or to `None` if
+    /// `extension` is empty.
+    ///
+    /// For more details see [`PathBuf::set_extension`].
+    ///
+    /// [`self.extension`]: Path::extension
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let mut p = Path::new("/feel/the").normalize();
+    ///
+    /// p.set_extension("force");
+    /// assert_eq!(p, Path::new("/feel/the.force"));
+    ///
+    /// p.set_extension("dark.side");
+    /// assert_eq!(p, Path::new("/feel/the.dark.side"));
+    ///
+    /// p.set_extension("cookie");
+    /// assert_eq!(p, Path::new("/feel/the.dark.cookie"));
+    ///
+    /// p.set_extension("");
+    /// assert_eq!(p, Path::new("/feel/the.dark"));
+    ///
+    /// p.set_extension("");
+    /// assert_eq!(p, Path::new("/feel/the"));
+    ///
+    /// p.set_extension("");
+    /// assert_eq!(p, Path::new("/feel/the"));
+    /// ```
     #[inline]
     pub fn set_extension<S: AsRef<OsStr>>(&mut self, file_name: S) {
         self.inner.set_extension(file_name);
@@ -648,6 +749,20 @@ impl Normalize for NormalizedPathBuf {
 }
 
 impl Normalize for Path {
+    /// Builds a normalized path for current path object
+    ///
+    /// # Panics
+    /// If `self` does not start by either a `RootDir` or a `Prefix` component.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// let path = Path::new("/foo/baz/../bar").normalize();
+    /// assert_eq!(path, Path::new("/foo/bar"));
+    /// ```
     fn normalize(&self) -> NormalizedPathBuf {
         let mut components = self.components().peekable();
         let mut inner = match components.peek().cloned() {
