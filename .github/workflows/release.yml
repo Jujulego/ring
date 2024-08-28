@@ -100,10 +100,8 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Generate native packages
+      - name: Add native artifacts
         run: |
-          node ./scripts/npm-native-packages.js
-        
           mv build-linux-amd64/ring-linux-amd64 npm/ring-linux-amd64/bin/ring
           mv build-windows-amd64/ring-windows-amd64.exe npm/ring-windows-amd64/bin/ring.exe
           mv build-macos-amd64/ring-macos-amd64 npm/ring-macos-amd64/bin/ring

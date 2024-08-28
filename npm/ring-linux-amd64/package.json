@@ -1,0 +1,20 @@
+{
+  "name": "@jujulego/ring-linux-amd64",
+  "description": "Ring linux amd64 binary.",
+  "version": "0.0.0-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jujulego/ring.git"
+  },
+  "files": [
+    "./bin"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "preferUnplugged": true
+}
