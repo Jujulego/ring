@@ -20,5 +20,5 @@
     "eslint": "^9.9.0",
     "globals": "^15.9.0"
   },
-  "packageManager": "yarn@4.4.0"
+  "packageManager": "yarn@4.4.1"
 }
