@@ -38,8 +38,8 @@ impl<'a> DetectStrategy<'a> {
     fn apply<T>(&self, detector: &Rc<dyn DetectAs<T>>) -> OptionalResult<T> {
         // TODO: pass a normalized path to detector
         match self {
-            DetectStrategy::From(path) => detector.detect_from_as(path.as_ref()),
-            DetectStrategy::At(path) => detector.detect_at_as(path.as_ref()),
+            DetectStrategy::From(path) => detector.detect_from_as(path),
+            DetectStrategy::At(path) => detector.detect_at_as(path),
         }
     }
 }
