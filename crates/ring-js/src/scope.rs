@@ -37,8 +37,8 @@ impl Scope for JsScope {
 
     fn projects(&self) -> Box<ProjectIterator> {
         let projects = self.root_project.manifest().workspaces.iter()
-            .relative_to(self.root())
-            .inspect(|pattern| debug!("Search js project matching {pattern}"))
+            .resolve(self.root())
+            .inspect(|pattern| debug!("Search js project matching {}", pattern.display()))
             .glob_search()
             .filter_map(|result| result
                 .inspect_err(|err| warn!("Error while loading scope project {:#}", err))

@@ -31,8 +31,8 @@ impl Scope for RustScope {
 
     fn projects(&self) -> Box<ProjectIterator> {
         let projects = self.workspace().members.iter()
-            .relative_to(self.root())
-            .inspect(|pattern| debug!("Search rust project matching {pattern}"))
+            .resolve(self.root())
+            .inspect(|pattern| debug!("Search rust project matching {}", pattern.display()))
             .glob_search()
             .filter_map(|result| result
                 .inspect_err(|err| warn!("Error while loading scope project {:#}", err))
