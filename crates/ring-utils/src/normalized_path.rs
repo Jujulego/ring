@@ -438,6 +438,12 @@ impl NormalizedPath {
     pub fn extension(&self) -> Option<&OsStr> {
         self.inner.extension()
     }
+    
+    #[inline]
+    pub fn prefix(&self) -> Option<PrefixComponent> {
+        self.inner.components().next()
+            .and_then(|cmp| if let Component::Prefix(prefix) = cmp { Some(prefix) } else { None })
+    }
 }
 
 impl AsRef<OsStr> for &NormalizedPath {
