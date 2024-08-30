@@ -93,8 +93,8 @@ mod tests {
         Detector {}
 
         impl DetectAs<&'static str> for Detector {
-            fn detect_at_as(&self, path: &Path) -> OptionalResult<&'static str>;
-            fn detect_from_as(&self, path: &Path) -> OptionalResult<&'static str>;
+            fn detect_at_as(&self, path: &NormalizedPath) -> OptionalResult<&'static str>;
+            fn detect_from_as(&self, path: &NormalizedPath) -> OptionalResult<&'static str>;
         }
     );
 

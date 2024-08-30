@@ -34,10 +34,11 @@ pub trait PatternIterator : Iterator {
     /// Basic usage:
     /// 
     /// ```
+    /// use std::path::Path;
     /// use ring_files::PatternIterator;
-    /// use ring_utils::NormalizedPathBuf;
+    /// use ring_utils::Normalize;
     ///
-    /// let base = NormalizedPathBuf::from("/example");
+    /// let base = Path::new("/example").normalize();
     /// let patterns = vec!["crates/*", "scripts"];
     /// let prepended = patterns.iter().resolve(&base).collect::<Vec<_>>();
     ///
@@ -47,10 +48,11 @@ pub trait PatternIterator : Iterator {
     /// It does not prepend absolute patterns:
     /// 
     /// ```
+    /// use std::path::Path;
     /// use ring_files::PatternIterator;
-    /// use ring_utils::NormalizedPathBuf;
+    /// use ring_utils::Normalize;
     ///
-    /// let base = NormalizedPathBuf::from("/example");
+    /// let base = Path::new("/example").normalize();
     /// let patterns = vec!["/crates/*", "/scripts"];
     /// let prepended = patterns.iter().resolve(&base).collect::<Vec<_>>();
     ///
