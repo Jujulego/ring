@@ -1,6 +1,7 @@
 use std::borrow::Borrow;
 use std::ffi::OsStr;
 use std::fmt::Debug;
+use std::io;
 use std::iter::FusedIterator;
 use std::ops::Deref;
 use std::path::{Component, Components, Path, PathBuf, PrefixComponent, MAIN_SEPARATOR_STR};
@@ -249,7 +250,7 @@ impl FusedIterator for NormalizedAncestors<'_> {}
 ///
 /// assert_eq!(path, Path::new("/example/bar/foo"));
 /// ```
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, Ord, PartialOrd)]
 #[cfg_attr(not(doc), repr(transparent))]
 pub struct NormalizedPath {
     inner: Path,
@@ -377,6 +378,30 @@ impl NormalizedPath {
         self.inner.is_dir()
     }
 
+    /// Returns `true` if the path exists on disk and is pointing at a file.
+    ///
+    /// See [`Path::is_file`] for more details
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Path::new("/a_file.txt").normalize().is_file(), true);
+    /// assert_eq!(Path::new("/is_a_directory/").normalize().is_file(), false);
+    /// ```
+    #[inline]
+    pub fn is_file(&self) -> bool {
+        self.inner.is_file()
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn join<P : AsRef<Path>>(&self, path: P) -> NormalizedPathBuf {
+        NormalizedPathBuf { inner: self.inner.join(path) }
+    }
+
     /// Returns path without its final component, if there is one.
     ///
     /// See [`Path::parent`] for more details
@@ -438,23 +463,39 @@ impl NormalizedPath {
     pub fn extension(&self) -> Option<&OsStr> {
         self.inner.extension()
     }
-    
+
     #[inline]
     pub fn prefix(&self) -> Option<PrefixComponent> {
         self.inner.components().next()
             .and_then(|cmp| if let Component::Prefix(prefix) = cmp { Some(prefix) } else { None })
     }
+    
+    #[must_use]
+    #[inline]
+    pub fn to_path_buf(&self) -> NormalizedPathBuf {
+        NormalizedPathBuf { inner: self.inner.to_path_buf() }
+    }
+    
+    pub fn try_exists(&self) -> io::Result<bool> {
+        self.inner.try_exists()
+    }
 }
 
-impl AsRef<OsStr> for &NormalizedPath {
+impl AsRef<OsStr> for NormalizedPath {
     fn as_ref(&self) -> &OsStr {
         self.as_os_str()
     }
 }
 
-impl AsRef<Path> for &NormalizedPath {
+impl AsRef<Path> for NormalizedPath {
     fn as_ref(&self) -> &Path {
         self.as_path()
+    }
+}
+
+impl AsRef<NormalizedPath> for NormalizedPath {
+    fn as_ref(&self) -> &NormalizedPath {
+        self
     }
 }
 

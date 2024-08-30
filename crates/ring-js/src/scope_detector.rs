@@ -2,10 +2,9 @@ use std::cell::RefCell;
 use crate::{JsProjectDetector, JsScope};
 use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Found};
-use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_utils::PathTree;
+use ring_utils::{NormalizedPath, PathTree};
 
 #[derive(Debug)]
 pub struct JsScopeDetector {
@@ -25,7 +24,7 @@ impl JsScopeDetector {
 impl Detector for JsScopeDetector {
     type Item = Rc<JsScope>;
 
-    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         if let Some(scope) = self.cache.borrow().get(path) {
@@ -42,7 +41,7 @@ impl Detector for JsScopeDetector {
             })
     }
     
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_from(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         info!("Searching js scope from {}", path.display());
         detect_from!(self, path)
     }

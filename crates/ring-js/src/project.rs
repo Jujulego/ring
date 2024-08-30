@@ -1,21 +1,20 @@
 use crate::constants::JS_TAG;
 use crate::package_manifest::PackageManifest;
 use ring_traits::{Project, Tagged};
-use ring_utils::Tag;
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
 use semver::Version;
-use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use crate::PackageManager;
 
 #[derive(Debug)]
 pub struct JsProject {
-    root: PathBuf,
+    root: NormalizedPathBuf,
     manifest: Rc<PackageManifest>,
     package_manager: PackageManager,
 }
 
 impl JsProject {
-    pub fn new(root: PathBuf, manifest: Rc<PackageManifest>, package_manager: PackageManager) -> JsProject {
+    pub fn new(root: NormalizedPathBuf, manifest: Rc<PackageManifest>, package_manager: PackageManager) -> JsProject {
         JsProject { root, manifest, package_manager }
     }
     
@@ -29,7 +28,7 @@ impl JsProject {
 }
 
 impl Project for JsProject {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         &self.root
     }
 

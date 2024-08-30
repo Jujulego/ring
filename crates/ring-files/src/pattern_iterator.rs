@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use std::iter::FusedIterator;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
 use ring_traits::DetectAs;
 use ring_utils::{Normalize, NormalizedPath, NormalizedPathBuf, OptionalResult};
@@ -57,12 +57,12 @@ pub trait PatternIterator : Iterator {
     /// assert_eq!(prepended, &["/crates/*", "/scripts"]);
     /// ```
     #[inline]
-    fn resolve<P: AsRef<NormalizedPath>>(self, base: &P) -> ResolvedPatterns<Self>
+    fn resolve(self, base: &NormalizedPath) -> ResolvedPatterns<Self>
     where
         Self: Sized,
         Self::Item: AsRef<Path>
     {
-        ResolvedPatterns::new(self, base.as_ref())
+        ResolvedPatterns::new(self, base)
     }
 }
 

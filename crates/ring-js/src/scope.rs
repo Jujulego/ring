@@ -2,8 +2,7 @@ use crate::constants::JS_TAG;
 use crate::{JsProject, JsProjectDetector, PackageManager};
 use ring_files::PatternIterator;
 use ring_traits::{Project, ProjectIterator, Scope, Tagged};
-use ring_utils::Tag;
-use std::path::Path;
+use ring_utils::{NormalizedPath, Tag};
 use std::rc::Rc;
 use tracing::{debug, warn};
 
@@ -31,7 +30,7 @@ impl JsScope {
 }
 
 impl Scope for JsScope {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         self.root_project.root()
     }
 
