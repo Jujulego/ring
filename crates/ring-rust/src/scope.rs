@@ -1,21 +1,20 @@
-use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, warn};
 use ring_files::PatternIterator;
 use ring_traits::{ProjectIterator, Scope, Tagged};
-use ring_utils::Tag;
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustScope {
-    root: PathBuf,
+    root: NormalizedPathBuf,
     manifest: Rc<CargoManifest>,
     project_detector: Rc<RustProjectDetector>,
 }
 
 impl RustScope {
-    pub fn new(root: PathBuf, manifest: Rc<CargoManifest>, project_detector: Rc<RustProjectDetector>) -> RustScope {
+    pub fn new(root: NormalizedPathBuf, manifest: Rc<CargoManifest>, project_detector: Rc<RustProjectDetector>) -> RustScope {
         RustScope { root, manifest, project_detector }
     }
     
@@ -25,7 +24,7 @@ impl RustScope {
 }
 
 impl Scope for RustScope {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         &self.root
     }
 
