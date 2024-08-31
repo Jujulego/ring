@@ -475,13 +475,14 @@ impl NormalizedPath {
     }
 
     /// Extracts the prefix of `self`, if possible.
-    /// 
+    ///
     /// # Examples
-    /// 
-    /// ```
+    ///
+    /// ```no_run
     /// use std::path::Path;
     /// use ring_utils::Normalize;
     ///
+    /// // This example works only windows
     /// assert!(Path::new("/test/toto").normalize().prefix().is_none());
     /// assert!(Path::new(r"C:\test\toto").normalize().prefix().is_some());
     /// ```
@@ -967,6 +968,13 @@ mod tests {
 
         assert_eq!(path.components(), path.components());
         assert_eq!(path.components(), Path::new("/foo/bar").components());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn it_should_extract_path_prefix() {
+        assert!(Path::new("/test/toto").normalize().prefix().is_none());
+        assert!(Path::new(r"C:\test\toto").normalize().prefix().is_some());
     }
 
     #[test]

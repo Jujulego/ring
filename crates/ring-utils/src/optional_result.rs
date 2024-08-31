@@ -118,16 +118,68 @@ impl<T, E> OptionalResult<T, E> {
         self
     }
 
+    /// Returns `true` if self is an [`Empty`] value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult;
+    /// use ring_utils::OptionalResult::{Empty, Fail, Found};
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Empty;
+    /// assert_eq!(optional_result.is_empty(), true);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Found("test");
+    /// assert_eq!(optional_result.is_empty(), false);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Fail(());
+    /// assert_eq!(optional_result.is_empty(), false);
+    /// ```
     #[inline]
     pub fn is_empty(&self) -> bool {
         matches!(self, Empty)
     }
 
+    /// Returns `true` if self is a [`Fail`] value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult;
+    /// use ring_utils::OptionalResult::{Empty, Fail, Found};
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Empty;
+    /// assert_eq!(optional_result.is_fail(), false);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Fail(());
+    /// assert_eq!(optional_result.is_fail(), true);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Found("test");
+    /// assert_eq!(optional_result.is_fail(), false);
+    /// ```
     #[inline]
     pub fn is_fail(&self) -> bool {
         matches!(self, Fail(_))
     }
 
+
+    /// Returns `true` if self is a [`Found`] value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult;
+    /// use ring_utils::OptionalResult::{Empty, Fail, Found};
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Empty;
+    /// assert_eq!(optional_result.is_found(), false);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Fail(());
+    /// assert_eq!(optional_result.is_found(), false);
+    ///
+    /// let optional_result: OptionalResult<&str, ()> = Found("test");
+    /// assert_eq!(optional_result.is_found(), true);
+    /// ```
     #[inline]
     pub fn is_found(&self) -> bool {
         matches!(self, Found(_))
