@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use crate::{JsProjectDetector, JsScope};
-use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as, detect_from};
+use ring_traits::{Detect, DetectAs, Scope, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Found};
 use std::rc::Rc;
 use tracing::{debug, info};
@@ -21,7 +21,7 @@ impl JsScopeDetector {
     }
 }
 
-impl Detector for JsScopeDetector {
+impl Detect for JsScopeDetector {
     type Item = Rc<JsScope>;
 
     fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {

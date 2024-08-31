@@ -1,6 +1,6 @@
 use crate::{CargoManifest, RustProjectDetector, RustScope};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Scope, Tagged, detect_as, detect_from};
+use ring_traits::{Detect, DetectAs, Scope, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Found};
 use ring_utils::{NormalizedPath, PathTree};
 use std::cell::RefCell;
@@ -26,7 +26,7 @@ impl RustScopeDetector {
     }
 }
 
-impl Detector for RustScopeDetector {
+impl Detect for RustScopeDetector {
     type Item = Rc<RustScope>;
 
     fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {

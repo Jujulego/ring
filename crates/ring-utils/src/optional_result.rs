@@ -61,6 +61,99 @@ impl<T, E> OptionalResult<T, E> {
         }
     }
 
+    /// Returns [`Empty`] if the optional result is [`Empty`], [`Fail`] if it is [`Fail`] otherwise
+    /// calls `predicate` with the wrapped value and returns:
+    ///
+    /// - [`Found(val)`] if `predicate` returns `true` (where `val` is the wrapped value), and
+    /// - [`Empty`] if `predicate` returns `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// fn is_even(n: &i32) -> bool {
+    ///     n % 2 == 0
+    /// }
+    ///
+    /// assert_eq!(Found::<_, ()>(2).filter(is_even), Found(2));
+    /// assert_eq!(Found::<_, ()>(1).filter(is_even), Empty);
+    /// assert_eq!(Empty::<_, ()>.filter(is_even), Empty);
+    /// assert_eq!(Fail::<_, ()>(()).filter(is_even), Fail(()));
+    /// ```
+    #[inline]
+    pub fn filter<F>(self, predicate: F) -> OptionalResult<T, E>
+    where
+        F: FnOnce(&T) -> bool,
+    {
+        match self {
+            Found(val) if predicate(&val) => Found(val),
+            Found(_) | Empty => Empty,
+            Fail(err) => Fail(err),
+        }
+    }
+
+    /// Calls a function with a reference to the contained value if [`Found`]
+    ///
+    /// Returns the original optional result
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// // prints "hello world"
+    /// let result = Found::<&str, ()>("world").inspect(|txt| println!("hello {txt}"));
+    ///
+    /// // prints nothing
+    /// let result = Empty::<&str, ()>.inspect(|txt| println!("hello {txt}"));
+    /// let result = Fail::<&str, ()>(()).inspect(|txt| println!("hello {txt}"));
+    /// ```
+    #[inline]
+    pub fn inspect(self, f: impl FnOnce(&T)) -> OptionalResult<T, E> {
+        if let Found(ref val) = self {
+            f(val);
+        }
+
+        self
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        matches!(self, Empty)
+    }
+
+    #[inline]
+    pub fn is_fail(&self) -> bool {
+        matches!(self, Fail(_))
+    }
+
+    #[inline]
+    pub fn is_found(&self) -> bool {
+        matches!(self, Found(_))
+    }
+
+    /// Apply a function to the contained value (if [`Found`]) mapping `OptionalResult<T, E>` to
+    /// `OptionalResult<U, E>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_utils::OptionalResult::{self, *};
+    ///
+    /// assert_eq!(Found::<&str, ()>("test").map(|s| s.len()), Found(4));
+    /// assert_eq!(Empty::<&str, ()>.map(|s| s.len()), Empty);
+    /// assert_eq!(Fail::<&str, ()>(()).map(|s| s.len()), Fail(()));
+    /// ```
+    #[inline]
+    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> OptionalResult<U, E> {
+        match self {
+            Found(data) => Found(f(data)),
+            Fail(err) => Fail(err),
+            Empty => Empty,
+        }
+    }
+
     /// Returns [`Ok`] if the optional result is [`Found`], [`Err`] if it is [`Fail`] otherwise
     /// calls `f` and return the result wrapped in [`Ok`].
     ///
@@ -121,84 +214,6 @@ impl<T, E> OptionalResult<T, E> {
         T: Default
     {
         self.result_or_else(T::default)
-    }
-
-    /// Returns [`Empty`] if the optional result is [`Empty`], [`Fail`] if it is [`Fail`] otherwise
-    /// calls `predicate` with the wrapped value and returns:
-    ///
-    /// - [`Found(val)`] if `predicate` returns `true` (where `val` is the wrapped value), and
-    /// - [`Empty`] if `predicate` returns `false`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_utils::OptionalResult::{self, *};
-    ///
-    /// fn is_even(n: &i32) -> bool {
-    ///     n % 2 == 0
-    /// }
-    ///
-    /// assert_eq!(Found::<_, ()>(2).filter(is_even), Found(2));
-    /// assert_eq!(Found::<_, ()>(1).filter(is_even), Empty);
-    /// assert_eq!(Empty::<_, ()>.filter(is_even), Empty);
-    /// assert_eq!(Fail::<_, ()>(()).filter(is_even), Fail(()));
-    /// ```
-    #[inline]
-    pub fn filter<F>(self, predicate: F) -> OptionalResult<T, E>
-    where
-        F: FnOnce(&T) -> bool,
-    {
-        match self {
-            Found(val) if predicate(&val) => Found(val),
-            Found(_) | Empty => Empty,
-            Fail(err) => Fail(err),
-        }
-    }
-
-    /// Calls a function with a reference to the contained value if [`Found`]
-    ///
-    /// Returns the original optional result
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_utils::OptionalResult::{self, *};
-    ///
-    /// // prints "hello world"
-    /// let result = Found::<&str, ()>("world").inspect(|txt| println!("hello {txt}"));
-    ///
-    /// // prints nothing
-    /// let result = Empty::<&str, ()>.inspect(|txt| println!("hello {txt}"));
-    /// let result = Fail::<&str, ()>(()).inspect(|txt| println!("hello {txt}"));
-    /// ```
-    #[inline]
-    pub fn inspect(self, f: impl FnOnce(&T)) -> OptionalResult<T, E> {
-        if let Found(ref val) = self {
-            f(val);
-        }
-
-        self
-    }
-
-    /// Apply a function to the contained value (if [`Found`]) mapping `OptionalResult<T, E>` to
-    /// `OptionalResult<U, E>`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_utils::OptionalResult::{self, *};
-    ///
-    /// assert_eq!(Found::<&str, ()>("test").map(|s| s.len()), Found(4));
-    /// assert_eq!(Empty::<&str, ()>.map(|s| s.len()), Empty);
-    /// assert_eq!(Fail::<&str, ()>(()).map(|s| s.len()), Fail(()));
-    /// ```
-    #[inline]
-    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> OptionalResult<U, E> {
-        match self {
-            Found(data) => Found(f(data)),
-            Fail(err) => Fail(err),
-            Empty => Empty,
-        }
     }
 }
 

@@ -30,7 +30,7 @@ macro_rules! detect_from {
     }};
 }
 
-pub trait Detector {
+pub trait Detect {
     type Item;
 
     /// Search item at given path
@@ -48,7 +48,7 @@ pub trait DetectAs<T> {
     fn detect_from_as(&self, path: &NormalizedPath) -> OptionalResult<T>;
 }
 
-impl<D : Detector> DetectAs<D::Item> for D {
+impl<D : Detect> DetectAs<D::Item> for D {
     #[inline]
     fn detect_at_as(&self, path: &NormalizedPath) -> OptionalResult<D::Item> {
         self.detect_at(path)
@@ -57,5 +57,36 @@ impl<D : Detector> DetectAs<D::Item> for D {
     #[inline]
     fn detect_from_as(&self, path: &NormalizedPath) -> OptionalResult<D::Item> {
         self.detect_from(path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+    use mockall::mock;
+    use ring_utils::Normalize;
+    use ring_utils::OptionalResult::{Empty, Found};
+    use super::*;
+
+    mock!(
+        Detector {}
+        impl Detect for Detector {
+            type Item = String;
+
+            fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<String>;
+        }
+    );
+
+    #[test]
+    fn it_should_call_detect_at_using_all_path_ancestors() {
+        let mut detector = MockDetector::new();
+        detector.expect_detect_at()
+            .times(3)
+            .returning(|path| if path == "/test" { Found(String::from("test")) } else { Empty });
+
+        let path = Path::new("/test/foo/bar").normalize();
+        assert!(detector.detect_from(&path).is_found());
+        
+        detector.checkpoint();
     }
 }

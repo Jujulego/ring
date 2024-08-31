@@ -1,7 +1,7 @@
 use crate::constants::MANIFEST;
 use crate::{JsProject, PackageManifest};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as, detect_from};
+use ring_traits::{Detect, DetectAs, Project, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Found};
 use ring_utils::{NormalizedPath, PathTree};
 use std::cell::RefCell;
@@ -32,7 +32,7 @@ impl Default for JsProjectDetector {
     }
 }
 
-impl Detector for JsProjectDetector {
+impl Detect for JsProjectDetector {
     type Item = Rc<JsProject>;
 
     fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
