@@ -2,8 +2,7 @@ use crate::constants::JS_TAG;
 use crate::{JsProject, JsProjectDetector, PackageManager};
 use ring_files::PatternIterator;
 use ring_traits::{Project, ProjectIterator, Scope, Tagged};
-use ring_utils::Tag;
-use std::path::Path;
+use ring_utils::{NormalizedPath, Tag};
 use std::rc::Rc;
 use tracing::{debug, warn};
 
@@ -31,14 +30,14 @@ impl JsScope {
 }
 
 impl Scope for JsScope {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         self.root_project.root()
     }
 
     fn projects(&self) -> Box<ProjectIterator> {
         let projects = self.root_project.manifest().workspaces.iter()
-            .relative_to(self.root())
-            .inspect(|pattern| debug!("Search js project matching {pattern}"))
+            .resolve(self.root())
+            .inspect(|pattern| debug!("Search js project matching {}", pattern.display()))
             .glob_search()
             .filter_map(|result| result
                 .inspect_err(|err| warn!("Error while loading scope project {:#}", err))

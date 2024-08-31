@@ -1,19 +1,18 @@
-use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use semver::Version;
 use ring_traits::{Project, Tagged};
-use ring_utils::Tag;
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
 use crate::{CargoManifest, CargoPackage};
 use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustProject {
-    root: PathBuf,
+    root: NormalizedPathBuf,
     manifest: Rc<CargoManifest>,
 }
 
 impl RustProject {
-    pub fn new(root: PathBuf, manifest: Rc<CargoManifest>) -> RustProject {
+    pub fn new(root: NormalizedPathBuf, manifest: Rc<CargoManifest>) -> RustProject {
         RustProject { root, manifest }
     }
 
@@ -23,7 +22,7 @@ impl RustProject {
 }
 
 impl Project for RustProject {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         &self.root
     }
 

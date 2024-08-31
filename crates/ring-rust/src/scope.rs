@@ -1,21 +1,20 @@
-use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, warn};
 use ring_files::PatternIterator;
 use ring_traits::{ProjectIterator, Scope, Tagged};
-use ring_utils::Tag;
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
 use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
 use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustScope {
-    root: PathBuf,
+    root: NormalizedPathBuf,
     manifest: Rc<CargoManifest>,
     project_detector: Rc<RustProjectDetector>,
 }
 
 impl RustScope {
-    pub fn new(root: PathBuf, manifest: Rc<CargoManifest>, project_detector: Rc<RustProjectDetector>) -> RustScope {
+    pub fn new(root: NormalizedPathBuf, manifest: Rc<CargoManifest>, project_detector: Rc<RustProjectDetector>) -> RustScope {
         RustScope { root, manifest, project_detector }
     }
     
@@ -25,14 +24,14 @@ impl RustScope {
 }
 
 impl Scope for RustScope {
-    fn root(&self) -> &Path {
+    fn root(&self) -> &NormalizedPath {
         &self.root
     }
 
     fn projects(&self) -> Box<ProjectIterator> {
         let projects = self.workspace().members.iter()
-            .relative_to(self.root())
-            .inspect(|pattern| debug!("Search rust project matching {pattern}"))
+            .resolve(self.root())
+            .inspect(|pattern| debug!("Search rust project matching {}", pattern.display()))
             .glob_search()
             .filter_map(|result| result
                 .inspect_err(|err| warn!("Error while loading scope project {:#}", err))

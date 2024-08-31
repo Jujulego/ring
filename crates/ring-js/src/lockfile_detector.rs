@@ -1,9 +1,8 @@
 use std::cell::RefCell;
-use std::path::Path;
 use anyhow::anyhow;
 use tracing::{debug, info, trace};
-use ring_traits::{detect_from, Detector};
-use ring_utils::{OptionalResult, PathTree};
+use ring_traits::{detect_from, Detect};
+use ring_utils::{NormalizedPath, OptionalResult, PathTree};
 use ring_utils::OptionalResult::{Empty, Fail, Found};
 use crate::constants::PACKAGE_MANAGERS;
 use crate::PackageManager;
@@ -27,10 +26,10 @@ impl Default for JsLockfileDetector {
     }
 }
 
-impl Detector for JsLockfileDetector {
+impl Detect for JsLockfileDetector {
     type Item = PackageManager;
 
-    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         if let Some(&pm) = self.cache.borrow().get(path) {
@@ -59,7 +58,7 @@ impl Detector for JsLockfileDetector {
         Empty
     }
 
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_from(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         info!("Searching js lockfile from {}", path.display());
         detect_from!(self, path)
     }

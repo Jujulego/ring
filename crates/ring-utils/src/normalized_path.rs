@@ -1,6 +1,7 @@
 use std::borrow::Borrow;
 use std::ffi::OsStr;
 use std::fmt::Debug;
+use std::io;
 use std::iter::FusedIterator;
 use std::ops::Deref;
 use std::path::{Component, Components, Path, PathBuf, PrefixComponent, MAIN_SEPARATOR_STR};
@@ -249,7 +250,7 @@ impl FusedIterator for NormalizedAncestors<'_> {}
 ///
 /// assert_eq!(path, Path::new("/example/bar/foo"));
 /// ```
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, Ord, PartialOrd)]
 #[cfg_attr(not(doc), repr(transparent))]
 pub struct NormalizedPath {
     inner: Path,
@@ -359,6 +360,58 @@ impl NormalizedPath {
         self.inner.display()
     }
 
+    /// Returns `true` if the path exists on disk and is pointing at a directory.
+    ///
+    /// See [`Path::is_dir`] for more details
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Path::new("/is_a_directory/").normalize().is_dir(), true);
+    /// assert_eq!(Path::new("/a_file.txt").normalize().is_dir(), false);
+    /// ```
+    #[inline]
+    pub fn is_dir(&self) -> bool {
+        self.inner.is_dir()
+    }
+
+    /// Returns `true` if the path exists on disk and is pointing at a file.
+    ///
+    /// See [`Path::is_file`] for more details
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert_eq!(Path::new("/a_file.txt").normalize().is_file(), true);
+    /// assert_eq!(Path::new("/is_a_directory/").normalize().is_file(), false);
+    /// ```
+    #[inline]
+    pub fn is_file(&self) -> bool {
+        self.inner.is_file()
+    }
+
+    /// Creates an owned [`NormalizedPathBuf`] with `path` adjoined to `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::{Path, PathBuf};
+    /// use ring_utils::{Normalize, NormalizedPathBuf};
+    ///
+    /// assert_eq!(Path::new("/etc").normalize().join("passwd"), Path::new("/etc/passwd").normalize());
+    /// assert_eq!(Path::new("/etc").normalize().join("/bin/sh"), Path::new("/bin/sh").normalize());
+    /// ```
+    #[must_use]
+    pub fn join<P : AsRef<Path>>(&self, path: P) -> NormalizedPathBuf {
+        NormalizedPathBuf { inner: self.inner.join(path) }
+    }
+
     /// Returns path without its final component, if there is one.
     ///
     /// See [`Path::parent`] for more details
@@ -420,17 +473,76 @@ impl NormalizedPath {
     pub fn extension(&self) -> Option<&OsStr> {
         self.inner.extension()
     }
+
+    /// Extracts the prefix of `self`, if possible.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// // This example works only windows
+    /// assert!(Path::new("/test/toto").normalize().prefix().is_none());
+    /// assert!(Path::new(r"C:\test\toto").normalize().prefix().is_some());
+    /// ```
+    #[inline]
+    pub fn prefix(&self) -> Option<PrefixComponent> {
+        self.inner.components().next()
+            .and_then(|cmp| if let Component::Prefix(prefix) = cmp { Some(prefix) } else { None })
+    }
+
+    /// Converts a `NormalizedPath` to an owned [`NormalizedPathBuf`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::path::{Path, PathBuf};
+    /// use ring_utils::Normalize;
+    ///
+    /// let path_buf = Path::new("/foo.txt").normalize().to_path_buf();
+    /// assert_eq!(path_buf, Path::new("/foo.txt").to_path_buf());
+    /// ```
+    #[must_use]
+    #[inline]
+    pub fn to_path_buf(&self) -> NormalizedPathBuf {
+        NormalizedPathBuf { inner: self.inner.to_path_buf() }
+    }
+
+    /// Returns `Ok(true)` if the path points at an existing entity.
+    ///
+    /// For more details see [`Path::try_exists`].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use ring_utils::Normalize;
+    ///
+    /// assert!(!Path::new("/does_not_exist.txt").normalize().try_exists().expect("Can't check existence of file does_not_exist.txt"));
+    /// assert!(Path::new("/root/secret_file.txt").normalize().try_exists().is_err());
+    /// ```
+    #[inline]
+    pub fn try_exists(&self) -> io::Result<bool> {
+        self.inner.try_exists()
+    }
 }
 
-impl AsRef<OsStr> for &NormalizedPath {
+impl AsRef<OsStr> for NormalizedPath {
     fn as_ref(&self) -> &OsStr {
         self.as_os_str()
     }
 }
 
-impl AsRef<Path> for &NormalizedPath {
+impl AsRef<Path> for NormalizedPath {
     fn as_ref(&self) -> &Path {
         self.as_path()
+    }
+}
+
+impl AsRef<NormalizedPath> for NormalizedPath {
+    fn as_ref(&self) -> &NormalizedPath {
+        self
     }
 }
 
@@ -856,6 +968,13 @@ mod tests {
 
         assert_eq!(path.components(), path.components());
         assert_eq!(path.components(), Path::new("/foo/bar").components());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn it_should_extract_path_prefix() {
+        assert!(Path::new("/test/toto").normalize().prefix().is_none());
+        assert!(Path::new(r"C:\test\toto").normalize().prefix().is_some());
     }
 
     #[test]

@@ -1,11 +1,10 @@
 use crate::constants::MANIFEST;
 use crate::{CargoManifest, RustProject};
 use ring_files::ManifestLoader;
-use ring_traits::{Detector, DetectAs, Project, Tagged, detect_as, detect_from};
+use ring_traits::{Detect, DetectAs, Project, Tagged, detect_as, detect_from};
 use ring_utils::OptionalResult::{self, Found};
-use ring_utils::PathTree;
+use ring_utils::{NormalizedPath, PathTree};
 use std::cell::RefCell;
-use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, info};
 
@@ -34,10 +33,10 @@ impl Default for RustProjectDetector {
     }
 }
 
-impl Detector for RustProjectDetector {
+impl Detect for RustProjectDetector {
     type Item = Rc<RustProject>;
 
-    fn detect_at(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_at(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         let path = if path.is_file() { path.parent().unwrap() } else { path };
 
         if let Some(project) = self.cache.borrow().get(path) {
@@ -54,7 +53,7 @@ impl Detector for RustProjectDetector {
             })
     }
 
-    fn detect_from(&self, path: &Path) -> OptionalResult<Self::Item> {
+    fn detect_from(&self, path: &NormalizedPath) -> OptionalResult<Self::Item> {
         info!("Searching rust project from {}", path.display());
         detect_from!(self, path)
     }

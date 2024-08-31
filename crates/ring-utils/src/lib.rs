@@ -2,7 +2,6 @@ mod macros;
 mod normalized_path;
 mod optional_result;
 mod path_tree;
-mod path;
 mod tag;
 
 pub use normalized_path::*;

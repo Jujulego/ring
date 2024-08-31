@@ -1,12 +1,11 @@
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::ErrorKind;
-use std::path::Path;
 use std::rc::Rc;
 use anyhow::{anyhow, Context};
 use tracing::{debug, trace};
 use ring_traits::Manifest;
-use ring_utils::{OptionalResult, PathTree};
+use ring_utils::{NormalizedPath, OptionalResult, PathTree};
 
 #[derive(Debug)]
 pub struct ManifestLoader<M : Manifest> {
@@ -22,7 +21,7 @@ impl<M : Manifest> ManifestLoader<M> {
         }
     }
 
-    pub fn load(&self, path: &Path) -> OptionalResult<Rc<M>> {
+    pub fn load(&self, path: &NormalizedPath) -> OptionalResult<Rc<M>> {
         let path = path.join(self.filename);
         
         if let Some(result) = self.cache.borrow().get(&path) {
