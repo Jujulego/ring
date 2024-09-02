@@ -10,6 +10,7 @@
   "files": [
     "./bin"
   ],
+  "bin": "./bin/ring",
   "os": [
     "linux"
   ],

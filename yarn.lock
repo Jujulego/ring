@@ -124,24 +124,32 @@ __metadata:
 "@jujulego/ring-linux-amd64@npm:0.0.0-dev, @jujulego/ring-linux-amd64@workspace:npm/ring-linux-amd64":
   version: 0.0.0-use.local
   resolution: "@jujulego/ring-linux-amd64@workspace:npm/ring-linux-amd64"
+  bin:
+    ring-linux-amd64: ./bin/ring
   languageName: unknown
   linkType: soft
 
 "@jujulego/ring-macos-amd64@npm:0.0.0-dev, @jujulego/ring-macos-amd64@workspace:npm/ring-macos-amd64":
   version: 0.0.0-use.local
   resolution: "@jujulego/ring-macos-amd64@workspace:npm/ring-macos-amd64"
+  bin:
+    ring-macos-amd64: ./bin/ring
   languageName: unknown
   linkType: soft
 
 "@jujulego/ring-macos-arm64@npm:0.0.0-dev, @jujulego/ring-macos-arm64@workspace:npm/ring-macos-arm64":
   version: 0.0.0-use.local
   resolution: "@jujulego/ring-macos-arm64@workspace:npm/ring-macos-arm64"
+  bin:
+    ring-macos-arm64: ./bin/ring
   languageName: unknown
   linkType: soft
 
 "@jujulego/ring-windows-amd64@npm:0.0.0-dev, @jujulego/ring-windows-amd64@workspace:npm/ring-windows-amd64":
   version: 0.0.0-use.local
   resolution: "@jujulego/ring-windows-amd64@workspace:npm/ring-windows-amd64"
+  bin:
+    ring-windows-amd64: ./bin/ring
   languageName: unknown
   linkType: soft
 
