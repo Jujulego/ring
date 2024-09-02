@@ -10,7 +10,7 @@ while (packages.length) {
   const name = packages.pop();
 
   const manifestPath = path.resolve(import.meta.dirname, '..', 'npm', name, 'package.json');
-  const manifest = require(manifestPath);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
   manifest.version = version;
 
