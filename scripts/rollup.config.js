@@ -22,6 +22,7 @@ const options = {
   ],
   external: [
     ...Object.keys(pkg.dependencies),
+    'yargs/helpers',
   ]
 };
 
