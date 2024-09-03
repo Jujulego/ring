@@ -1,0 +1,29 @@
+{
+  "name": "@ring/scripts",
+  "author": "Julien Capellari <julien.capellari@gmail.com>",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "./bin",
+    "./dist"
+  ],
+  "bin": {
+    "ring-dt": "./bin/ring-dt"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "postinstall": "rollup -c"
+  },
+  "dependencies": {
+    "@swc/helpers": "0.5.13"
+  },
+  "devDependencies": {
+    "@jujulego/vite-plugin-swc": "1.2.0",
+    "@rollup/plugin-node-resolve": "15.2.3",
+    "@swc/core": "1.7.23",
+    "@types/node": "20.14.8",
+    "rollup": "4.21.2",
+    "typescript": "5.5.4"
+  }
+}
