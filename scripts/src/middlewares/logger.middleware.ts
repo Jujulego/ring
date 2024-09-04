@@ -1,18 +1,19 @@
 import {
-  type Log, logDebugFilter$, logDelay$,
+  type Log, logDebugFilter$, type LogDelay, logDelay$,
   LogLevel,
   type LogLevelKey,
-  qLogDelay, toStderr,
+  qLogDelay,
   type WithDelay,
 } from '@kyrielle/logger';
 import { defineQuickFormat, q$, qarg, qerror, qprop, qwrap } from '@jujulego/quick-tag';
 import { chalkTemplateStderr } from 'chalk-template';
 import os from 'node:os';
 import type { ColorName, ModifierName } from 'chalk';
+import process from 'node:process';
 import type { Argv } from 'yargs';
-import { filter$, flow$ } from 'kyrielle';
+import { filter$, flow$, observer$ } from 'kyrielle';
 import { inject$ } from '@kyrielle/injector';
-import { Logger } from '../tokens.js';
+import { Logger, Spinner } from '../tokens.js';
 
 // Constants
 const VERBOSITY_LEVEL: Record<number, LogLevelKey> = {
@@ -50,7 +51,18 @@ export function loggerMiddleware(parser: Argv) {
         filter$((log) => log.level >= logLevel),
         logDebugFilter$(),
         logDelay$(),
-        toStderr(logFormat)
+        observer$({
+          next(log: Log & LogDelay) {
+            const spinner = inject$(Spinner);
+
+            spinner.clear();
+            process.stderr.write(logFormat(log) + os.EOL);
+
+            if (spinner.isSpinning) {
+              spinner.render();
+            }
+          }
+        })
       );
     });
 }
