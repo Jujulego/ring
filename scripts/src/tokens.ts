@@ -1,7 +1,7 @@
 import { token$ } from '@kyrielle/injector';
 import { logger$, withTimestamp } from '@kyrielle/logger';
-import ora from 'ora';
+import yoctoSpinner from 'yocto-spinner';
 
 // Tokens
 export const Logger = token$('Logger', () => logger$(withTimestamp()));
-export const Spinner = token$('Spinner', () => ora());
+export const Spinner = token$('Spinner', () => yoctoSpinner());

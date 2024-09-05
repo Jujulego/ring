@@ -1,18 +1,20 @@
+import { defineQuickFormat, q$, qarg, qerror, qprop, qwrap } from '@jujulego/quick-tag';
+import { globalScope$, inject$ } from '@kyrielle/injector';
 import {
-  type Log, type LogDelay, logDelay$,
+  type Log,
+  type LogDelay,
+  logDelay$,
   LogLevel,
   type LogLevelKey,
   qLogDelay,
   type WithDelay,
 } from '@kyrielle/logger';
-import { defineQuickFormat, q$, qarg, qerror, qprop, qwrap } from '@jujulego/quick-tag';
-import { chalkTemplateStderr } from 'chalk-template';
-import os from 'node:os';
 import type { ColorName, ModifierName } from 'chalk';
+import { chalkTemplateStderr } from 'chalk-template';
+import { filter$, flow$, observer$ } from 'kyrielle';
+import os from 'node:os';
 import process from 'node:process';
 import type { Argv } from 'yargs';
-import { filter$, flow$, observer$ } from 'kyrielle';
-import { globalScope$, inject$ } from '@kyrielle/injector';
 import { Logger, Spinner } from '../tokens.js';
 
 // Constants
@@ -56,10 +58,6 @@ export function loggerMiddleware(parser: Argv) {
 
             spinner?.clear();
             process.stderr.write(logFormat(log) + os.EOL);
-
-            if (spinner?.isSpinning) {
-              spinner.render();
-            }
           }
         })
       );
