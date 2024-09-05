@@ -180,7 +180,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@jujulego/ring@workspace:npm/ring":
+"@jujulego/ring@workspace:*, @jujulego/ring@workspace:npm/ring":
   version: 0.0.0-use.local
   resolution: "@jujulego/ring@workspace:npm/ring"
   dependencies:
@@ -2443,6 +2443,7 @@ __metadata:
   resolution: "ring@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.9.0"
+    "@jujulego/ring": "workspace:*"
     "@microsoft/eslint-formatter-sarif": "npm:3.1.0"
     "@ring/scripts": "workspace:*"
     eslint: "npm:^9.9.0"

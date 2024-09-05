@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@jujulego/ring": "workspace:*",
     "@microsoft/eslint-formatter-sarif": "3.1.0",
     "@ring/scripts": "workspace:*",
     "eslint": "^9.9.0",

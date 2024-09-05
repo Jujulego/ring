@@ -1,5 +1,5 @@
 import {
-  type Log, logDebugFilter$, type LogDelay, logDelay$,
+  type Log, type LogDelay, logDelay$,
   LogLevel,
   type LogLevelKey,
   qLogDelay,
@@ -12,7 +12,7 @@ import type { ColorName, ModifierName } from 'chalk';
 import process from 'node:process';
 import type { Argv } from 'yargs';
 import { filter$, flow$, observer$ } from 'kyrielle';
-import { inject$ } from '@kyrielle/injector';
+import { globalScope$, inject$ } from '@kyrielle/injector';
 import { Logger, Spinner } from '../tokens.js';
 
 // Constants
@@ -49,16 +49,15 @@ export function loggerMiddleware(parser: Argv) {
       flow$(
         inject$(Logger),
         filter$((log) => log.level >= logLevel),
-        logDebugFilter$(),
         logDelay$(),
         observer$({
           next(log: Log & LogDelay) {
-            const spinner = inject$(Spinner);
+            const spinner = globalScope$().get(Spinner);
 
-            spinner.clear();
+            spinner?.clear();
             process.stderr.write(logFormat(log) + os.EOL);
 
-            if (spinner.isSpinning) {
+            if (spinner?.isSpinning) {
               spinner.render();
             }
           }

@@ -1,7 +1,7 @@
 import process from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import build from './commands/build.js';
+import link from './commands/link.js';
 import { loggerMiddleware } from './middlewares/logger.middleware.js';
 
 // Bootstrap
@@ -11,7 +11,7 @@ const parser = yargs(hideBin(process.argv))
 loggerMiddleware(parser);
 
 parser
-  .command(build)
+  .command(link)
   .demandCommand()
   .recommendCommands()
   .strictCommands();
