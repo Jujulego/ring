@@ -111,7 +111,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Set packages version
-        run: node ./scripts/npm-cli-version.js ${{ steps.info.outputs.version }}
+        run: yarn ring-dt set version ${{ steps.info.outputs.version }}
 
       - name: Publish packages
         run: |

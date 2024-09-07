@@ -1,0 +1,39 @@
+{
+  "name": "@ring/scripts",
+  "author": "Julien Capellari <julien.capellari@gmail.com>",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "./bin",
+    "./dist"
+  ],
+  "bin": {
+    "ring-dt": "bin/ring-dt.js"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c --watch",
+    "postinstall": "rollup -c"
+  },
+  "dependencies": {
+    "@jujulego/quick-tag": "1.0.3",
+    "@kyrielle/injector": "1.0.0-alpha.2",
+    "@kyrielle/logger": "1.0.0-beta.2",
+    "@swc/helpers": "0.5.13",
+    "chalk": "5.3.0",
+    "chalk-template": "1.1.0",
+    "kyrielle": "1.0.0-beta.2",
+    "yargs": "17.7.2",
+    "yocto-spinner": "0.1.0"
+  },
+  "devDependencies": {
+    "@jujulego/vite-plugin-swc": "1.2.0",
+    "@rollup/plugin-node-resolve": "15.2.3",
+    "@swc/core": "1.7.23",
+    "@types/node": "20.14.8",
+    "@types/yargs": "17.0.33",
+    "rollup": "4.21.2",
+    "typescript": "5.5.4"
+  }
+}
