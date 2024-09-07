@@ -1,8 +1,8 @@
 use std::fmt::{Display, Formatter};
 use semver::VersionReq;
-use crate::NormalizedPathBuf;
+use crate::{NormalizedPathBuf, Tag, Tagged};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Requirement {
     Any,
     Path(NormalizedPathBuf),
@@ -19,12 +19,51 @@ impl Display for Requirement {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Dependency {
+    name: String,
+    requirement: Requirement,
+    tag: Option<Tag>,
+}
+
+impl Dependency {
+    pub fn new(name: String, requirement: Requirement) -> Self {
+        Dependency { name, requirement, tag: None }
+    }
+    
+    pub fn with_tag(name: String, requirement: Requirement, tag: Tag) -> Self {
+        Dependency { name, requirement, tag: Some(tag) }
+    }
+    
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    
+    pub fn requirement(&self) -> &Requirement {
+        &self.requirement
+    }
+    
+    pub fn tag(&self) -> &Option<Tag> {
+        &self.tag
+    }
+}
+
+impl Tagged for Dependency {
+    fn tags(&self) -> Vec<Tag> {
+        if let Some(tag) = &self.tag {
+            vec![tag.clone()]
+        } else {
+            vec![]
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::Path;
     use crate::Normalize;
     use super::*;
-    
+
     #[test]
     fn it_should_display_requirement() {
         assert_eq!(format!("{}", Requirement::Any), "any");
