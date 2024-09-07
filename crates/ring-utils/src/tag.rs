@@ -1,24 +1,25 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 use owo_colors::{DynColors, OwoColorize};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Tag {
-    label: &'static str,
+    label: String,
     color: Option<DynColors>,
 }
 
 impl Tag {
-    pub const fn new(label: &'static str) -> Tag {
+    pub fn new(label: String) -> Tag {
         Tag { label, color: None }
     }
 
-    pub const fn with_color(label: &'static str, color: DynColors) -> Tag {
-        Tag { label, color: Some(color) }
+    pub fn with_color(self, color: DynColors) -> Tag {
+        Tag { label: self.label, color: Some(color) }
     }
 
-    pub const fn label(&self) -> &'static str {
-        self.label
+    pub const fn label(&self) -> &String {
+        &self.label
     }
 }
 
@@ -36,13 +37,13 @@ impl Eq for Tag {}
 
 impl PartialEq for Tag {
     fn eq(&self, other: &Self) -> bool {
-        self.label.eq(other.label)
+        self.label == other.label
     }
 }
 
 impl Ord for Tag {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.label.cmp(other.label)
+        self.label.cmp(&other.label)
     }
 }
 
@@ -50,6 +51,25 @@ impl PartialOrd for Tag {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+
+impl From<&str> for Tag {
+    fn from(value: &str) -> Self {
+        Tag::new(String::from(value))
+    }
+}
+
+impl FromStr for Tag {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Tag::from(s))
+    }
+}
+
+pub trait Tagged {
+    /// Return some tags on entity
+    fn tags(&self) -> Vec<Tag>;
 }
 
 #[cfg(test)]
@@ -60,9 +80,9 @@ mod tests {
 
     #[test]
     fn it_should_display_with_given_color() {
-        assert_eq!(format!("{}", Tag::new("testA")), "testA");
+        assert_eq!(format!("{}", Tag::from("testA")), "testA");
         assert_eq!(
-            format!("{}", Tag::with_color("testA", Ansi(AnsiColors::Blue))),
+            format!("{}", Tag::from("test1").with_color(Ansi(AnsiColors::Blue))),
             format!("{}", "testA".blue())
         );
     }
@@ -70,7 +90,7 @@ mod tests {
     #[test]
     fn it_should_have_same_eq_than_inner_str() {
         assert_eq!(
-            Tag::new("testA").eq(&Tag::new("testB")),
+            Tag::from("testA").eq(&Tag::from("testB")),
             "testA".eq("testB"),
         );
     }
@@ -78,7 +98,7 @@ mod tests {
     #[test]
     fn it_should_have_same_ord_than_inner_str() {
         assert_eq!(
-            Tag::new("testA").cmp(&Tag::new("testB")),
+            Tag::from("testA").cmp(&Tag::from("testB")),
             "testA".cmp("testB"),
         );
     }
@@ -86,7 +106,7 @@ mod tests {
     #[test]
     fn it_should_have_same_partial_ord_than_inner_str() {
         assert_eq!(
-            Tag::new("testA").partial_cmp(&Tag::new("testB")),
+            Tag::from("testA").partial_cmp(&Tag::from("testB")),
             "testA".partial_cmp("testB"),
         );
     }

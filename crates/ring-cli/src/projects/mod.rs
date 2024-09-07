@@ -6,8 +6,8 @@ use ring_core::RingCore;
 
 pub fn build_command() -> Command {
     Command::new("projects")
-        .aliases(["project"])
-        .visible_aliases(["prj"])
+        .aliases(["prj"])
+        .visible_aliases(["project"])
         .subcommand_required(true)
         .subcommands([
             current::build_command(),

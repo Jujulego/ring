@@ -1,10 +1,10 @@
+use crate::constants::rust_tag;
+use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
+use ring_files::PatternIterator;
+use ring_traits::{ProjectIterator, Scope};
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag, Tagged};
 use std::rc::Rc;
 use tracing::{debug, warn};
-use ring_files::PatternIterator;
-use ring_traits::{ProjectIterator, Scope, Tagged};
-use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
-use crate::{CargoManifest, CargoWorkspace, RustProjectDetector};
-use crate::constants::RUST_TAG;
 
 #[derive(Debug)]
 pub struct RustScope {
@@ -44,7 +44,7 @@ impl Scope for RustScope {
 }
 
 impl Tagged for RustScope {
-    fn tags(&self) ->  &[&'static Tag] {
-        &[&RUST_TAG]
+    fn tags(&self) -> Vec<Tag> {
+        vec![rust_tag()]
     }
 }

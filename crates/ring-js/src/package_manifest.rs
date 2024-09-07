@@ -1,8 +1,9 @@
-use std::io::Read;
 use anyhow::Context;
+use ring_traits::Manifest;
 use semver::Version;
 use serde::Deserialize;
-use ring_traits::Manifest;
+use std::collections::HashMap;
+use std::io::Read;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 pub struct PackageManifest {
@@ -11,6 +12,12 @@ pub struct PackageManifest {
     pub version: Option<Version>,
     #[serde(default)]
     pub workspaces: Vec<String>,
+    #[serde(default)]
+    pub dependencies: HashMap<String, String>,
+    #[serde(default, rename="devDependencies")]
+    pub dev_dependencies: HashMap<String, String>,
+    #[serde(default, rename="optionalDependencies")]
+    pub optional_dependencies: HashMap<String, String>,
 }
 
 impl Manifest for PackageManifest {

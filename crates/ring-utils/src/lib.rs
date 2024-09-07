@@ -9,4 +9,4 @@ pub use normalized_path::*;
 pub use optional_result::OptionalResult;
 pub use path_tree::PathTree;
 pub use requirement::Requirement;
-pub use tag::Tag;
+pub use tag::*;
