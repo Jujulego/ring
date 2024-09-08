@@ -1,7 +1,7 @@
 use crate::constants::js_tag;
 use crate::package_manifest::PackageManifest;
 use crate::PackageManager;
-use ring_traits::Project;
+use ring_traits::{DependencyIterator, Project};
 use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag, Tagged};
 use semver::Version;
 use std::rc::Rc;
@@ -38,6 +38,10 @@ impl Project for JsProject {
 
     fn version(&self) -> Option<&Version> {
         self.manifest.version.as_ref()
+    }
+
+    fn dependencies(&self) -> Box<DependencyIterator> {
+        todo!()
     }
 }
 

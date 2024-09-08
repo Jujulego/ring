@@ -46,6 +46,9 @@ mod tests {
             name: "test".to_string(),
             version: None,
             workspaces: Vec::new(),
+            dependencies: HashMap::default(),
+            dev_dependencies: HashMap::default(),
+            optional_dependencies: HashMap::default(),
         });
     }
 
@@ -60,6 +63,9 @@ mod tests {
             name: "test".to_string(),
             version: Some(Version::new(1, 0, 0)),
             workspaces: Vec::new(),
+            dependencies: HashMap::default(),
+            dev_dependencies: HashMap::default(),
+            optional_dependencies: HashMap::default(),
         });
     }
 
@@ -77,6 +83,9 @@ mod tests {
                 "packages/test-a".to_string(),
                 "packages/test-b".to_string()
             ],
+            dependencies: HashMap::default(),
+            dev_dependencies: HashMap::default(),
+            optional_dependencies: HashMap::default(),
         });
     }
 }

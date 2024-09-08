@@ -1,13 +1,10 @@
-use std::rc::Rc;
-use ring_utils::NormalizedPath;
-use crate::{DetectAs, ProjectIterator, Tagged};
+use ring_utils::{NormalizedPath, Tagged};
+use crate::ProjectIterator;
 
 pub trait Scope : Tagged {
     /// Returns scope root directory
     fn root(&self) -> &NormalizedPath;
 
     /// Returns an iterator over scope projects
-    fn projects(&self) -> Box<ProjectIterator<'_>>;
+    fn projects(&self) -> Box<ProjectIterator>;
 }
-
-pub type ScopeDetector = dyn DetectAs<Rc<dyn Scope>>;

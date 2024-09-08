@@ -1,6 +1,6 @@
 use crate::constants::rust_tag;
 use crate::{CargoManifest, CargoPackage};
-use ring_traits::Project;
+use ring_traits::{DependencyIterator, Project};
 use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag, Tagged};
 use semver::Version;
 use std::rc::Rc;
@@ -32,6 +32,10 @@ impl Project for RustProject {
 
     fn version(&self) -> Option<&Version> {
         self.package().version.as_ref()
+    }
+
+    fn dependencies(&self) -> Box<DependencyIterator> {
+        todo!()
     }
 }
 
