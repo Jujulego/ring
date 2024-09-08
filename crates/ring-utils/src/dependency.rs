@@ -2,9 +2,9 @@ use std::fmt::{Display, Formatter};
 use semver::VersionReq;
 use crate::{NormalizedPathBuf, Tag, Tagged};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum Requirement {
-    Any,
+    #[default] Any,
     Path(NormalizedPathBuf),
     Version(VersionReq),
 }
@@ -31,8 +31,8 @@ impl Dependency {
         Dependency { name, requirement, tag: None }
     }
     
-    pub fn with_tag(name: String, requirement: Requirement, tag: Tag) -> Self {
-        Dependency { name, requirement, tag: Some(tag) }
+    pub fn with_tag(self, tag: Tag) -> Self {
+        Dependency { tag: Some(tag), ..self }
     }
     
     pub fn name(&self) -> &str {

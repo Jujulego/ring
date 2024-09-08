@@ -13,3 +13,11 @@ pub const PACKAGE_MANAGERS: [PackageManager; 3] = [
 pub fn js_tag() -> Tag {
     Tag::from("js").with_color(Ansi(AnsiColors::Yellow))
 }
+
+pub fn dev_tag() -> Tag {
+    Tag::from("dev").with_color(Ansi(AnsiColors::Blue))
+}
+
+pub fn optional_tag() -> Tag {
+    Tag::from("optional").with_color(Ansi(AnsiColors::Magenta))
+}
