@@ -2,7 +2,7 @@ use anyhow::Context;
 use ring_traits::Manifest;
 use semver::Version;
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::Read;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
@@ -13,11 +13,11 @@ pub struct PackageManifest {
     #[serde(default)]
     pub workspaces: Vec<String>,
     #[serde(default)]
-    pub dependencies: HashMap<String, String>,
+    pub dependencies: BTreeMap<String, String>,
     #[serde(default, rename="devDependencies")]
-    pub dev_dependencies: HashMap<String, String>,
+    pub dev_dependencies: BTreeMap<String, String>,
     #[serde(default, rename="optionalDependencies")]
-    pub optional_dependencies: HashMap<String, String>,
+    pub optional_dependencies: BTreeMap<String, String>,
 }
 
 impl Manifest for PackageManifest {
@@ -46,9 +46,9 @@ mod tests {
             name: "test".to_string(),
             version: None,
             workspaces: Vec::new(),
-            dependencies: HashMap::default(),
-            dev_dependencies: HashMap::default(),
-            optional_dependencies: HashMap::default(),
+            dependencies: BTreeMap::default(),
+            dev_dependencies: BTreeMap::default(),
+            optional_dependencies: BTreeMap::default(),
         });
     }
 
@@ -63,9 +63,9 @@ mod tests {
             name: "test".to_string(),
             version: Some(Version::new(1, 0, 0)),
             workspaces: Vec::new(),
-            dependencies: HashMap::default(),
-            dev_dependencies: HashMap::default(),
-            optional_dependencies: HashMap::default(),
+            dependencies: BTreeMap::default(),
+            dev_dependencies: BTreeMap::default(),
+            optional_dependencies: BTreeMap::default(),
         });
     }
 
@@ -83,9 +83,9 @@ mod tests {
                 "packages/test-a".to_string(),
                 "packages/test-b".to_string()
             ],
-            dependencies: HashMap::default(),
-            dev_dependencies: HashMap::default(),
-            optional_dependencies: HashMap::default(),
+            dependencies: BTreeMap::default(),
+            dev_dependencies: BTreeMap::default(),
+            optional_dependencies: BTreeMap::default(),
         });
     }
 }

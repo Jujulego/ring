@@ -48,6 +48,16 @@ impl Dependency {
     }
 }
 
+impl Display for Dependency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if let Some(tag) = &self.tag {
+            write!(f, "{}@{} {}", self.name, self.requirement, tag)
+        } else {
+            write!(f, "{}@{}", self.name, self.requirement)
+        }
+    }
+}
+
 impl Tagged for Dependency {
     fn tags(&self) -> Vec<Tag> {
         if let Some(tag) = &self.tag {
