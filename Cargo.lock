@@ -192,7 +192,7 @@ checksum = "55f5f3bc18b481c70c416920f4bb02f7df64b99dbee36d8445027042a273ab84"
 dependencies = [
  "aho-corasick",
  "nu-ansi-term 0.50.1",
- "owo-colors",
+ "owo-colors 4.0.0",
 ]
 
 [[package]]
@@ -265,6 +265,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caff54706df99d2a78a5a4e3455ff45448d81ef1bb63c22cd14052ca0e993a3f"
 
 [[package]]
+name = "owo-colors"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f1fd1e2f6b8c2caa4ede09a3c1b8fcab7b8b3c0c82987e685eb0df047b044f5"
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -322,7 +328,7 @@ dependencies = [
  "clap",
  "itertools",
  "lscolors",
- "owo-colors",
+ "owo-colors 5.0.0",
  "ring-cli-formatters",
  "ring-core",
  "ring-js",
@@ -369,7 +375,7 @@ name = "ring-js"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "owo-colors",
+ "owo-colors 5.0.0",
  "ring-files",
  "ring-traits",
  "ring-utils",
@@ -384,7 +390,7 @@ name = "ring-rust"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "owo-colors",
+ "owo-colors 5.0.0",
  "ring-files",
  "ring-traits",
  "ring-utils",
@@ -410,7 +416,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "mockall",
- "owo-colors",
+ "owo-colors 5.0.0",
 ]
 
 [[package]]

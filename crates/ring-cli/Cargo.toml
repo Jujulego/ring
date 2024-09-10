@@ -13,7 +13,7 @@ anyhow = "1.0.83"
 clap = "4.5.4"
 itertools = "0.13.0"
 lscolors = { version = "0.19.0", features = ["owo-colors"] }
-owo-colors = "4.0.0"
+owo-colors = "5.0.0"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
