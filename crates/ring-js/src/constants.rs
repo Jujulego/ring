@@ -10,14 +10,17 @@ pub const PACKAGE_MANAGERS: [PackageManager; 3] = [
     PackageManager::Yarn,
 ];
 
+#[inline]
 pub fn js_tag() -> Tag {
     Tag::from("js").with_color(Ansi(AnsiColors::Yellow))
 }
 
+#[inline]
 pub fn dev_tag() -> Tag {
     Tag::from("dev").with_color(Ansi(AnsiColors::Blue))
 }
 
+#[inline]
 pub fn optional_tag() -> Tag {
     Tag::from("optional").with_color(Ansi(AnsiColors::Magenta))
 }

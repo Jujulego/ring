@@ -409,7 +409,10 @@ impl NormalizedPath {
     /// ```
     #[must_use]
     pub fn join<P : AsRef<Path>>(&self, path: P) -> NormalizedPathBuf {
-        NormalizedPathBuf { inner: self.inner.join(path) }
+        let mut result = NormalizedPathBuf { inner: self.inner.to_path_buf() };
+        result._push(path.as_ref());
+        
+        result
     }
 
     /// Returns path without its final component, if there is one.

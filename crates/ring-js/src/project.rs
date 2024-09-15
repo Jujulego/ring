@@ -43,13 +43,19 @@ impl Project for JsProject {
 
     fn dependencies(&self) -> Box<DependencyIterator> {
         let deps = self.manifest.dependencies.iter()
-            .map(|(name, req)| Dependency::new(name.to_string(), parse_js_requirement(req, &self.root)));
+            .map(|(name, req)| parse_js_requirement(req, &self.root)
+                .map(|req| Dependency::new(name.to_string(), req))
+            );
         
         let dev_deps = self.manifest.dev_dependencies.iter()
-            .map(|(name, req)| Dependency::new(name.to_string(), parse_js_requirement(req, &self.root)).with_tag(dev_tag()));
+            .map(|(name, req)| parse_js_requirement(req, &self.root)
+                .map(|req| Dependency::new(name.to_string(), req).with_tag(dev_tag()))
+            );
         
         let opt_deps = self.manifest.optional_dependencies.iter()
-            .map(|(name, req)| Dependency::new(name.to_string(), parse_js_requirement(req, &self.root)).with_tag(optional_tag()));
+            .map(|(name, req)| parse_js_requirement(req, &self.root)
+                .map(|req| Dependency::new(name.to_string(), req).with_tag(optional_tag()))
+            );
         
         Box::new(deps.chain(dev_deps).chain(opt_deps))
     }

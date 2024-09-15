@@ -12,7 +12,7 @@ pub use project::Project;
 pub use scope::Scope;
 
 // Aliases
-pub type DependencyIterator<'a> = dyn Iterator<Item = ring_utils::Dependency> + 'a;
+pub type DependencyIterator<'a> = dyn Iterator<Item = anyhow::Result<ring_utils::Dependency>> + 'a;
 pub type ProjectDetector = dyn DetectAs<Rc<dyn Project>>;
 pub type ProjectIterator<'a> = dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a;
 pub type ScopeDetector = dyn DetectAs<Rc<dyn Scope>>;
