@@ -339,7 +339,7 @@ __metadata:
     "@types/yargs": "npm:17.0.33"
     chalk: "npm:5.3.0"
     chalk-template: "npm:1.1.0"
-    kyrielle: "npm:1.0.0-beta.2"
+    kyrielle: "npm:1.0.0-beta.3"
     rollup: "npm:4.21.3"
     typescript: "npm:5.6.2"
     yargs: "npm:17.7.2"
@@ -1860,16 +1860,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kyrielle@npm:1.0.0-beta.2, kyrielle@npm:^1.0.0-beta.1":
-  version: 1.0.0-beta.2
-  resolution: "kyrielle@npm:1.0.0-beta.2"
+"kyrielle@npm:1.0.0-beta.3, kyrielle@npm:^1.0.0-beta.1":
+  version: 1.0.0-beta.3
+  resolution: "kyrielle@npm:1.0.0-beta.3"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.5"
     "@swc/helpers": "npm:^0.5.3"
   dependenciesMeta:
-    vitest@1.6.0:
+    vitest@2.1.1:
       unplugged: true
-  checksum: 10c0/88af0d7b35e809ae13351866d39d0fd5fd0a80abc17c3ac9978b33ac76b99597ad8cc0d99d939f50ed93f36b5430f708a377a6199cd5159b1313c4bd55864dd2
+  checksum: 10c0/56bb1e40f51c82a14ef8b7ff22f41883457bfe9019526c5b072aed2101bd5707930c193340e4b8689dc5cc54aac0af23122faa913d76cfcbdd62593017c946ad
   languageName: node
   linkType: hard
 
