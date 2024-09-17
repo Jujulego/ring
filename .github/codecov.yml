@@ -13,32 +13,7 @@ component_management:
       paths:
         - crates/ring-cli/**
 
-    - component_id: crate-ring-cli-formatters
-      name: cli-formatters
+    - component_id: crate-ring-tag
+      name: tag
       paths:
-        - crates/ring-cli-formatters/**
-
-    - component_id: crate-ring-files
-      name: files
-      paths:
-        - crates/ring-files/**
-
-    - component_id: crate-ring-js
-      name: js
-      paths:
-        - crates/ring-js/**
-
-    - component_id: crate-ring-rust
-      name: rust
-      paths:
-        - crates/ring-rust/**
-
-    - component_id: crate-ring-traits
-      name: traits
-      paths:
-        - crates/ring-traits/**
-
-    - component_id: crate-ring-utils
-      name: utils
-      paths:
-        - crates/ring-utils/**
+        - crates/ring-tag/**
