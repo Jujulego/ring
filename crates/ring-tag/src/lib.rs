@@ -1,5 +1,9 @@
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
 use rgb::Rgb;
+
+#[cfg(feature = "owo")]
+use owo_colors::{DynColors, OwoColorize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tag
@@ -49,6 +53,17 @@ impl Tag {
 
     pub fn color(&self) -> Option<&Rgb<u8>> {
         self.color.as_ref()
+    }
+}
+
+impl Display for Tag {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        #[cfg(feature = "owo")]
+        if let Some(color) = self.color() {
+            return self.label.color(DynColors::Rgb(color.r, color.g, color.b)).fmt(f)
+        }
+        
+        self.label.fmt(f)
     }
 }
 
@@ -103,6 +118,20 @@ mod tests {
         assert_eq!(
             Tag::from("a").partial_cmp(&Tag::from("b").with_color((0, 0, 0))),
             "a".partial_cmp("b")
+        );
+    }
+    
+    #[test]
+    fn it_should_print_uncolored_label() {
+        assert_eq!(format!("{}", Tag::from("hello")), "hello");
+    }
+    
+    #[test]
+    #[cfg(feature = "owo")]
+    fn it_should_print_colored_label() {
+        assert_eq!(
+            format!("{}", Tag::from("hello").with_color((255, 0, 0))),
+            format!("{}", "hello".color(DynColors::Rgb(255, 0, 0)))
         );
     }
 }
