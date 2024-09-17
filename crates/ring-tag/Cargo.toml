@@ -1,0 +1,11 @@
+[package]
+name = "ring-tag"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+owo = ["dep:owo-colors"]
+
+[dependencies]
+owo-colors = { version = "4.1.0", optional = true }
+rgb = "0.8.50"
