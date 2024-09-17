@@ -28,7 +28,7 @@ use owo_colors::{DynColors, OwoColorize};
 /// ```
 #[derive(Debug)]
 pub struct Tag {
-    label: String,
+    pub label: String,
     color: Option<Rgb<u8>>,
 }
 
@@ -39,8 +39,9 @@ impl Tag {
     }
 
     /// Adds given color to tag
+    #[inline]
     pub fn with_color<C: Into<Rgb<u8>>>(self, color: C) -> Tag {
-        Tag { label: self.label, color: Some(color.into()) }
+        self._with_color(color.into())
     }
 
     fn _with_color(self, color: Rgb<u8>) -> Tag {
