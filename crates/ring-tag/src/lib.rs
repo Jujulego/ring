@@ -55,7 +55,7 @@ impl Tag {
     pub fn with_scope<S: ToString + ?Sized>(self, scope: &S) -> Tag {
         self._with_scope(scope.to_string())
     }
-    
+
     fn _with_scope(self, scope: String) -> Tag {
         Tag { scope: Some(scope), ..self }
     }
@@ -176,9 +176,21 @@ mod tests {
     fn it_should_compare_by_scopes_then_by_labels() {
         assert_eq!(Tag::from("a").cmp(&Tag::from("b")), Ordering::Less);
         assert_eq!(Tag::from("hello").with_scope("a").cmp(&Tag::from("hello").with_scope("b")), Ordering::Less);
-        
+
         assert_eq!(Tag::from("a").partial_cmp(&Tag::from("b")), Some(Ordering::Less));
         assert_eq!(Tag::from("hello").with_scope("a").partial_cmp(&Tag::from("hello").with_scope("b")), Some(Ordering::Less));
+    }
+
+    #[test]
+    fn it_should_convert_from_string() {
+        assert_eq!(
+            Tag::from("a:hello"),
+            Tag { scope: Some("a".to_string()), label: "hello".to_string(), color: None }
+        );
+        assert_eq!(
+            Tag::from_str("a:hello"),
+            Ok(Tag { scope: Some("a".to_string()), label: "hello".to_string(), color: None })
+        );
     }
     
     #[test]
