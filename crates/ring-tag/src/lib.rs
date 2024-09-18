@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
 #[cfg(feature = "owo")]
 use owo_colors::{Style, Styled};
 
@@ -20,10 +21,17 @@ use owo_colors::{Style, Styled};
 ///
 /// let tag = Tag::from("example");
 /// assert_eq!(tag.label(), "example");
+/// assert_eq!(tag.scope(), None);
 /// assert_eq!(tag.color(), None);
 ///
 /// let tag = Tag::from("example").with_color((0, 255, 0));
 /// assert_eq!(tag.label(), "example");
+/// assert_eq!(tag.scope(), None);
+/// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0}));
+///
+/// let tag = Tag::from("example").with_scope("foo").with_color((0, 255, 0));
+/// assert_eq!(tag.label(), "example");
+/// assert_eq!(tag.scope(), Some("foo"));
 /// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0}));
 ///
 /// ```
@@ -60,6 +68,19 @@ impl Tag {
         Tag { scope: Some(scope), ..self }
     }
 
+    /// Displays colored tag using owo-colors
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use owo_colors::{OwoColorize, Style};
+    /// use ring_tag::Tag;
+    ///
+    /// assert_eq!(
+    ///     format!("{}", Tag::from("hello").with_scope("a").with_color((255, 0, 0)).styled()),
+    ///     format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
+    /// );
+    /// ```
     #[cfg(feature = "owo")]
     pub fn styled(&self) -> Styled<&Tag> {
         let mut style = Style::new();
@@ -79,8 +100,8 @@ impl Tag {
         self.color.as_ref()
     }
 
-    pub fn scope(&self) -> Option<&String> {
-        self.scope.as_ref()
+    pub fn scope(&self) -> Option<&str> {
+        self.scope.as_deref()
     }
 }
 
