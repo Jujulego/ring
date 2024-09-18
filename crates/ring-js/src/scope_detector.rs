@@ -1,10 +1,10 @@
-use std::cell::RefCell;
 use crate::{JsProjectDetector, JsScope};
-use ring_traits::{Detect, DetectAs, Scope, Tagged, detect_as, detect_from};
+use ring_traits::{detect_as, detect_from, Detect, DetectAs, Scope};
 use ring_utils::OptionalResult::{self, Found};
+use ring_utils::{NormalizedPath, PathTree, Tagged};
+use std::cell::RefCell;
 use std::rc::Rc;
 use tracing::{debug, info};
-use ring_utils::{NormalizedPath, PathTree};
 
 #[derive(Debug)]
 pub struct JsScopeDetector {

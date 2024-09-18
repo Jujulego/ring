@@ -1,7 +1,6 @@
-use std::rc::Rc;
 use semver::Version;
-use ring_utils::NormalizedPath;
-use crate::{DetectAs, Tagged};
+use ring_utils::{NormalizedPath, Tagged};
+use crate::DependencyIterator;
 
 pub trait Project : Tagged {
     /// Returns project root directory
@@ -12,7 +11,7 @@ pub trait Project : Tagged {
 
     /// Returns project version (if any)
     fn version(&self) -> Option<&Version>;
+    
+    /// Returns project dependencies
+    fn dependencies(&self) -> Box<DependencyIterator>;
 }
-
-pub type ProjectDetector = dyn DetectAs<Rc<dyn Project>>;
-pub type ProjectIterator<'a> = dyn Iterator<Item = anyhow::Result<Rc<dyn Project>>> + 'a;

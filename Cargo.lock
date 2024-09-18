@@ -411,6 +411,7 @@ dependencies = [
  "anyhow",
  "mockall",
  "owo-colors",
+ "semver",
 ]
 
 [[package]]

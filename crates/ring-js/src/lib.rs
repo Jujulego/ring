@@ -6,6 +6,7 @@ mod project;
 mod project_detector;
 mod scope;
 mod scope_detector;
+mod utils;
 
 pub use package_manager::PackageManager;
 pub use package_manifest::PackageManifest;

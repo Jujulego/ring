@@ -1,5 +1,6 @@
 pub use combined_detector::CombinedDetector;
-use ring_traits::{Module, Project, Scope, Tagged};
+use ring_traits::{Module, Project, Scope};
+use ring_utils::Tagged;
 use std::rc::Rc;
 
 #[cfg(feature = "js")]

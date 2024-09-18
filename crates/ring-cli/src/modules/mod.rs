@@ -5,8 +5,7 @@ use ring_core::RingCore;
 
 pub fn build_command() -> Command {
     Command::new("modules")
-        .aliases(["module"])
-        .visible_aliases(["mod"])
+        .aliases(["mod"])
         .subcommand_required(true)
         .subcommands([
             list::build_command()

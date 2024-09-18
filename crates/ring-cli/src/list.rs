@@ -47,7 +47,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
                 .map(lscolors::Style::to_owo_colors_style)
                 .unwrap_or_default();
 
-            let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
+            let mut tags: BTreeSet<Tag> = BTreeSet::new();
 
             for project in detector.detect_at(&entry.path().normalize()) {
                 tags.extend(project?.tags());
@@ -64,7 +64,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         }
     } else {
         let file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
-        let mut tags: BTreeSet<&'static Tag> = BTreeSet::new();
+        let mut tags: BTreeSet<Tag> = BTreeSet::new();
 
         for project in detector.detect_at(&path) {
             tags.extend(project?.tags());

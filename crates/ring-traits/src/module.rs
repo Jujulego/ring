@@ -1,6 +1,5 @@
 use std::rc::Rc;
-use crate::{ProjectDetector, ScopeDetector};
-use crate::tagged::TaggedDetector;
+use crate::{ProjectDetector, ScopeDetector, TaggedDetector};
 
 pub trait Module {
     fn name(&self) -> &'static str;

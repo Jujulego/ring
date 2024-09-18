@@ -1,8 +1,8 @@
-use crate::constants::JS_TAG;
+use crate::constants::js_tag;
 use crate::{JsProject, JsProjectDetector, PackageManager};
 use ring_files::PatternIterator;
-use ring_traits::{Project, ProjectIterator, Scope, Tagged};
-use ring_utils::{NormalizedPath, Tag};
+use ring_traits::{Project, ProjectIterator, Scope};
+use ring_utils::{NormalizedPath, Tag, Tagged};
 use std::rc::Rc;
 use tracing::{debug, warn};
 
@@ -50,7 +50,7 @@ impl Scope for JsScope {
 }
 
 impl Tagged for JsScope {
-    fn tags(&self) -> &[&'static Tag] {
-        &[&JS_TAG]
+    fn tags(&self) -> Vec<Tag> {
+        vec![js_tag()]
     }
 }

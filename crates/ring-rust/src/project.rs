@@ -1,9 +1,9 @@
-use std::rc::Rc;
-use semver::Version;
-use ring_traits::{Project, Tagged};
-use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag};
+use crate::constants::rust_tag;
 use crate::{CargoManifest, CargoPackage};
-use crate::constants::RUST_TAG;
+use ring_traits::{DependencyIterator, Project};
+use ring_utils::{NormalizedPath, NormalizedPathBuf, Tag, Tagged};
+use semver::Version;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct RustProject {
@@ -33,10 +33,14 @@ impl Project for RustProject {
     fn version(&self) -> Option<&Version> {
         self.package().version.as_ref()
     }
+
+    fn dependencies(&self) -> Box<DependencyIterator> {
+        todo!()
+    }
 }
 
 impl Tagged for RustProject {
-    fn tags(&self) ->  &[&'static Tag] {
-        &[&RUST_TAG]
+    fn tags(&self) -> Vec<Tag> {
+        vec![rust_tag()]
     }
 }
