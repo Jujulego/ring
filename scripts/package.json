@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@jujulego/vite-plugin-swc": "1.2.0",
-    "@rollup/plugin-node-resolve": "15.2.3",
+    "@rollup/plugin-node-resolve": "15.2.4",
     "@swc/core": "1.7.26",
     "@types/node": "20.16.5",
     "@types/yargs": "17.0.33",
