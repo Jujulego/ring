@@ -246,30 +246,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@kyrielle/injector@npm:1.0.0-alpha.2":
-  version: 1.0.0-alpha.2
-  resolution: "@kyrielle/injector@npm:1.0.0-alpha.2"
+"@kyrielle/injector@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@kyrielle/injector@npm:1.0.0"
   dependencies:
     "@swc/helpers": "npm:^0.5.3"
   dependenciesMeta:
-    vitest@1.5.2:
+    vitest@2.1.4:
       unplugged: true
-  checksum: 10c0/285515121f82839ce1f8129ccef51791315582e3dd700a73f9d159914fb904b7d5641d010fd6ebc2694db7eb1356a77725aa8b7a8ee0d6ab7d17b2adbf534ab1
+  checksum: 10c0/b07d0c7025693596ce31b493263e1532bacacc04f9c744b9e453fcba6ae8d43a48b6915efd62c33f6b3bb9be8c204bd3d927624bca8fb15c11b8ff50e0717173
   languageName: node
   linkType: hard
 
-"@kyrielle/logger@npm:1.0.0-beta.2":
-  version: 1.0.0-beta.2
-  resolution: "@kyrielle/logger@npm:1.0.0-beta.2"
+"@kyrielle/logger@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@kyrielle/logger@npm:2.0.0"
   dependencies:
     "@jujulego/quick-tag": "npm:^1.0.1"
     "@swc/helpers": "npm:^0.5.3"
-    kyrielle: "npm:^1.0.0-beta.1"
+    kyrielle: "npm:^2.2.1"
     pretty-ms: "npm:^9.0.0"
   dependenciesMeta:
-    vitest@2.0.2:
+    vitest@2.1.4:
       unplugged: true
-  checksum: 10c0/85096111d1a583c28f432576cb528182fe3990683208a5c393a41a41f886c70afd4e2ec0044b652421b4a7be12b2d9cad5a4e3544375e8fdd693fafbb7b0972b
+  checksum: 10c0/7adf1731d5a47f488a75da5ce4b108b5fc64e997df8413385cf2a09814346dba9b404100d7317578c30aec669650dd79dedddf5dbbd2a36b78df65bc2f3ea60d
   languageName: node
   linkType: hard
 
@@ -354,8 +354,8 @@ __metadata:
   dependencies:
     "@jujulego/quick-tag": "npm:1.0.3"
     "@jujulego/vite-plugin-swc": "npm:1.2.0"
-    "@kyrielle/injector": "npm:1.0.0-alpha.2"
-    "@kyrielle/logger": "npm:1.0.0-beta.2"
+    "@kyrielle/injector": "npm:1.0.0"
+    "@kyrielle/logger": "npm:2.0.0"
     "@rollup/plugin-node-resolve": "npm:15.3.0"
     "@swc/core": "npm:1.7.39"
     "@swc/helpers": "npm:0.5.13"
@@ -363,7 +363,7 @@ __metadata:
     "@types/yargs": "npm:17.0.33"
     chalk: "npm:5.3.0"
     chalk-template: "npm:1.1.0"
-    kyrielle: "npm:1.0.0-beta.3"
+    kyrielle: "npm:2.2.1"
     rollup: "npm:4.24.0"
     typescript: "npm:5.6.3"
     yargs: "npm:17.7.2"
@@ -1875,16 +1875,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kyrielle@npm:1.0.0-beta.3, kyrielle@npm:^1.0.0-beta.1":
-  version: 1.0.0-beta.3
-  resolution: "kyrielle@npm:1.0.0-beta.3"
+"kyrielle@npm:2.2.1, kyrielle@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "kyrielle@npm:2.2.1"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.5"
     "@swc/helpers": "npm:^0.5.3"
   dependenciesMeta:
-    vitest@2.1.1:
+    vitest@2.1.3:
       unplugged: true
-  checksum: 10c0/56bb1e40f51c82a14ef8b7ff22f41883457bfe9019526c5b072aed2101bd5707930c193340e4b8689dc5cc54aac0af23122faa913d76cfcbdd62593017c946ad
+  checksum: 10c0/7f6255d09194d13be9ab7416974d6d107192a6f4cc594dd400e71e3fbe8d900515de996b06522471a97d318759f94cc4b5a3b05a0c842f1cef187b3d13dcb4b7
   languageName: node
   linkType: hard
 
