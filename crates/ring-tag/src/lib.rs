@@ -2,6 +2,7 @@ use rgb::Rgb;
 use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
+use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
 #[cfg(feature = "owo")]
@@ -27,15 +28,15 @@ use owo_colors::{Style, Styled};
 /// let tag = Tag::from("example").with_color((0, 255, 0));
 /// assert_eq!(tag.label(), "example");
 /// assert_eq!(tag.scope(), None);
-/// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0}));
+/// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0 }));
 ///
 /// let tag = Tag::from("example").with_scope("foo").with_color((0, 255, 0));
 /// assert_eq!(tag.label(), "example");
 /// assert_eq!(tag.scope(), Some("foo"));
-/// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0}));
+/// assert_eq!(tag.color(), Some(&Rgb { r: 0, g: 255, b: 0 }));
 ///
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Tag {
     label: String,
     color: Option<Rgb<u8>>,
@@ -141,6 +142,13 @@ impl PartialEq for Tag {
     }
 }
 
+impl Hash for Tag {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.scope.hash(state);
+        self.label.hash(state);
+    }
+}
+
 impl Ord for Tag {
     fn cmp(&self, other: &Self) -> Ordering {
         self.scope.cmp(&other.scope).then(self.label.cmp(&other.label))
@@ -172,6 +180,14 @@ mod tests {
 
     #[cfg(feature = "owo")]
     use owo_colors::OwoColorize;
+    
+    macro_rules! hash {
+        ($v:expr) => {{
+            let mut hasher = std::hash::DefaultHasher::new();
+            $v.hash(&mut hasher);
+            hasher.finish()
+        }};
+    }
 
     #[test]
     fn it_should_be_equal_with_same_label_and_scope() {
@@ -190,6 +206,26 @@ mod tests {
         assert_eq!(
             Tag::from("hello").with_scope("a"),
             Tag::from("hello").with_scope("a").with_color((0, 0, 0))
+        );
+    }
+
+    #[test]
+    fn it_should_have_smae_hash_with_same_label_and_scope() {
+        assert_eq!(
+            hash!(Tag::from("hello")),
+            hash!(Tag::from("hello").with_color((0, 0, 0)))
+        );
+        assert_ne!(
+            hash!(Tag::from("hello")),
+            hash!(Tag::from("hello").with_scope("a"))
+        );
+        assert_ne!(
+            hash!(Tag::from("hello").with_scope("a")),
+            hash!(Tag::from("hello").with_scope("b"))
+        );
+        assert_eq!(
+            hash!(Tag::from("hello").with_scope("a")),
+            hash!(Tag::from("hello").with_scope("a").with_color((0, 0, 0)))
         );
     }
 
