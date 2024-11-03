@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.92"
 clap = "4.5.20"
+sentry = { version = "0.34.0", features = ["anyhow", "tracing"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"

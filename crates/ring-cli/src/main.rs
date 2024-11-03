@@ -1,10 +1,12 @@
+use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
-use clap::{arg, ArgAction, Command};
 use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::prelude::*;
 
 fn main() -> anyhow::Result<()> {
-    // Setup commands
+    let _guard = setup_sentry();
+
+    // Parse arguments
     let args = Command::new("ring")
         .version(env!("RING_CLI_VERSION"))
         .propagate_version(true)
@@ -15,19 +17,33 @@ fn main() -> anyhow::Result<()> {
         .get_matches();
 
     // Setup tracing
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(match args.get_count("verbose") {
-            0 => Level::WARN,
-            1 => Level::INFO,
-            2 => Level::DEBUG,
-            _ => Level::TRACE,
-        })
-        .without_time()
-        .with_target(false)
-        .with_writer(io::stderr)
-        .finish();
+    setup_tracing(&args);
 
-    tracing::subscriber::set_global_default(subscriber)?;
-    
     Ok(())
+}
+
+fn setup_sentry() -> sentry::ClientInitGuard {
+    sentry::init(("https://c9f17af2112f77c5e940111c1aade8db@o4508229080055808.ingest.de.sentry.io/4508236598214736", sentry::ClientOptions {
+        release: Some(format!("ring@{}", env!("RING_CLI_VERSION")).into()),
+        traces_sample_rate: 1.0,
+        ..Default::default()
+    }))
+}
+
+fn setup_tracing(args: &ArgMatches) {
+    tracing_subscriber::registry()
+        .with(sentry::integrations::tracing::layer())
+        .with(tracing_subscriber::fmt::layer()
+            .without_time()
+            .with_target(false)
+            .with_writer(io::stderr
+                .with_max_level(match dbg!(args.get_count("verbose")) {
+                    0 => Level::WARN,
+                    1 => Level::INFO,
+                    2 => Level::DEBUG,
+                    _ => Level::TRACE,
+                })
+            )
+        )
+        .init();
 }
