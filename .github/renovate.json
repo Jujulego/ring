@@ -2,7 +2,7 @@
   "extends": [
     "config:base"
   ],
-  "baseBranches": ["latest"],
+  "baseBranches": ["latest", "next"],
   "labels": ["dependencies"],
   "packageRules": [
     {
