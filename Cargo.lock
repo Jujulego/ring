@@ -858,6 +858,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-code-unit"
+version = "0.1.0"
+dependencies = [
+ "ring-tag",
+]
+
+[[package]]
 name = "ring-tag"
 version = "0.1.0"
 dependencies = [

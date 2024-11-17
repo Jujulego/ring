@@ -167,7 +167,9 @@ impl PartialOrd for Tag {
 
 /// Object holding one or many tags
 pub trait Tagged {
-    fn tags(&self) -> Vec<Tag>;
+    fn tags(&self) -> Vec<Tag> {
+        vec![]
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
