@@ -1,0 +1,8 @@
+[package]
+name = "ring-js"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ring-code-unit = { path = "../ring-code-unit" }
+ring-tag = { path = "../ring-tag" }
