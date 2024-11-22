@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           files: codecov-unit.json
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           files: codecov-docs.json
