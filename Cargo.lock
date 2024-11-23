@@ -865,19 +865,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-js"
-version = "0.1.0"
-dependencies = [
- "ring-code-unit",
- "ring-tag",
-]
-
-[[package]]
 name = "ring-tag"
 version = "0.1.0"
 dependencies = [
  "owo-colors",
  "rgb",
+]
+
+[[package]]
+name = "ring-web"
+version = "0.1.0"
+dependencies = [
+ "ring-code-unit",
+ "ring-tag",
 ]
 
 [[package]]

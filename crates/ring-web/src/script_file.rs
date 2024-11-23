@@ -4,22 +4,22 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Javascript File
+// Script File
 ////////////////////////////////////////////////////////////////////////////////
 
-/// Represents a Javascript file.
-pub struct JavascriptFile {
+/// Represents a script file
+pub struct ScriptFile {
     path: PathBuf,
     language: Tag,
 }
 
-impl JavascriptFile {
-    pub fn new(path: PathBuf, language: Tag) -> JavascriptFile {
-        JavascriptFile { path, language }
+impl ScriptFile {
+    pub fn new(path: PathBuf, language: Tag) -> ScriptFile {
+        ScriptFile { path, language }
     }
 }
 
-impl CodeUnit for JavascriptFile {
+impl CodeUnit for ScriptFile {
     fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
         None
     }
@@ -29,7 +29,7 @@ impl CodeUnit for JavascriptFile {
     }
 }
 
-impl Tagged for JavascriptFile {
+impl Tagged for ScriptFile {
     fn tags(&self) -> Vec<Tag> {
         vec![self.language.clone()]
     }

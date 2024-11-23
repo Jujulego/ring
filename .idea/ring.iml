@@ -5,7 +5,6 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-formatters/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/ring-js/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-traits/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-utils/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-rust/src" isTestSource="false" />
@@ -13,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-tag/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-code-unit/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-web/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
