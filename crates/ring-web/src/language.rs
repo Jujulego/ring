@@ -19,14 +19,15 @@ impl WebLanguage {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn it_should_create_a_js_tag() {
         assert_eq!(WebLanguage::JavaScript.tag().label(), "js");
     }
-    
+
     #[test]
     fn it_should_create_a_ts_tag() {
         assert_eq!(WebLanguage::TypeScript.tag().label(), "ts");

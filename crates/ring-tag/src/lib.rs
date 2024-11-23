@@ -270,4 +270,13 @@ mod tests {
             format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
         );
     }
+
+    struct TestTagged {}
+    impl Tagged for TestTagged {}
+
+    #[test]
+    fn tagged_tags_should_return_an_empty_vector_by_default() {
+        let tt = TestTagged {};
+        assert_eq!(tt.tags(), vec![]);
+    }
 }

@@ -16,3 +16,23 @@ pub trait CodeUnit: Tagged {
     /// Returns location of the code unit
     fn path(&self) -> &Path;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct TestCodeUnit {}
+    impl Tagged for TestCodeUnit {}
+    impl CodeUnit for TestCodeUnit {
+        fn path(&self) -> &Path {
+            todo!()
+        }
+    }
+
+    #[test]
+    fn code_unit_parent_should_return_none_by_default() {
+        let tcu = TestCodeUnit {};
+        
+        assert!(tcu.parent().is_none());
+    }
+}
