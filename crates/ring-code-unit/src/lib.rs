@@ -19,19 +19,20 @@ pub trait CodeUnit: Tagged {
 
 #[cfg(test)]
 mod tests {
+    use mockall::mock;
     use super::*;
 
-    struct TestCodeUnit {}
-    impl Tagged for TestCodeUnit {}
-    impl CodeUnit for TestCodeUnit {
-        fn path(&self) -> &Path {
-            todo!()
+    mock!(
+        TestUnit {}
+        impl Tagged for TestUnit {}
+        impl CodeUnit for TestUnit {
+            fn path(&self) -> &Path;
         }
-    }
-
+    );
+    
     #[test]
     fn code_unit_parent_should_return_none_by_default() {
-        let tcu = TestCodeUnit {};
+        let tcu = MockTestUnit::new();
         
         assert!(tcu.parent().is_none());
     }
