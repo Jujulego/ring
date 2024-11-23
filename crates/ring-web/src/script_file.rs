@@ -1,7 +1,6 @@
 use ring_code_unit::CodeUnit;
 use ring_tag::{Tag, Tagged};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Script File
@@ -20,10 +19,6 @@ impl ScriptFile {
 }
 
 impl CodeUnit for ScriptFile {
-    fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
-        None
-    }
-
     fn path(&self) -> &Path {
         &self.path
     }
