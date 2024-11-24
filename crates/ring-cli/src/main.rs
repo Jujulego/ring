@@ -1,8 +1,11 @@
+mod list;
+
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
-use tracing::Level;
+use tracing::{instrument, Level};
 use tracing_subscriber::prelude::*;
 
+#[instrument(name = "cli")]
 fn main() -> anyhow::Result<()> {
     let _guard = setup_sentry();
 
@@ -10,6 +13,10 @@ fn main() -> anyhow::Result<()> {
     let args = Command::new("ring")
         .version(env!("RING_CLI_VERSION"))
         .propagate_version(true)
+        .subcommand_required(true)
+        .subcommands([
+            list::build_command()
+        ])
         .arg(arg!(-v --verbose)
             .global(true)
             .required(false)
@@ -19,7 +26,11 @@ fn main() -> anyhow::Result<()> {
     // Setup tracing
     setup_tracing(&args);
 
-    Ok(())
+    // Handle subcommands
+    match args.subcommand() {
+        Some(("list", args)) => list::handle_command(args),
+        _ => unreachable!()
+    }
 }
 
 fn setup_sentry() -> sentry::ClientInitGuard {
@@ -37,7 +48,7 @@ fn setup_tracing(args: &ArgMatches) {
             .without_time()
             .with_target(false)
             .with_writer(io::stderr
-                .with_max_level(match dbg!(args.get_count("verbose")) {
+                .with_max_level(match args.get_count("verbose") {
                     0 => Level::WARN,
                     1 => Level::INFO,
                     2 => Level::DEBUG,

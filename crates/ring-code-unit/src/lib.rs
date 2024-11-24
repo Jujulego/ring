@@ -1,4 +1,3 @@
-use anyhow::Result;
 use ring_tag::Tagged;
 use std::path::Path;
 use std::rc::Rc;
@@ -23,7 +22,7 @@ pub trait CodeUnit: Tagged {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait CodeUnitDetector {
-    fn detect<P: AsRef<Path>>(&self, path: &P) -> Result<Option<Rc<dyn CodeUnit>>>;
+    fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>>;
 }
 
 #[cfg(test)]

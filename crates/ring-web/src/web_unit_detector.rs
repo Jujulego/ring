@@ -31,7 +31,7 @@ impl WebUnitDetector {
 }
 
 impl CodeUnitDetector for WebUnitDetector {
-    fn detect<P: AsRef<Path>>(&self, path: &P) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
+    fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         Ok(self.detect_script(path)
             .map(|cu| Rc::new(cu) as Rc<dyn CodeUnit>)
         )
