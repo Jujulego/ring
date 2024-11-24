@@ -167,7 +167,9 @@ impl PartialOrd for Tag {
 
 /// Object holding one or many tags
 pub trait Tagged {
-    fn tags(&self) -> Vec<Tag>;
+    fn tags(&self) -> Vec<Tag> {
+        vec![]
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,6 +178,7 @@ pub trait Tagged {
 
 #[cfg(test)]
 mod tests {
+    use mockall::mock;
     use super::*;
 
     #[cfg(feature = "owo")]
@@ -267,5 +270,17 @@ mod tests {
             format!("{}", Tag::from("hello").with_scope("a").with_color((255, 0, 0)).styled()),
             format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
         );
+    }
+
+    mock! {
+        TestTagged {}
+        impl Tagged for TestTagged {}
+    }
+    
+    #[test]
+    fn tagged_tags_should_return_an_empty_vector_by_default() {
+        let tt = MockTestTagged::new();
+        
+        assert_eq!(tt.tags(), vec![]);
     }
 }

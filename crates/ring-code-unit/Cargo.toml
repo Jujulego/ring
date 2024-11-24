@@ -1,0 +1,10 @@
+[package]
+name = "ring-code-unit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ring-tag = { path = "../ring-tag" }
+
+[dev-dependencies]
+mockall = "0.13.1"

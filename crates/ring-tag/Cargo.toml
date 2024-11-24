@@ -9,3 +9,6 @@ owo = ["dep:owo-colors"]
 [dependencies]
 owo-colors = { version = "4.1.0", optional = true }
 rgb = "0.8.50"
+
+[dev-dependencies]
+mockall = "0.13.1"
