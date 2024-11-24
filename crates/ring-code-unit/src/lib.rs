@@ -22,13 +22,13 @@ mod tests {
     use mockall::mock;
     use super::*;
 
-    mock!(
+    mock! {
         TestUnit {}
         impl Tagged for TestUnit {}
         impl CodeUnit for TestUnit {
             fn path(&self) -> &Path;
         }
-    );
+    }
     
     #[test]
     fn code_unit_parent_should_return_none_by_default() {

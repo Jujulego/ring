@@ -178,6 +178,7 @@ pub trait Tagged {
 
 #[cfg(test)]
 mod tests {
+    use mockall::mock;
     use super::*;
 
     #[cfg(feature = "owo")]
@@ -271,12 +272,15 @@ mod tests {
         );
     }
 
-    struct TestTagged {}
-    impl Tagged for TestTagged {}
-
+    mock! {
+        TestTagged {}
+        impl Tagged for TestTagged {}
+    }
+    
     #[test]
     fn tagged_tags_should_return_an_empty_vector_by_default() {
-        let tt = TestTagged {};
+        let tt = MockTestTagged::new();
+        
         assert_eq!(tt.tags(), vec![]);
     }
 }
