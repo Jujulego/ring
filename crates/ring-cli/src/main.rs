@@ -2,10 +2,9 @@ mod list;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
-use tracing::{instrument, Level};
+use tracing::Level;
 use tracing_subscriber::prelude::*;
 
-#[instrument(name = "cli")]
 fn main() -> anyhow::Result<()> {
     let _guard = setup_sentry();
 

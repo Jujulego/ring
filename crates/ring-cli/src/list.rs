@@ -16,7 +16,7 @@ pub fn build_command() -> Command {
             .value_parser(value_parser!(PathBuf)))
 }
 
-#[instrument(name = "list")]
+#[instrument(name = "cli.list", fields(message = "ring_cli::list::handle_command"))]
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
