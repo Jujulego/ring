@@ -925,6 +925,7 @@ dependencies = [
 name = "ring-code-unit"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "mockall",
  "ring-tag",
 ]
@@ -942,6 +943,7 @@ dependencies = [
 name = "ring-web"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ring-code-unit",
  "ring-tag",
 ]
