@@ -195,7 +195,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_print_rows_with_aligned_columns() {
+    fn it_should_print_rows_with_aligned_columns() {
         let mut table = CliTable::new();
         table.add_row([&"Test", &"successful"]);
         table.add_row([&"Test with a long name", &"successful"]);
@@ -207,7 +207,19 @@ mod tests {
     }
 
     #[test]
-    fn should_print_colored_rows_with_aligned_columns() {
+    fn it_should_print_rows_in_reverse_order() {
+        let mut table = CliTable::new();
+        table.add_row([&"Test", &"successful"]);
+        table.add_row([&"Test with a long name", &"successful"]);
+
+        let mut it = table.iter();
+        assert_eq!(format!("{}", it.next_back().unwrap()), "Test with a long name successful");
+        assert_eq!(format!("{}", it.next_back().unwrap()), "Test                  successful");
+        assert!(it.next_back().is_none());
+    }
+
+    #[test]
+    fn it_should_print_colored_rows_with_aligned_columns() {
         let mut table = CliTable::new();
         table.add_row([&"Test".fg::<Red>(), &"successful"]);
         table.add_row([&"Test with a long name", &"successful"]);
