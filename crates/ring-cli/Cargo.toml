@@ -10,11 +10,10 @@ itertools = "0.13.0"
 lscolors = { version = "0.20.0", features = ["owo-colors"] }
 owo-colors = "4.1.0"
 sentry = { version = "0.34.0", features = ["anyhow", "tracing"] }
-textwrap = "0.16.1"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-unicode-width = "0.2.0"
 
+ring-cli-table = { path = "../ring-cli-table" }
 ring-code-unit = { path = "../ring-code-unit" }
 ring-tag = { path = "../ring-tag", features = ["owo"] }
 ring-web = { path = "../ring-web" }

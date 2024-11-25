@@ -1,5 +1,4 @@
 mod commands;
-mod utils;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;

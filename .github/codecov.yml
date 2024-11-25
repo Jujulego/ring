@@ -13,6 +13,11 @@ component_management:
       paths:
         - crates/ring-cli/**
 
+    - component_id: crate-ring-cli-table
+      name: cli-table
+      paths:
+        - crates/ring-cli-table/**
+
     - component_id: crate-ring-code-unit
       name: code-unit
       paths:

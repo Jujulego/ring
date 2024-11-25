@@ -1,0 +1,11 @@
+[package]
+name = "ring-cli-table"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+textwrap = "0.16.1"
+unicode-width = "0.2.0"
+
+[dev-dependencies]
+owo-colors = "4.1.0"

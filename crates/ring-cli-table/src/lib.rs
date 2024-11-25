@@ -13,14 +13,14 @@ use unicode_width::UnicodeWidthStr;
 /// # Examples
 ///
 /// ```
-/// use ring_cli::utils::cli_table::CliTable;
+/// use ring_cli_table::CliTable;
 ///
 /// let mut table = CliTable::new();
 /// table.add_row([&"Test", &"successful"]);
 /// table.add_row([&"Test with a long name", &"successful"]);
 ///
-/// for row in table {
-///   println("{row}");
+/// for row in &table {
+///   println!("{row}");
 /// }
 /// ```
 #[derive(Clone, Debug)]
@@ -62,7 +62,7 @@ impl<const N: usize> CliTable<N> {
     /// # Examples
     ///
     /// ```
-    /// use ring_cli::utils::cli_table::CliTable;
+    /// use ring_cli_table::CliTable;
     ///
     /// let mut table = CliTable::new();
     /// assert!(table.is_empty());
@@ -80,7 +80,7 @@ impl<const N: usize> CliTable<N> {
     /// # Examples
     ///
     /// ```
-    /// use ring_cli::utils::cli_table::CliTable;
+    /// use ring_cli_table::CliTable;
     ///
     /// let mut table = CliTable::new();
     /// table.add_row([&"Test", &"successful"]);
@@ -203,6 +203,7 @@ mod tests {
         let mut it = table.iter();
         assert_eq!(format!("{}", it.next().unwrap()), "Test                  successful");
         assert_eq!(format!("{}", it.next().unwrap()), "Test with a long name successful");
+        assert!(it.next().is_none());
     }
 
     #[test]
@@ -214,5 +215,6 @@ mod tests {
         let mut it = table.iter();
         assert_eq!(format!("{}", it.next().unwrap()), "\u{1b}[31mTest\u{1b}[39m                  successful");
         assert_eq!(format!("{}", it.next().unwrap()), "Test with a long name successful");
+        assert!(it.next().is_none());
     }
 }

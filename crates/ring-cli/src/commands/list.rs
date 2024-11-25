@@ -10,7 +10,7 @@ use std::fs::read_dir;
 use std::path::PathBuf;
 use lscolors::LsColors;
 use tracing::{instrument, span, Level};
-use crate::utils::cli_table::CliTable;
+use ring_cli_table::CliTable;
 
 pub fn build_command() -> Command {
     Command::new("list")

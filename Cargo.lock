@@ -954,13 +954,21 @@ dependencies = [
  "itertools",
  "lscolors",
  "owo-colors",
+ "ring-cli-table",
  "ring-code-unit",
  "ring-tag",
  "ring-web",
  "sentry",
- "textwrap",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "ring-cli-table"
+version = "0.1.0"
+dependencies = [
+ "owo-colors",
+ "textwrap",
  "unicode-width 0.2.0",
 ]
 

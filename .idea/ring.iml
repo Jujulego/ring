@@ -13,6 +13,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-tag/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-code-unit/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-web/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-table/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
