@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-owo = ["dep:owo-colors"]
+owo = ["dep:owo-colors", "dep:supports-color"]
 
 [dependencies]
 owo-colors = { version = "4.1.0", optional = true }
+supports-color = { version = "3.0.1", optional = true }
 rgb = "0.8.50"
 
 [dev-dependencies]

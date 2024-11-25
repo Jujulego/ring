@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
 #[cfg(feature = "owo")]
-use owo_colors::{Style, Styled};
+use owo_colors::{AnsiColors, Style, Styled};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tag
@@ -39,14 +39,22 @@ use owo_colors::{Style, Styled};
 #[derive(Clone, Debug)]
 pub struct Tag {
     label: String,
-    color: Option<Rgb<u8>>,
     scope: Option<String>,
+    color: Option<Rgb<u8>>,
+    #[cfg(feature = "owo")]
+    ansi_color: Option<AnsiColors>,
 }
 
 impl Tag {
     /// Creates a new tag with given label
     pub fn new(label: String) -> Tag {
-        Tag { label, scope: None, color: None }
+        Tag {
+            label,
+            scope: None,
+            color: None,
+            #[cfg(feature = "owo")]
+            ansi_color: None,
+        }
     }
 
     /// Adds given color to tag
@@ -57,6 +65,12 @@ impl Tag {
 
     fn _with_color(self, color: Rgb<u8>) -> Tag {
         Tag { color: Some(color), ..self }
+    }
+
+    /// Adds given ansi color to tag (for basic terminal support)
+    #[cfg(feature = "owo")]
+    pub fn with_ansi_color(self, ansi_colors: AnsiColors) -> Tag {
+        Tag { ansi_color: Some(ansi_colors), ..self }
     }
 
     /// Adds given scope to tag
@@ -84,10 +98,39 @@ impl Tag {
     /// ```
     #[cfg(feature = "owo")]
     pub fn styled(&self) -> Styled<&Tag> {
+        self.styled_for(supports_color::Stream::Stdout)
+    }
+
+    /// Displays colored tag using owo-colors, according to supported colors of given stream
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use owo_colors::{OwoColorize, Style};
+    /// use supports_color::Stream;
+    /// use ring_tag::Tag;
+    ///
+    /// assert_eq!(
+    ///     format!("{}", Tag::from("hello").with_scope("a").with_color((255, 0, 0)).styled_for(Stream::Stdout)),
+    ///     format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
+    /// );
+    /// ```
+    #[cfg(feature = "owo")]
+    pub fn styled_for(&self, stream: supports_color::Stream) -> Styled<&Tag> {
         let mut style = Style::new();
 
-        if let Some(color) = self.color() {
-            style = style.color(owo_colors::Rgb(color.r, color.g, color.b));
+        if let Some(support) = supports_color::on(stream) {
+            if support.has_basic {
+                if let Some(ansi_color) = self.ansi_color {
+                    style = style.color(ansi_color);
+                }
+            }
+
+            if support.has_16m {
+                if let Some(color) = self.color {
+                    style = style.color(owo_colors::Rgb(color.r, color.g, color.b));
+                }
+            }
         }
 
         style.style(self)
@@ -178,12 +221,12 @@ pub trait Tagged {
 
 #[cfg(test)]
 mod tests {
-    use mockall::mock;
     use super::*;
+    use mockall::mock;
 
     #[cfg(feature = "owo")]
     use owo_colors::OwoColorize;
-    
+
     macro_rules! hash {
         ($v:expr) => {{
             let mut hasher = std::hash::DefaultHasher::new();
@@ -245,11 +288,11 @@ mod tests {
     fn it_should_convert_from_string() {
         assert_eq!(
             Tag::from("a:hello"),
-            Tag { scope: Some("a".to_string()), label: "hello".to_string(), color: None }
+            Tag::from("hello").with_scope("a")
         );
         assert_eq!(
             Tag::from_str("a:hello"),
-            Ok(Tag { scope: Some("a".to_string()), label: "hello".to_string(), color: None })
+            Ok(Tag::from("hello").with_scope("a"))
         );
     }
     

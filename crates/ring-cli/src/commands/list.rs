@@ -47,7 +47,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             .unwrap_or_default();
 
         table.add_row([
-            &file_name.style(file_style),
+            &file_name.if_supports_color(supports_color::Stream::Stdout, |txt| txt.style(file_style)),
             &tags.iter().map(|tag| tag.styled()).join(" "),
         ]);
     }
