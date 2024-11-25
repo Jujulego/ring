@@ -8,6 +8,7 @@ use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
 use tracing::{instrument, span, Level};
+use crate::utils::cli_table::CliTable;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -26,6 +27,8 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         Box::new(WebUnitDetector {})
     ];
 
+    let mut table = CliTable::new();
+
     for path in list_files(path)? {
         let mut tags = BTreeSet::new();
 
@@ -35,7 +38,14 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
 
-        println!("{} {}", path.file_name().unwrap().to_str().unwrap(), tags.iter().map(|tag| tag.styled()).join(" "));
+        table.add_row([
+            &path.file_name().unwrap().to_str().unwrap(),
+            &tags.iter().map(|tag| tag.styled()).join(" "),
+        ]);
+    }
+
+    for row in &table {
+        println!("{row}");
     }
 
     Ok(())
@@ -43,7 +53,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn list_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
     if path.is_dir() {
-        span!(Level::TRACE, "read_dir").in_scope(|| {
+        span!(Level::INFO, "read_dir").in_scope(|| {
             read_dir(path)?
                 .map(|res| res
                     .map(|e| e.path())

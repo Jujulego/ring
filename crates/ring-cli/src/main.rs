@@ -1,4 +1,5 @@
-mod list;
+mod commands;
+mod utils;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
@@ -14,7 +15,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .subcommand_required(true)
         .subcommands([
-            list::build_command()
+            commands::list::build_command()
         ])
         .arg(arg!(-v --verbose)
             .global(true)
@@ -27,7 +28,7 @@ fn main() -> anyhow::Result<()> {
 
     // Handle subcommands
     match args.subcommand() {
-        Some(("list", args)) => list::handle_command(args),
+        Some(("list", args)) => commands::list::handle_command(args),
         _ => unreachable!()
     }
 }

@@ -8,10 +8,11 @@ anyhow = "1.0.93"
 clap = "4.5.20"
 itertools = "0.13.0"
 sentry = { version = "0.34.0", features = ["anyhow", "tracing"] }
+textwrap = "0.16.1"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+unicode-width = "0.2.0"
 
 ring-code-unit = { path = "../ring-code-unit" }
 ring-tag = { path = "../ring-tag", features = ["owo"] }
 ring-web = { path = "../ring-web" }
-log = "0.4.22"
