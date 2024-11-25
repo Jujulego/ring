@@ -9,6 +9,20 @@ use unicode_width::UnicodeWidthStr;
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Formats given data as table with aligned columns
+///
+/// # Examples
+///
+/// ```
+/// use ring_cli::utils::cli_table::CliTable;
+///
+/// let mut table = CliTable::new();
+/// table.add_row([&"Test", &"successful"]);
+/// table.add_row([&"Test with a long name", &"successful"]);
+///
+/// for row in table {
+///   println("{row}");
+/// }
+/// ```
 #[derive(Clone, Debug)]
 pub struct CliTable<const N: usize> {
     rows: Vec<[String; N]>,
@@ -16,6 +30,7 @@ pub struct CliTable<const N: usize> {
 }
 
 impl<const N: usize> CliTable<N> {
+    /// Creates an empty CLiTable
     pub fn new() -> Self {
         CliTable {
             rows: Vec::new(),
@@ -23,6 +38,7 @@ impl<const N: usize> CliTable<N> {
         }
     }
 
+    /// Adds given row to the table, and updates columns width
     pub fn add_row(&mut self, row: [&dyn Display; N]) {
         let items = core::array::from_fn(|idx| format!("{}", row[idx]));
 
@@ -33,6 +49,7 @@ impl<const N: usize> CliTable<N> {
         self.rows.push(items);
     }
 
+    /// Returns an iterator over table rows
     pub fn iter(&self) -> CliTableIter<'_, N> {
         CliTableIter {
             rows: &self.rows[..],
@@ -40,10 +57,37 @@ impl<const N: usize> CliTable<N> {
         }
     }
 
+    /// Returns `true` when the table is empty
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli::utils::cli_table::CliTable;
+    ///
+    /// let mut table = CliTable::new();
+    /// assert!(table.is_empty());
+    ///
+    /// table.add_row([&"Test", &"successful"]);
+    /// assert!(!table.is_empty());
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
     }
 
+
+    /// Returns the number of rows in the table
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli::utils::cli_table::CliTable;
+    ///
+    /// let mut table = CliTable::new();
+    /// table.add_row([&"Test", &"successful"]);
+    /// table.add_row([&"Test with a long name", &"successful"]);
+    ///
+    /// assert_eq!(table.len(), 2);
+    /// ```
     pub fn len(&self) -> usize {
         self.rows.len()
     }
@@ -101,7 +145,7 @@ impl<'a, const N: usize> DoubleEndedIterator for CliTableIter<'a, N> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if !self.rows.is_empty() {
             let last_idx = self.rows.len() - 1;
-            
+
             let row = CliTableRow {
                 items: &self.rows[last_idx],
                 widths: self.widths,
@@ -132,7 +176,7 @@ pub struct CliTableRow<'a, const N: usize> {
 impl<'a, const N: usize> Display for CliTableRow<'a, N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for (idx, item) in self.items.iter().enumerate() {
-            if idx < N {
+            if idx < N - 1 {
                 let width = self.widths[idx] + item.width() - display_width(item);
                 write!(f, "{item:width$} ")?;
             } else {
@@ -141,5 +185,34 @@ impl<'a, const N: usize> Display for CliTableRow<'a, N> {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use owo_colors::colors::Red;
+    use owo_colors::OwoColorize;
+    use super::*;
+
+    #[test]
+    fn should_print_rows_with_aligned_columns() {
+        let mut table = CliTable::new();
+        table.add_row([&"Test", &"successful"]);
+        table.add_row([&"Test with a long name", &"successful"]);
+
+        let mut it = table.iter();
+        assert_eq!(format!("{}", it.next().unwrap()), "Test                  successful");
+        assert_eq!(format!("{}", it.next().unwrap()), "Test with a long name successful");
+    }
+
+    #[test]
+    fn should_print_colored_rows_with_aligned_columns() {
+        let mut table = CliTable::new();
+        table.add_row([&"Test".fg::<Red>(), &"successful"]);
+        table.add_row([&"Test with a long name", &"successful"]);
+
+        let mut it = table.iter();
+        assert_eq!(format!("{}", it.next().unwrap()), "\u{1b}[31mTest\u{1b}[39m                  successful");
+        assert_eq!(format!("{}", it.next().unwrap()), "Test with a long name successful");
     }
 }

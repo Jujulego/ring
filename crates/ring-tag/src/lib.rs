@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn it_should_have_smae_hash_with_same_label_and_scope() {
+    fn it_should_have_same_hash_with_same_label_and_scope() {
         assert_eq!(
             hash!(Tag::from("hello")),
             hash!(Tag::from("hello").with_color((0, 0, 0)))
