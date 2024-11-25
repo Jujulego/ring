@@ -1,3 +1,4 @@
+use owo_colors::OwoColorize;
 use anyhow::Context;
 use clap::{arg, value_parser, ArgMatches, Command};
 use itertools::Itertools;
@@ -7,6 +8,7 @@ use std::collections::BTreeSet;
 use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
+use lscolors::LsColors;
 use tracing::{instrument, span, Level};
 use crate::utils::cli_table::CliTable;
 
@@ -27,6 +29,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         Box::new(WebUnitDetector {})
     ];
 
+    let ls_colors = LsColors::from_env().unwrap_or_default();
     let mut table = CliTable::new();
 
     for path in list_files(path)? {
@@ -38,8 +41,13 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
 
+        let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
+        let file_style = ls_colors.style_for_path(&path)
+            .map(lscolors::Style::to_owo_colors_style)
+            .unwrap_or_default();
+
         table.add_row([
-            &path.file_name().unwrap().to_str().unwrap(),
+            &file_name.style(file_style),
             &tags.iter().map(|tag| tag.styled()).join(" "),
         ]);
     }

@@ -7,6 +7,8 @@ edition = "2021"
 anyhow = "1.0.93"
 clap = "4.5.20"
 itertools = "0.13.0"
+lscolors = { version = "0.20.0", features = ["owo-colors"] }
+owo-colors = "4.1.0"
 sentry = { version = "0.34.0", features = ["anyhow", "tracing"] }
 textwrap = "0.16.1"
 tracing = "0.1.40"
