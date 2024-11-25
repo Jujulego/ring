@@ -1,9 +1,18 @@
+#[cfg(test)]
+mod mock_supports_color;
+
 use rgb::Rgb;
 use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
+
+#[cfg(not(test))]
+use supports_color::on as supports_color_on;
+
+#[cfg(test)]
+use mock_supports_color::on as supports_color_on;
 
 #[cfg(feature = "owo")]
 use owo_colors::{AnsiColors, Style, Styled};
@@ -87,7 +96,7 @@ impl Tag {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use owo_colors::{OwoColorize, Style};
     /// use ring_tag::Tag;
     ///
@@ -105,7 +114,7 @@ impl Tag {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use owo_colors::{OwoColorize, Style};
     /// use supports_color::Stream;
     /// use ring_tag::Tag;
@@ -119,7 +128,7 @@ impl Tag {
     pub fn styled_for(&self, stream: supports_color::Stream) -> Styled<&Tag> {
         let mut style = Style::new();
 
-        if let Some(support) = supports_color::on(stream) {
+        if let Some(support) = dbg!(supports_color_on(stream)) {
             if support.has_basic {
                 if let Some(ansi_color) = self.ansi_color {
                     style = style.color(ansi_color);
@@ -301,10 +310,31 @@ mod tests {
         assert_eq!(format!("{}", Tag::from("hello")), "hello");
         assert_eq!(format!("{}", Tag::from("hello").with_scope("a")), "a:hello");
     }
-    
+
+    mock! {
+        TestStream {}
+    }
+
     #[test]
     #[cfg(feature = "owo")]
-    fn it_should_print_colored_label() {
+    fn it_should_print_ansi_colored_label() {
+        mock_supports_color::set_has_16m();
+
+        assert_eq!(
+            format!("{}", Tag::from("hello").with_ansi_color(AnsiColors::Red).styled()),
+            format!("{}", "hello".style(Style::new().color(AnsiColors::Red)))
+        );
+        assert_eq!(
+            format!("{}", Tag::from("hello").with_scope("a").with_ansi_color(AnsiColors::Red).styled()),
+            format!("{}", "a:hello".style(Style::new().color(AnsiColors::Red)))
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "owo")]
+    fn it_should_print_rgb_colored_label() {
+        mock_supports_color::set_has_16m();
+
         assert_eq!(
             format!("{}", Tag::from("hello").with_color((255, 0, 0)).styled()),
             format!("{}", "hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
