@@ -27,6 +27,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ansi_colours"
+version = "1.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14eec43e0298190790f41679fe69ef7a829d2a2ddd78c8c00339e84710e435fe"
+dependencies = [
+ "rgb",
+]
+
+[[package]]
 name = "anstream"
 version = "0.6.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -772,7 +781,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb37767f6569cd834a413442455e0f066d0d522de8630436e2a1761d9726ba56"
 dependencies = [
  "supports-color 2.1.0",
- "supports-color 3.0.1",
+ "supports-color 3.0.2",
 ]
 
 [[package]]
@@ -979,7 +988,7 @@ dependencies = [
  "ring-code-unit",
  "ring-web",
  "sentry",
- "supports-color 3.0.1",
+ "supports-color 3.0.2",
  "tracing",
  "tracing-subscriber",
 ]
@@ -1006,10 +1015,11 @@ dependencies = [
 name = "ring-tag"
 version = "0.1.0"
 dependencies = [
+ "ansi_colours",
  "mockall",
  "owo-colors",
  "rgb",
- "supports-color 3.0.1",
+ "supports-color 3.0.2",
 ]
 
 [[package]]
@@ -1337,9 +1347,9 @@ dependencies = [
 
 [[package]]
 name = "supports-color"
-version = "3.0.1"
+version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8775305acf21c96926c900ad056abeef436701108518cf890020387236ac5a77"
+checksum = "c64fc7232dd8d2e4ac5ce4ef302b1d81e0b80d055b9d77c7c4f51f6aa4c867d6"
 dependencies = [
  "is_ci",
 ]

@@ -7,6 +7,7 @@ use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
+use ansi_colours::ansi256_from_rgb;
 
 #[cfg(not(test))]
 use supports_color::on as supports_color_on;
@@ -135,6 +136,12 @@ impl Tag {
                 }
             }
 
+            if support.has_256 {
+                if let Some(color) = self.color {
+                    style = style.color(owo_colors::XtermColors::from(ansi256_from_rgb(color)));
+                }
+            }
+
             if support.has_16m {
                 if let Some(color) = self.color {
                     style = style.color(owo_colors::Rgb(color.r, color.g, color.b));
@@ -235,6 +242,7 @@ mod tests {
 
     #[cfg(feature = "owo")]
     use owo_colors::OwoColorize;
+    use owo_colors::XtermColors;
 
     macro_rules! hash {
         ($v:expr) => {{
@@ -327,6 +335,21 @@ mod tests {
         assert_eq!(
             format!("{}", Tag::from("hello").with_scope("a").with_ansi_color(AnsiColors::Red).styled()),
             format!("{}", "a:hello".style(Style::new().color(AnsiColors::Red)))
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "owo")]
+    fn it_should_print_ansi_256_colored_label() {
+        mock_supports_color::set_has_256();
+
+        assert_eq!(
+            format!("{}", Tag::from("hello").with_color((255, 0, 0)).styled()),
+            format!("{}", "hello".style(Style::new().color(XtermColors::Red)))
+        );
+        assert_eq!(
+            format!("{}", Tag::from("hello").with_scope("a").with_color((255, 0, 0)).styled()),
+            format!("{}", "a:hello".style(Style::new().color(XtermColors::Red)))
         );
     }
 
