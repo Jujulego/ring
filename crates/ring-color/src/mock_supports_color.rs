@@ -17,6 +17,15 @@ pub fn on(_stream: supports_color::Stream) -> Option<ColorLevel> {
     })
 }
 
+pub fn set_has_basic() {
+    RESULT.with(|result| {
+        *result.borrow_mut() = Some(ColorLevel {
+            has_basic: true,
+            has_256: false,
+            has_16m: false,
+        });
+    })
+}
 pub fn set_has_256() {
     RESULT.with(|result| {
         *result.borrow_mut() = Some(ColorLevel {
