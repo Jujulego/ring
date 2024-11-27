@@ -23,6 +23,11 @@ component_management:
       paths:
         - crates/ring-code-unit/**
 
+    - component_id: crate-ring-color
+      name: color
+      paths:
+        - crates/ring-color/**
+
     - component_id: crate-ring-tag
       name: tag
       paths:
