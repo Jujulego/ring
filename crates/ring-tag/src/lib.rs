@@ -129,7 +129,7 @@ impl Tag {
     pub fn styled_for(&self, stream: supports_color::Stream) -> Styled<&Tag> {
         let mut style = Style::new();
 
-        if let Some(support) = dbg!(supports_color_on(stream)) {
+        if let Some(support) = supports_color_on(stream) {
             if support.has_basic {
                 if let Some(ansi_color) = self.ansi_color {
                     style = style.color(ansi_color);

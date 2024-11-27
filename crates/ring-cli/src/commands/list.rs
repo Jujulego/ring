@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
 use anyhow::Context;
-use clap::{arg, value_parser, ArgMatches, Command};
+use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
 use ring_code_unit::CodeUnitDetector;
 use ring_web::WebUnitDetector;
@@ -17,22 +17,35 @@ pub fn build_command() -> Command {
         .visible_alias("ls")
         .arg(arg!([path])
             .value_parser(value_parser!(PathBuf)))
+        .arg(arg!(-a --all)
+            .action(ArgAction::SetTrue))
 }
 
 #[instrument(name = "cli.list", fields(message = "ring_cli::list::handle_command"))]
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
+    // Extract arguments
     let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
         .unwrap_or(&current_dir);
 
+    let show_all = args.get_one::<bool>("all").unwrap_or(&false);
+    
+    // Initiate detectors
     let detectors: &[Box<dyn CodeUnitDetector>] = &[
         Box::new(WebUnitDetector {})
     ];
 
+    // Test files
     let ls_colors = LsColors::from_env().unwrap_or_default();
     let mut table = CliTable::new();
 
     for path in list_files(path)? {
+        let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
+        
+        if !show_all && file_name.starts_with(".") {
+            continue;
+        }
+        
         let mut tags = BTreeSet::new();
 
         for detector in detectors {
@@ -41,7 +54,6 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
 
-        let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
         let file_style = ls_colors.style_for_path(&path)
             .map(lscolors::Style::to_owo_colors_style)
             .unwrap_or_default();
