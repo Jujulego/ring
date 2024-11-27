@@ -141,7 +141,7 @@ impl<'a, const N: usize> Iterator for CliTableIter<'a, N> {
     }
 }
 
-impl<'a, const N: usize> DoubleEndedIterator for CliTableIter<'a, N> {
+impl<const N: usize> DoubleEndedIterator for CliTableIter<'_, N> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if !self.rows.is_empty() {
             let last_idx = self.rows.len() - 1;
@@ -159,8 +159,8 @@ impl<'a, const N: usize> DoubleEndedIterator for CliTableIter<'a, N> {
     }
 }
 
-impl<'a, const N: usize> ExactSizeIterator for CliTableIter<'a, N> {}
-impl<'a, const N: usize> FusedIterator for CliTableIter<'a, N> {}
+impl<const N: usize> ExactSizeIterator for CliTableIter<'_, N> {}
+impl<const N: usize> FusedIterator for CliTableIter<'_, N> {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cli Table Row
@@ -173,7 +173,7 @@ pub struct CliTableRow<'a, const N: usize> {
     widths: &'a [usize; N],
 }
 
-impl<'a, const N: usize> Display for CliTableRow<'a, N> {
+impl<const N: usize> Display for CliTableRow<'_, N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for (idx, item) in self.items.iter().enumerate() {
             if idx < N - 1 {
