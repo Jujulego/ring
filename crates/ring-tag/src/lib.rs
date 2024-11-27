@@ -77,44 +77,17 @@ impl Tag {
     }
 
     /// Displays colored tag using owo-colors
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use owo_colors::{OwoColorize, Style};
-    /// use ring_color::ColorLabel;
-    /// use ring_tag::Tag;
-    ///
-    /// assert_eq!(
-    ///     format!("{}", Tag::from("hello").with_scope("a").with_color(ColorLabel::Red, (255, 0, 0)).styled()),
-    ///     format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
-    /// );
-    /// ```
     #[cfg(feature = "owo-colors")]
     pub fn styled(&self) -> Styled<&Tag> {
         self.styled_for(supports_color::Stream::Stdout)
     }
 
     /// Displays colored tag using owo-colors, according to supported colors of given stream
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use owo_colors::{OwoColorize, Style};
-    /// use supports_color::Stream;
-    /// use ring_color::ColorLabel;
-    /// use ring_tag::Tag;
-    ///
-    /// assert_eq!(
-    ///     format!("{}", Tag::from("hello").with_scope("a").with_color(ColorLabel::Red, (255, 0, 0)).styled_for(Stream::Stdout)),
-    ///     format!("{}", "a:hello".style(Style::new().color(owo_colors::Rgb(255, 0, 0))))
-    /// );
-    /// ```
     #[cfg(feature = "owo-colors")]
     pub fn styled_for(&self, stream: supports_color::Stream) -> Styled<&Tag> {
         let mut style = Style::new();
 
-        if let Some(color) = self.color.unwrap().to_owo_for_stream(stream) {
+        if let Some(color) = self.color.and_then(|color| color.to_owo_for_stream(stream)) {
             style = style.color(color);
         }
 
