@@ -3,6 +3,11 @@ name = "ring-web"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+owo = ["ring-tag/owo", "dep:owo-colors"]
+
 [dependencies]
+anyhow = "1.0.93"
+owo-colors = { version = "4.1.0", optional = true }
 ring-code-unit = { path = "../ring-code-unit" }
 ring-tag = { path = "../ring-tag" }

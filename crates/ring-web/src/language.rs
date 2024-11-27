@@ -13,8 +13,23 @@ pub enum WebLanguage {
 impl WebLanguage {
     pub fn tag(&self) -> Tag {
         match self {
-            WebLanguage::JavaScript => Tag::from("js").with_color((0xf7, 0xdf, 0x1e)),
-            WebLanguage::TypeScript => Tag::from("ts").with_color((0x00, 0x7a, 0xcc)),
+            WebLanguage::JavaScript => {
+                let tag = Tag::from("js")
+                    .with_color((0xf7, 0xdf, 0x1e));
+                
+                #[cfg(feature = "owo")]
+                let tag = tag.with_ansi_color(owo_colors::AnsiColors::Yellow);
+                
+                tag
+            },
+            WebLanguage::TypeScript => {
+                let tag = Tag::from("ts").with_color((0x00, 0x7a, 0xcc));
+
+                #[cfg(feature = "owo")]
+                let tag = tag.with_ansi_color(owo_colors::AnsiColors::Blue);
+
+                tag
+            },
         }
     }
 }

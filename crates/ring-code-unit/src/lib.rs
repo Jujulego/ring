@@ -1,6 +1,6 @@
+use ring_tag::Tagged;
 use std::path::Path;
 use std::rc::Rc;
-use ring_tag::Tagged;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code Unit
@@ -17,10 +17,18 @@ pub trait CodeUnit: Tagged {
     fn path(&self) -> &Path;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Code Unit Detector
+////////////////////////////////////////////////////////////////////////////////
+
+pub trait CodeUnitDetector {
+    fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>>;
+}
+
 #[cfg(test)]
 mod tests {
-    use mockall::mock;
     use super::*;
+    use mockall::mock;
 
     mock! {
         TestUnit {}
