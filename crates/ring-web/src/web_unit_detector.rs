@@ -34,15 +34,17 @@ impl WebUnitDetector {
         }
 
         // Search shebang header
-        trace!("read file {}", path.display());
-        let file = fs::File::open(path)?;
-        let reader = BufReader::new(file);
-        let shebang = reader.lines()
-            .find(|res| res.as_ref().map_or(true, |line| line.starts_with("#!")))
-            .transpose()?;
-
-        if shebang.map_or(false, |t| t == "#!/usr/bin/env node") {
-            return Ok(Some(WebLanguage::JavaScript))
+        if path.extension().is_none() {
+            trace!("read file {}", path.display());
+            let file = fs::File::open(path)?;
+            let reader = BufReader::new(file);
+            let shebang = reader.lines()
+                .find(|res| res.as_ref().map_or(true, |line| line.starts_with("#!")))
+                .transpose()?;
+    
+            if shebang.map_or(false, |t| t == "#!/usr/bin/env node") {
+                return Ok(Some(WebLanguage::JavaScript))
+            }
         }
 
         Ok(None)
