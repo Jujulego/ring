@@ -1047,6 +1047,7 @@ dependencies = [
  "ring-code-unit",
  "ring-color",
  "ring-tag",
+ "tracing",
 ]
 
 [[package]]

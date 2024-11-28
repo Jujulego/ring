@@ -21,7 +21,7 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.list", fields(message = "ring_cli::list::handle_command"))]
+#[instrument(name = "cli.list", skip(args))]
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
     let current_dir = env::current_dir()?;

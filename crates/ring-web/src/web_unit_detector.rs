@@ -1,5 +1,9 @@
+use std::ffi::OsStr;
+use std::fs;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::rc::Rc;
+use tracing::{instrument, trace};
 use ring_code_unit::{CodeUnit, CodeUnitDetector};
 use crate::{ScriptFile, WebLanguage};
 
@@ -7,33 +11,59 @@ use crate::{ScriptFile, WebLanguage};
 // Web Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Clone, Copy, Debug)]
 pub struct WebUnitDetector {}
 
 impl WebUnitDetector {
-    fn _detect_language(&self, path: &Path) -> Option<WebLanguage> {
+    fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
         if !path.is_file() {
-            return None
+            return Ok(None)
         }
 
-        match path.extension()?.to_str()? {
-            "js" | "jsx" | "cjs" | "mjs" => Some(WebLanguage::JavaScript),
-            "ts" | "tsx" | "cts" | "mts" => Some(WebLanguage::TypeScript),
-            _ => None
+        // Extension based
+        if let Some(ext) = path.extension().and_then(OsStr::to_str) {
+            match ext {
+                "js" | "jsx" | "cjs" | "mjs" => {
+                    return Ok(Some(WebLanguage::JavaScript))
+                },
+                "ts" | "tsx" | "cts" | "mts" => {
+                    return Ok(Some(WebLanguage::TypeScript))
+                },
+                _ => {}
+            }
         }
+
+        // Search shebang header
+        trace!("read file {}", path.display());
+        let file = fs::File::open(path)?;
+        let reader = BufReader::new(file);
+        let shebang = reader.lines()
+            .find(|res| res.as_ref().map_or(true, |line| line.starts_with("#!")))
+            .transpose()?;
+
+        if shebang.map_or(false, |t| t == "#!/usr/bin/env node") {
+            return Ok(Some(WebLanguage::JavaScript))
+        }
+
+        Ok(None)
     }
 
-    pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> Option<ScriptFile> {
+    #[instrument(name = "web.detect_script", skip(self, path))]
+    pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<ScriptFile>> {
         let path = path.as_ref();
 
-        self._detect_language(path)
-            .map(|language| ScriptFile::new(path.to_path_buf(), language))
+        let script = self._detect_script_language(path)?
+            .map(|language| ScriptFile::new(path.to_path_buf(), language));
+
+        Ok(script)
     }
 }
 
 impl CodeUnitDetector for WebUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        Ok(self.detect_script(path)
-            .map(|cu| Rc::new(cu) as Rc<dyn CodeUnit>)
-        )
+        let script = self.detect_script(path)?
+            .map(|cu| Rc::new(cu) as Rc<dyn CodeUnit>);
+
+        Ok(script)
     }
 }
