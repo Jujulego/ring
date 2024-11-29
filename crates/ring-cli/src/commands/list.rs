@@ -32,7 +32,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     
     // Initiate detectors
     let detectors: &[Box<dyn CodeUnitDetector>] = &[
-        Box::new(WebUnitDetector {})
+        Box::new(WebUnitDetector::default()),
     ];
 
     // Test files

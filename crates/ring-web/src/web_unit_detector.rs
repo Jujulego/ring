@@ -1,7 +1,9 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{instrument, trace};
 use ring_code_unit::{CodeUnit, CodeUnitDetector};
@@ -11,8 +13,10 @@ use crate::{Package, ScriptFile, WebLanguage};
 // Web Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, Copy, Debug)]
-pub struct WebUnitDetector {}
+#[derive(Clone, Debug, Default)]
+pub struct WebUnitDetector {
+    packages: RefCell<HashMap<PathBuf, Rc<Package>>>
+}
 
 impl WebUnitDetector {
     fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
@@ -66,33 +70,67 @@ impl WebUnitDetector {
     }
 
     #[instrument(name = "web.detect_script", skip(self, path))]
-    pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<ScriptFile>> {
+    pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<ScriptFile>>> {
         let path = path.as_ref();
 
         let script = self._detect_script_language(path)?
             .map(|language| ScriptFile::new(path.to_path_buf(), language));
+        
+        if let Some(mut script) = script {
+            let package = path.parent()
+                .and_then(|parent| self.search_package(parent).transpose());
+            
+            if let Some(package) = package {
+                script = script.with_package(package?)
+            }
 
-        Ok(script)
+            Ok(Some(Rc::new(script)))
+        } else {
+            Ok(None)
+        }
     }
 
     #[instrument(name = "web.detect_package", skip(self, path))]
-    pub fn detect_package<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Package>> {
+    pub fn detect_package<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<Package>>> {
         let path = path.as_ref();
 
+        if let Some(package) = self.packages.borrow().get(path) {
+            return Ok(Some(package.clone()))
+        }
+        
         let package = self._detect_package(path)?
-            .map(|language| Package::new(path.to_path_buf(), language));
+            .map(|language| Package::new(path.to_path_buf(), language))
+            .map(Rc::new);
+        
+        if let Some(package) = &package {
+            self.packages.borrow_mut().insert(path.to_path_buf(), package.clone());
+        }
 
         Ok(package)
+    }
+    
+    pub fn search_package(&self, mut path: &Path) -> anyhow::Result<Option<Rc<Package>>> {
+        loop {
+            if let Some(package) = self.detect_package(path)? {
+                break Ok(Some(package));
+            }
+            
+            if let Some(parent) = path.parent() {
+                path = parent;
+            } else {
+                break Ok(None);
+            }
+        }
     }
 }
 
 impl CodeUnitDetector for WebUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         let script = self.detect_script(path)?
-            .map(|cu| Rc::new(cu) as Rc<dyn CodeUnit>);
+            .map(|cu| cu as Rc<dyn CodeUnit>);
 
         let package = self.detect_package(path)?
-            .map(|cu| Rc::new(cu) as Rc<dyn CodeUnit>);
+            .map(|cu| cu as Rc<dyn CodeUnit>);
 
         Ok(script.or(package))
     }
