@@ -12,6 +12,7 @@ use ring_code_unit::{CodeUnit, CodeUnitDetector};
 use crate::{Package, ScriptFile, WebLanguage};
 use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
 use crate::package_manifest::PackageManifest;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Web Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ impl WebUnitDetector {
                 .find(|res| res.as_ref().map_or(true, |line| line.starts_with("#!")))
                 .transpose()?;
     
-            if shebang.map_or(false, |t| t == "#!/usr/bin/env node") {
+            if shebang.is_some_and(|t| t == "#!/usr/bin/env node") {
                 return Ok(Some(WebLanguage::JavaScript));
             }
         }

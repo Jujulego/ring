@@ -60,7 +60,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
         table.add_row([
             &file_name.if_supports_color(supports_color::Stream::Stdout, |txt| txt.style(file_style)),
-            &tags.iter().rev().map(|tag| tag.styled()).join(" "),
+            &tags.iter().map(|tag| tag.styled()).join(" "),
         ]);
     }
 
