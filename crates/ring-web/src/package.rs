@@ -2,6 +2,7 @@ use crate::WebLanguage;
 use ring_code_unit::CodeUnit;
 use ring_tag::{Tag, Tagged};
 use std::path::{Path, PathBuf};
+use crate::package_manager::PackageManager;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Package
@@ -11,11 +12,20 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Debug)]
 pub struct Package {
     path: PathBuf,
+    package_manager: Option<PackageManager>,
 }
 
 impl Package {
     pub fn new(path: PathBuf) -> Package {
-        Package { path }
+        Package { path, package_manager: None }
+    }
+
+    pub fn package_manager(&self) -> Option<&PackageManager> {
+        self.package_manager.as_ref()
+    }
+
+    pub fn set_package_manager(&mut self, package_manager: PackageManager) {
+        self.package_manager = Some(package_manager);
     }
 }
 
@@ -27,6 +37,12 @@ impl CodeUnit for Package {
 
 impl Tagged for Package {
     fn tags(&self) -> Vec<Tag> {
-        vec![WebLanguage::JavaScript.tag("package".to_string())]
+        let mut tags = vec![WebLanguage::JavaScript.tag()];
+
+        if let Some(package_manager) = &self.package_manager {
+            tags.push(package_manager.tag());
+        }
+
+        tags
     }
 }

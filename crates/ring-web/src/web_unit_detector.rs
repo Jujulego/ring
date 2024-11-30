@@ -8,7 +8,7 @@ use std::rc::Rc;
 use tracing::{instrument, trace};
 use ring_code_unit::{CodeUnit, CodeUnitDetector};
 use crate::{Package, ScriptFile, WebLanguage};
-
+use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
 ////////////////////////////////////////////////////////////////////////////////
 // Web Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,20 @@ impl WebUnitDetector {
         Ok(None)
     }
 
-    pub fn _detect_package(&self, path: &Path) -> anyhow::Result<Option<Package>> {
+    fn _detect_package_manager(&self, path: &Path) -> anyhow::Result<Option<PackageManager>> {
+        for package_manager in PACKAGE_MANAGERS {
+            let lockfile_path = path.join(package_manager.lockfile());
+
+            trace!("touch file {}", lockfile_path.display());
+            if lockfile_path.try_exists()? {
+                return Ok(Some(package_manager));
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn _detect_package(&self, path: &Path) -> anyhow::Result<Option<Package>> {
         if !path.is_dir() {
             return Ok(None);
         }
@@ -63,7 +76,13 @@ impl WebUnitDetector {
 
         trace!("touch file {}", manifest_path.display());
         if manifest_path.try_exists()? {
-            Ok(Some(Package::new(path.to_path_buf())))
+            let mut package = Package::new(path.to_path_buf());
+
+            if let Some(package_manager) = self._detect_package_manager(path)? {
+                package.set_package_manager(package_manager);
+            }
+            
+            Ok(Some(package))
         } else {
             Ok(None)
         }

@@ -48,6 +48,6 @@ impl CodeUnit for ScriptFile {
 
 impl Tagged for ScriptFile {
     fn tags(&self) -> Vec<Tag> {
-        vec![self.language.tag("script".to_string())]
+        vec![self.language.tag()]
     }
 }

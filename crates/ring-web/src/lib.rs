@@ -2,6 +2,7 @@ mod language;
 mod package;
 mod script_file;
 mod web_unit_detector;
+mod package_manager;
 
 pub use language::WebLanguage;
 pub use script_file::ScriptFile;
