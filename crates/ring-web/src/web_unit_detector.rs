@@ -54,22 +54,22 @@ impl WebUnitDetector {
         Ok(None)
     }
 
-    pub fn _detect_package(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
+    pub fn _detect_package(&self, path: &Path) -> anyhow::Result<Option<Package>> {
         if !path.is_dir() {
             return Ok(None);
         }
 
         let manifest_path = path.join("package.json");
+
         trace!("touch file {}", manifest_path.display());
-        
         if manifest_path.try_exists()? {
-            Ok(Some(WebLanguage::JavaScript))
+            Ok(Some(Package::new(path.to_path_buf())))
         } else {
             Ok(None)
         }
     }
 
-    #[instrument(name = "web.detect_script", skip(self, path))]
+    #[instrument(name = "web.detect-script", skip(self, path))]
     pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<ScriptFile>>> {
         let path = path.as_ref();
 
@@ -78,10 +78,11 @@ impl WebUnitDetector {
         
         if let Some(mut script) = script {
             let package = path.parent()
-                .and_then(|parent| self.search_package(parent).transpose());
+                .and_then(|parent| self.search_package(parent).transpose())
+                .transpose()?;
             
             if let Some(package) = package {
-                script = script.with_package(package?)
+                script.set_package(package)
             }
 
             Ok(Some(Rc::new(script)))
@@ -90,7 +91,7 @@ impl WebUnitDetector {
         }
     }
 
-    #[instrument(name = "web.detect_package", skip(self, path))]
+    #[instrument(name = "web.detect-package", skip(self, path))]
     pub fn detect_package<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<Package>>> {
         let path = path.as_ref();
 
@@ -99,7 +100,6 @@ impl WebUnitDetector {
         }
         
         let package = self._detect_package(path)?
-            .map(|language| Package::new(path.to_path_buf(), language))
             .map(Rc::new);
         
         if let Some(package) = &package {

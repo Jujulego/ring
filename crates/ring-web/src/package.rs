@@ -11,12 +11,11 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Debug)]
 pub struct Package {
     path: PathBuf,
-    language: WebLanguage,
 }
 
 impl Package {
-    pub fn new(path: PathBuf, language: WebLanguage) -> Package {
-        Package { path, language }
+    pub fn new(path: PathBuf) -> Package {
+        Package { path }
     }
 }
 
@@ -28,6 +27,6 @@ impl CodeUnit for Package {
 
 impl Tagged for Package {
     fn tags(&self) -> Vec<Tag> {
-        vec![self.language.tag()]
+        vec![WebLanguage::JavaScript.tag("package".to_string())]
     }
 }
