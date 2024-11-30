@@ -3,7 +3,7 @@ use ring_code_unit::CodeUnit;
 use ring_tag::{Tag, Tagged};
 use std::path::{Path, PathBuf};
 use crate::package_manager::PackageManager;
-
+use crate::package_manifest::PackageManifest;
 ////////////////////////////////////////////////////////////////////////////////
 // Package
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,14 +12,19 @@ use crate::package_manager::PackageManager;
 #[derive(Clone, Debug)]
 pub struct Package {
     path: PathBuf,
+    manifest: PackageManifest,
     package_manager: Option<PackageManager>,
 }
 
 impl Package {
-    pub fn new(path: PathBuf) -> Package {
-        Package { path, package_manager: None }
+    pub fn new(path: PathBuf, manifest: PackageManifest) -> Package {
+        Package { path, manifest, package_manager: None }
     }
 
+    pub fn manifest(&self) -> &PackageManifest {
+        &self.manifest
+    }
+    
     pub fn package_manager(&self) -> Option<&PackageManager> {
         self.package_manager.as_ref()
     }

@@ -2,13 +2,16 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::{BufRead, BufReader};
+use std::fs::File;
+use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use anyhow::anyhow;
 use tracing::{instrument, trace};
 use ring_code_unit::{CodeUnit, CodeUnitDetector};
 use crate::{Package, ScriptFile, WebLanguage};
 use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
+use crate::package_manifest::PackageManifest;
 ////////////////////////////////////////////////////////////////////////////////
 // Web Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,17 +77,22 @@ impl WebUnitDetector {
 
         let manifest_path = path.join("package.json");
 
-        trace!("touch file {}", manifest_path.display());
-        if manifest_path.try_exists()? {
-            let mut package = Package::new(path.to_path_buf());
+        trace!("read file {}", manifest_path.display());
+        match File::open(&manifest_path) {
+            Ok(ref mut file) => {
+                let mut package = Package::new(
+                    path.to_path_buf(),
+                    PackageManifest::from_reader(file)?
+                );
 
-            if let Some(package_manager) = self._detect_package_manager(path)? {
-                package.set_package_manager(package_manager);
+                if let Some(package_manager) = self._detect_package_manager(path)? {
+                    package.set_package_manager(package_manager);
+                }
+
+                Ok(Some(package))
             }
-            
-            Ok(Some(package))
-        } else {
-            Ok(None)
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(anyhow!(err).context(format!("Unable to access {}", manifest_path.display()))),
         }
     }
 
