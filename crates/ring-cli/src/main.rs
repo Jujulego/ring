@@ -44,6 +44,7 @@ fn setup_tracing(args: &ArgMatches) {
     tracing_subscriber::registry()
         .with(sentry::integrations::tracing::layer())
         .with(tracing_subscriber::fmt::layer()
+            .compact()
             .without_time()
             .with_target(false)
             .with_writer(io::stderr

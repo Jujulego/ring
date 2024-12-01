@@ -9,7 +9,7 @@ use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
 use lscolors::LsColors;
-use tracing::{instrument, span, Level};
+use tracing::{instrument, trace};
 use ring_cli_table::CliTable;
 
 pub fn build_command() -> Command {
@@ -21,7 +21,7 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.list", fields(message = "ring_cli::list::handle_command"))]
+#[instrument(name = "cli.list", skip(args))]
 pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
     let current_dir = env::current_dir()?;
@@ -32,7 +32,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     
     // Initiate detectors
     let detectors: &[Box<dyn CodeUnitDetector>] = &[
-        Box::new(WebUnitDetector {})
+        Box::new(WebUnitDetector::default()),
     ];
 
     // Test files
@@ -73,14 +73,13 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn list_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
     if path.is_dir() {
-        span!(Level::INFO, "read_dir").in_scope(|| {
-            read_dir(path)?
-                .map(|res| res
-                    .map(|e| e.path())
-                    .with_context(|| format!("Error while reading directory {:?}", path))
-                )
-                .collect()
-        })
+        trace!("read directory {}", path.display());
+        read_dir(path)?
+            .map(|res| res
+                .map(|e| e.path())
+                .with_context(|| format!("Error while reading directory {:?}", path))
+            )
+            .collect()
     } else {
         Ok(vec![path.clone()])
     }

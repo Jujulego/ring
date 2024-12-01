@@ -12,6 +12,13 @@ pub enum WebLanguage {
 }
 
 impl WebLanguage {
+    pub fn scoped_tag(&self, label: &str) -> Tag {
+        match self {
+            WebLanguage::JavaScript => Tag::from(label).with_scope("js").with_color(ColorLabel::Yellow, (0xf7, 0xdf, 0x1e)),
+            WebLanguage::TypeScript => Tag::from(label).with_scope("ts").with_color(ColorLabel::Blue, (0x00, 0x7a, 0xcc)),
+        }
+    }
+
     pub fn tag(&self) -> Tag {
         match self {
             WebLanguage::JavaScript => Tag::from("js").with_color(ColorLabel::Yellow, (0xf7, 0xdf, 0x1e)),
@@ -26,11 +33,11 @@ mod tests {
 
     #[test]
     fn it_should_create_a_js_tag() {
-        assert_eq!(WebLanguage::JavaScript.tag().label(), "js");
+        assert_eq!(WebLanguage::JavaScript.scoped_tag("test").scope(), Some("js"));
     }
 
     #[test]
     fn it_should_create_a_ts_tag() {
-        assert_eq!(WebLanguage::TypeScript.tag().label(), "ts");
+        assert_eq!(WebLanguage::TypeScript.scoped_tag("test").scope(), Some("ts"));
     }
 }

@@ -21,11 +21,8 @@ impl ScriptFile {
         ScriptFile { path, language, package: None }
     }
     
-    pub fn with_package(self, package: Rc<Package>) -> ScriptFile {
-        ScriptFile {
-            package: Some(package),
-            ..self
-        }
+    pub fn set_package(&mut self, package: Rc<Package>) {
+        self.package = Some(package);
     }
     
     pub fn language(&self) -> &WebLanguage {
