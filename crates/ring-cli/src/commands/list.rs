@@ -1,16 +1,17 @@
-use owo_colors::OwoColorize;
 use anyhow::Context;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
+use lscolors::LsColors;
+use owo_colors::OwoColorize;
+use ring_cli_table::CliTable;
 use ring_code_unit::CodeUnitDetector;
+use ring_tag::Tag;
 use ring_web::WebUnitDetector;
 use std::collections::BTreeSet;
 use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
-use lscolors::LsColors;
 use tracing::{instrument, trace};
-use ring_cli_table::CliTable;
 
 pub fn build_command() -> Command {
     Command::new("list")
@@ -46,10 +47,12 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
             continue;
         }
         
+        let mut languages = BTreeSet::new();
         let mut tags = BTreeSet::new();
 
         for detector in detectors {
             if let Some(unit) = detector.detect(&path)? {
+                languages.insert(Tag::from(unit.language()));
                 tags.extend(unit.tags());
             }
         }
@@ -60,6 +63,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
         table.add_row([
             &file_name.if_supports_color(supports_color::Stream::Stdout, |txt| txt.style(file_style)),
+            &languages.iter().map(|tag| tag.styled()).join(" "),
             &tags.iter().map(|tag| tag.styled()).join(" "),
         ]);
     }

@@ -992,6 +992,7 @@ dependencies = [
  "owo-colors",
  "ring-cli-table",
  "ring-code-unit",
+ "ring-tag",
  "ring-web",
  "sentry",
  "supports-color 3.0.2",
@@ -1014,6 +1015,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "mockall",
+ "ring-color",
  "ring-tag",
 ]
 
@@ -1044,6 +1046,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "owo-colors",
+ "rgb",
  "ring-code-unit",
  "ring-color",
  "ring-tag",

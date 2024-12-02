@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod mock_supports_color;
 
-use rgb::{Rgb, RGB};
+use rgb::RGB;
 
 #[cfg(feature = "owo-colors")]
 use ansi_colours::ansi256_from_rgb;
 
 #[cfg(feature = "owo-colors")]
-use owo_colors::{DynColors, XtermColors};
+use owo_colors::{DynColors, Style, XtermColors};
 
 #[cfg(not(test))]
 use supports_color::on as supports_color_on;
@@ -75,12 +75,7 @@ pub struct StableColor {
 }
 
 impl StableColor {
-    #[inline]
-    pub fn new<C: Into<Rgb<u8>>>(label: ColorLabel, color: C) -> Self {
-        StableColor::_new(label, color.into())
-    }
-
-    fn _new(label: ColorLabel, rgb: RGB<u8>) -> Self {
+    pub const fn new(label: ColorLabel, rgb: RGB<u8>) -> Self {
         StableColor { rgb, label }
     }
 
@@ -112,8 +107,17 @@ impl StableColor {
     }
 }
 
-impl From<StableColor> for RGB<u8> {
-    fn from(stable_color: StableColor) -> Self {
+#[cfg(feature = "owo-colors")]
+impl From<&StableColor> for Style {
+    fn from(stable_color: &StableColor) -> Self {
+        stable_color.to_owo()
+            .map(|owo| Style::new().color(owo))
+            .unwrap_or_default()
+    }
+}
+
+impl From<&StableColor> for RGB<u8> {
+    fn from(stable_color: &StableColor) -> Self {
         stable_color.rgb
     }
 }
@@ -124,12 +128,12 @@ impl From<StableColor> for RGB<u8> {
 
 #[cfg(test)]
 mod tests {
-    use owo_colors::AnsiColors;
     use super::*;
+    use owo_colors::AnsiColors;
 
     #[test]
     fn it_should_return_a_rgb_color() {
-        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255));
+        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255).into());
 
         mock_supports_color::set_has_16m();
         assert_eq!(color.to_owo(), Some(DynColors::Rgb(0, 0, 255)));
@@ -137,7 +141,7 @@ mod tests {
 
     #[test]
     fn it_should_return_a_xterm_color() {
-        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255));
+        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255).into());
 
         mock_supports_color::set_has_256();
         assert_eq!(color.to_owo(), Some(DynColors::Xterm(XtermColors::Blue)));
@@ -145,7 +149,7 @@ mod tests {
 
     #[test]
     fn it_should_return_an_ansi_color() {
-        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255));
+        let color = StableColor::new(ColorLabel::Blue, (0, 0, 255).into());
 
         mock_supports_color::set_has_basic();
         assert_eq!(color.to_owo(), Some(DynColors::Ansi(AnsiColors::Blue)));

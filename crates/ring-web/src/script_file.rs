@@ -1,6 +1,6 @@
 use crate::{Package, WebLanguage};
-use ring_code_unit::CodeUnit;
-use ring_tag::{Tag, Tagged};
+use ring_code_unit::{CodeLanguage, CodeUnit};
+use ring_tag::Tagged;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -25,16 +25,16 @@ impl ScriptFile {
         self.package = Some(package);
     }
     
-    pub fn language(&self) -> &WebLanguage {
-        &self.language
-    }
-    
     pub fn package(&self) -> Option<&Rc<Package>> {
         self.package.as_ref()
     }
 }
 
 impl CodeUnit for ScriptFile {
+    fn language(&self) -> CodeLanguage {
+        self.language.into()
+    }
+
     fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
         self.package
             .clone()
@@ -46,8 +46,4 @@ impl CodeUnit for ScriptFile {
     }
 }
 
-impl Tagged for ScriptFile {
-    fn tags(&self) -> Vec<Tag> {
-        vec![self.language.tag()]
-    }
-}
+impl Tagged for ScriptFile {}
