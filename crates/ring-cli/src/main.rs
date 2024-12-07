@@ -14,7 +14,8 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .subcommand_required(true)
         .subcommands([
-            commands::list::build_command()
+            commands::list::build_command(),
+            commands::processes::build_command(),
         ])
         .arg(arg!(-v --verbose)
             .global(true)
@@ -28,6 +29,7 @@ fn main() -> anyhow::Result<()> {
     // Handle subcommands
     match args.subcommand() {
         Some(("list", args)) => commands::list::handle_command(args),
+        Some(("processes", _)) => commands::processes::handle_command(),
         _ => unreachable!()
     }
 }
