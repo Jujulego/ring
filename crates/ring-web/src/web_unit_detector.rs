@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -44,7 +43,7 @@ impl WebUnitDetector {
         // Search shebang header
         if path.extension().is_none() {
             trace!("read file {}", path.display());
-            let file = fs::File::open(path)?;
+            let file = File::open(path)?;
             let reader = BufReader::new(file);
             let shebang = reader.lines()
                 .find(|res| res.as_ref().map_or(true, |line| line.starts_with("#!")))
