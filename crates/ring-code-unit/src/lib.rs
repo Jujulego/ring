@@ -45,8 +45,15 @@ impl From<&CodeLanguage> for Tag {
 
 /// Defines a code unit.
 pub trait CodeUnit: Tagged {
+    /// Returns unit's language
     fn language(&self) -> CodeLanguage;
 
+    /// Returns unit's name
+    fn name(&self) -> Option<&str> {
+        self.path().file_name()
+            .and_then(|name| name.to_str())
+    }
+    
     /// Returns a parent code unit containing this one
     fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
         None

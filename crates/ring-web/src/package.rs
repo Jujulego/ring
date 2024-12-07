@@ -40,6 +40,10 @@ impl CodeUnit for Package {
         WebLanguage::JavaScript.into()
     }
 
+    fn name(&self) -> Option<&str> {
+        Some(&self.manifest.name)
+    }
+
     fn path(&self) -> &Path {
         &self.path
     }

@@ -46,7 +46,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         if !show_all && file_name.starts_with(".") {
             continue;
         }
-        
+
         let mut languages = BTreeSet::new();
         let mut tags = BTreeSet::new();
 
