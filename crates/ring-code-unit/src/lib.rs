@@ -14,7 +14,7 @@ pub struct CodeLanguage {
 }
 
 impl CodeLanguage {
-    pub const fn new<'a>(name: String, color: StableColor) -> CodeLanguage {
+    pub const fn new(name: String, color: StableColor) -> CodeLanguage {
         CodeLanguage { name, color }
     }
 
