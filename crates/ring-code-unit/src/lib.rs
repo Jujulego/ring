@@ -1,6 +1,43 @@
-use ring_tag::Tagged;
+use ring_color::StableColor;
+use ring_tag::{Tag, Tagged};
 use std::path::Path;
 use std::rc::Rc;
+
+////////////////////////////////////////////////////////////////////////////////
+// Code Language
+////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone, Debug)]
+pub struct CodeLanguage {
+    name: String,
+    color: StableColor,
+}
+
+impl CodeLanguage {
+    pub const fn new(name: String, color: StableColor) -> CodeLanguage {
+        CodeLanguage { name, color }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn color(&self) -> &StableColor {
+        &self.color
+    }
+}
+
+impl From<CodeLanguage> for Tag {
+    fn from(l: CodeLanguage) -> Tag {
+        Tag::new(l.name).with_stable_color(l.color)
+    }
+}
+
+impl From<&CodeLanguage> for Tag {
+    fn from(l: &CodeLanguage) -> Tag {
+        Tag::new(l.name.clone()).with_stable_color(l.color)
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code Unit
@@ -8,6 +45,8 @@ use std::rc::Rc;
 
 /// Defines a code unit.
 pub trait CodeUnit: Tagged {
+    fn language(&self) -> CodeLanguage;
+
     /// Returns a parent code unit containing this one
     fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
         None
@@ -34,6 +73,7 @@ mod tests {
         TestUnit {}
         impl Tagged for TestUnit {}
         impl CodeUnit for TestUnit {
+            fn language(&self) -> CodeLanguage;
             fn path(&self) -> &Path;
         }
     }

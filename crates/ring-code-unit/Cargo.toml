@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.93"
+
+ring-color = { path = "../ring-color" }
 ring-tag = { path = "../ring-tag" }
 
 [dev-dependencies]

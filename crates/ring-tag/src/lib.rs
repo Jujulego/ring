@@ -59,10 +59,10 @@ impl Tag {
     /// Adds given color to tag
     #[inline]
     pub fn with_color<C: Into<Rgb<u8>>>(self, label: ColorLabel, color: C) -> Tag {
-        self._with_color(StableColor::new(label, color.into()))
+        self.with_stable_color(StableColor::new(label, color.into()))
     }
 
-    fn _with_color(self, color: StableColor) -> Tag {
+    pub fn with_stable_color(self, color: StableColor) -> Tag {
         Tag { color: Some(color), ..self }
     }
 

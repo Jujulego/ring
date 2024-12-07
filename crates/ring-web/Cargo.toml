@@ -8,6 +8,7 @@ owo-colors = ["ring-color/owo-colors", "ring-tag/owo-colors", "dep:owo-colors"]
 
 [dependencies]
 anyhow = "1.0.93"
+rgb = "0.8.50"
 tracing = "0.1.41"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
