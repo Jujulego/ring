@@ -1,0 +1,13 @@
+[package]
+name = "ring-code-unit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+
+ring-color = { path = "../ring-color" }
+ring-tag = { path = "../ring-tag" }
+
+[dev-dependencies]
+mockall = "0.13.1"

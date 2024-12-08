@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ 'latest' ]
+    branches: [ 'latest', 'next' ]
 
   pull_request:
-    branches: [ 'latest' ]
+    branches: [ 'latest', 'next' ]
 
 concurrency:
   group: rust-${{ github.ref }}

@@ -1,0 +1,11 @@
+[package]
+name = "ring-process-unit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.94"
+sysinfo = "0.33.0"
+
+ring-code-unit = { path = "../ring-code-unit" }
+ring-tag = { path = "../ring-tag" }
