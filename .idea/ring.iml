@@ -15,6 +15,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-web/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-table/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-color/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-process-unit/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

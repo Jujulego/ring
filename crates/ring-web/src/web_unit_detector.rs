@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use anyhow::anyhow;
-use tracing::{instrument, trace};
+use tracing::{info, instrument, trace};
 use ring_code_unit::{CodeUnit, CodeUnitDetector};
 use crate::{Package, ScriptFile, WebLanguage};
 use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
@@ -18,7 +18,7 @@ use crate::package_manifest::PackageManifest;
 
 #[derive(Clone, Debug, Default)]
 pub struct WebUnitDetector {
-    packages: RefCell<HashMap<PathBuf, Rc<Package>>>
+    packages: RefCell<HashMap<PathBuf, Option<Rc<Package>>>>
 }
 
 impl WebUnitDetector {
@@ -112,6 +112,7 @@ impl WebUnitDetector {
                 script.set_package(package)
             }
 
+            info!("recognized {} as a web script", path.display());
             Ok(Some(Rc::new(script)))
         } else {
             Ok(None)
@@ -123,14 +124,17 @@ impl WebUnitDetector {
         let path = path.as_ref();
 
         if let Some(package) = self.packages.borrow().get(path) {
-            return Ok(Some(package.clone()))
+            return Ok(package.clone())
         }
         
         let package = self._detect_package(path)?
             .map(Rc::new);
         
         if let Some(package) = &package {
-            self.packages.borrow_mut().insert(path.to_path_buf(), package.clone());
+            info!("recognized {} as a web package", path.display());
+            self.packages.borrow_mut().insert(path.to_path_buf(), Some(package.clone()));
+        } else {
+            self.packages.borrow_mut().insert(path.to_path_buf(), None);
         }
 
         Ok(package)

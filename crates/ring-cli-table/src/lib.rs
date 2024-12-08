@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{max, Ordering};
 use std::fmt::{Display, Formatter};
 use std::iter::FusedIterator;
 use textwrap::core::display_width;
@@ -91,6 +91,16 @@ impl<const N: usize> CliTable<N> {
     pub fn len(&self) -> usize {
         self.rows.len()
     }
+
+    pub fn sort_by<F>(&mut self, mut compare: F)
+    where
+        F: FnMut(CliTableRow<N>, CliTableRow<N>) -> Ordering
+    {
+        self.rows.sort_by(|a, b| compare(
+            CliTableRow { items: a, widths: &self.widths },
+            CliTableRow { items: b, widths: &self.widths },
+        ))
+    }
 }
 
 impl<const N: usize> Default for CliTable<N> {
@@ -171,6 +181,12 @@ impl<const N: usize> FusedIterator for CliTableIter<'_, N> {}
 pub struct CliTableRow<'a, const N: usize> {
     items: &'a [String; N],
     widths: &'a [usize; N],
+}
+
+impl<'a, const N: usize> CliTableRow<'a, N> {
+    pub fn get(&self, idx: usize) -> Option<&'a String> {
+        self.items.get(idx)
+    }
 }
 
 impl<const N: usize> Display for CliTableRow<'_, N> {
