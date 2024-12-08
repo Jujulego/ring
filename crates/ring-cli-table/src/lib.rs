@@ -101,6 +101,18 @@ impl<const N: usize> CliTable<N> {
             CliTableRow { items: b, widths: &self.widths },
         ))
     }
+
+    pub fn columns(&self) -> usize {
+        N
+    }
+
+    pub fn widths(&self) -> &[usize; N] {
+        &self.widths
+    }
+
+    pub fn set_widths(&mut self) -> &mut [usize; N] {
+        &mut self.widths
+    }
 }
 
 impl<const N: usize> Default for CliTable<N> {

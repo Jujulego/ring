@@ -4,9 +4,25 @@ use ring_color::ColorLabel;
 use ring_process_unit::ProcessUnit;
 use ring_tag::{Tag, Tagged};
 use std::rc::Rc;
+use std::sync::OnceLock;
 use regex::Regex;
 use sysinfo::Pid;
 
+// Parameters
+static SHOULD_HIDE_REGEX: OnceLock<[Regex; 2]> = OnceLock::new();
+
+fn should_hide_regex() -> &'static [Regex; 2] {
+    SHOULD_HIDE_REGEX.get_or_init(|| [
+        Regex::new(r"yarn\.[cm]?js$").unwrap(),
+        Regex::new(r"yarn-([0-9]+\.){3}[cm]?js$").unwrap(),
+    ])
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Node Process
+////////////////////////////////////////////////////////////////////////////////
+
+/// Represent a process running a script file using node
 pub struct NodeProcess {
     pid: Pid,
     arguments: Vec<String>,
@@ -40,11 +56,8 @@ impl ProcessUnit for NodeProcess {
     }
 
     fn should_hide(&self) -> bool {
-        let re = Regex::new(r"^yarn-([0-9]+\.){3}[cm]?js$").unwrap();
-
-        self.running_script.name().is_some_and(|name| {
-            name == "yarn.js" || re.is_match(name)
-        })
+        let path = self.running_script.path().to_str().unwrap();
+        should_hide_regex().iter().any(|re| re.is_match(path))
     }
 }
 

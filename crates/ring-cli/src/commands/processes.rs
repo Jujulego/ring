@@ -1,12 +1,13 @@
 use bytesize::ByteSize;
 use clap::{arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
+use owo_colors::{Effect, OwoColorize, Style};
 use ring_cli_table::CliTable;
 use ring_process_unit::ProcessUnitDetector;
 use ring_web::{WebProcessDetector, WebUnitDetector};
 use std::rc::Rc;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
-use tracing::instrument;
+use tracing::{debug, instrument, trace};
 
 pub fn build_command() -> Command {
     Command::new("processes").visible_alias("ps")
@@ -28,6 +29,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     // List processes
     let mut table = CliTable::new();
 
+    trace!("load running processes");
     let sys = System::new_with_specifics(
         RefreshKind::nothing()
             .with_processes(ProcessRefreshKind::everything()),
@@ -36,16 +38,27 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     for (pid, process) in sys.processes() {
         for detector in detectors {
             if let Some(unit) = detector.detect(pid, process)? {
-                if !show_all && unit.should_hide() {
-                    break;
+                let mut style = Style::new();
+
+                if unit.should_hide() {
+                    if !show_all {
+                        if let Some(name) = unit.running_code_unit().and_then(|u| u.name().map(|n| n.to_string())) {
+                            debug!("hide process {pid} running on {name}");
+                        } else {
+                            debug!("hide process {pid}");
+                        }
+
+                        break;
+                    } else {
+                        style = style.effect(Effect::Dimmed)
+                    }
                 }
 
                 table.add_row([
-                    &format!("{:>5}", pid.as_u32()),
-                    &format!("{:>5}", process.parent().map(|pid| pid.to_string()).unwrap_or_default()),
-                    &format!("{:>10}", ByteSize::b(process.memory())),
-                    &unit.tags().iter().map(|tag| tag.styled()).join(" "),
-                    &unit.cmd().join(" "),
+                    &format!("{:>5}", pid.as_u32()).style(style),
+                    &format!("{:>10}", ByteSize::b(process.memory())).style(style),
+                    &unit.tags().iter().map(|tag| tag.styled()).join(" ").style(style),
+                    &unit.cmd().join(" ").style(style),
                 ]);
 
                 break;
@@ -53,20 +66,10 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    let cols = termsize::get()
-        .map(|size| size.cols)
-        .unwrap_or(80) as usize;
-
     table.sort_by(|a, b| a.get(0).cmp(&b.get(0)));
 
     for row in &table {
-        let line = format!("{row}");
-
-        if line.len() > cols {
-            println!("{}...", &line[..cols - 3]);
-        } else {
-            println!("{line}");
-        }
+        println!("{row}");
     }
 
     Ok(())
