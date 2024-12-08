@@ -1,5 +1,5 @@
 use bytesize::ByteSize;
-use clap::Command;
+use clap::{arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
 use ring_cli_table::CliTable;
 use ring_process_unit::ProcessUnitDetector;
@@ -10,16 +10,20 @@ use tracing::instrument;
 
 pub fn build_command() -> Command {
     Command::new("processes").visible_alias("ps")
+        .arg(arg!(-a --all)
+            .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.processes")]
-pub fn handle_command() -> anyhow::Result<()> {
+#[instrument(name = "cli.processes", skip(args))]
+pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     // Initiate detectors
     let detectors: &[Box<dyn ProcessUnitDetector>] = &[
         Box::new(WebProcessDetector::new(
             Rc::new(WebUnitDetector::default())
         ))
     ];
+
+    let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List processes
     let mut table = CliTable::new();
@@ -32,6 +36,10 @@ pub fn handle_command() -> anyhow::Result<()> {
     for (pid, process) in sys.processes() {
         for detector in detectors {
             if let Some(unit) = detector.detect(pid, process)? {
+                if !show_all && unit.should_hide() {
+                    break;
+                }
+
                 table.add_row([
                     &format!("{:>5}", pid.as_u32()),
                     &format!("{:>5}", process.parent().map(|pid| pid.to_string()).unwrap_or_default()),

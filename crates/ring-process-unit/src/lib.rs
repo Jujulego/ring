@@ -17,6 +17,11 @@ pub trait ProcessUnit: Tagged {
 
     /// Code unit running in this process
     fn running_code_unit(&self) -> Option<Rc<dyn CodeUnit>>;
+
+    /// Should process be hidden
+    fn should_hide(&self) -> bool {
+        false
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

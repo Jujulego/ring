@@ -4,6 +4,7 @@ use ring_color::ColorLabel;
 use ring_process_unit::ProcessUnit;
 use ring_tag::{Tag, Tagged};
 use std::rc::Rc;
+use regex::Regex;
 use sysinfo::Pid;
 
 pub struct NodeProcess {
@@ -36,6 +37,14 @@ impl ProcessUnit for NodeProcess {
 
     fn running_code_unit(&self) -> Option<Rc<dyn CodeUnit>> {
         Some(self.running_script.clone())
+    }
+
+    fn should_hide(&self) -> bool {
+        let re = Regex::new(r"^yarn-([0-9]+\.){3}[cm]?js$").unwrap();
+
+        self.running_script.name().is_some_and(|name| {
+            name == "yarn.js" || re.is_match(name)
+        })
     }
 }
 
