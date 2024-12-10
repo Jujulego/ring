@@ -50,7 +50,7 @@ pub trait CodeUnit: Tagged {
 
     /// Returns unit's name
     fn name(&self) -> Option<&str> {
-        self.path().file_name()
+        self.path().file_stem()
             .and_then(|name| name.to_str())
     }
     
