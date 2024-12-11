@@ -1,3 +1,4 @@
+use std::ffi::OsStr;
 use crate::package_manager::PackageManager;
 use crate::package_manifest::PackageManifest;
 use crate::WebLanguage;
@@ -12,9 +13,9 @@ use std::path::{Path, PathBuf};
 /// Represents a script package
 #[derive(Clone, Debug)]
 pub struct Package {
-    path: PathBuf,
     manifest: PackageManifest,
     package_manager: Option<PackageManager>,
+    path: PathBuf,
 }
 
 impl Package {
@@ -41,7 +42,8 @@ impl CodeUnit for Package {
     }
 
     fn name(&self) -> Option<&str> {
-        Some(&self.manifest.name)
+        self.manifest.name.as_deref()
+            .or_else(|| self.path.file_name().and_then(OsStr::to_str))
     }
 
     fn path(&self) -> &Path {

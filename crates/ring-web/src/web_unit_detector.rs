@@ -131,7 +131,12 @@ impl WebUnitDetector {
             .map(Rc::new);
         
         if let Some(package) = &package {
-            info!("recognized {} as a web package", path.display());
+            if let Some(name) = package.name() {
+                info!("recognized {} as a web package '{}'", path.display(), name);
+            } else {
+                info!("recognized {} as a web package", path.display());
+            }
+            
             self.packages.borrow_mut().insert(path.to_path_buf(), Some(package.clone()));
         } else {
             self.packages.borrow_mut().insert(path.to_path_buf(), None);
