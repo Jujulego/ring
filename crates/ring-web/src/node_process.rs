@@ -1,11 +1,11 @@
 use crate::ScriptFile;
+use regex::Regex;
 use ring_code_unit::CodeUnit;
 use ring_color::ColorLabel;
 use ring_process_unit::ProcessUnit;
 use ring_tag::{Tag, Tagged};
 use std::rc::Rc;
 use std::sync::OnceLock;
-use regex::Regex;
 use sysinfo::Pid;
 
 // Parameters
@@ -26,22 +26,27 @@ fn should_hide_regex() -> &'static [Regex; 2] {
 pub struct NodeProcess {
     pid: Pid,
     arguments: Vec<String>,
-    running_script: Rc<ScriptFile>,
+    running_script: Option<Rc<ScriptFile>>,
 }
 
 impl NodeProcess {
-    pub fn new(pid: Pid, arguments: Vec<String>, running_script: Rc<ScriptFile>) -> NodeProcess {
+    pub fn new(pid: Pid, arguments: Vec<String>, running_script: Option<Rc<ScriptFile>>) -> NodeProcess {
         NodeProcess { pid, arguments, running_script }
     }
 
-    pub fn running_script(&self) -> &Rc<ScriptFile> {
-        &self.running_script
+    pub fn running_script(&self) -> Option<&Rc<ScriptFile>> {
+        self.running_script.as_ref()
     }
 }
 
 impl ProcessUnit for NodeProcess {
     fn cmd(&self) -> Vec<&str> {
-        let mut cmd = vec![self.running_script.name().unwrap(), ];
+        let mut cmd = vec![];
+
+        if let Some(script) = &self.running_script {
+            cmd.push(script.name().unwrap());
+        }
+
         cmd.extend(self.arguments.iter().map(|s| s.as_str()));
 
         cmd
@@ -52,12 +57,16 @@ impl ProcessUnit for NodeProcess {
     }
 
     fn running_code_unit(&self) -> Option<Rc<dyn CodeUnit>> {
-        Some(self.running_script.clone())
+        self.running_script.clone()
+            .map(|script| script as Rc<dyn CodeUnit>)
     }
 
     fn should_hide(&self) -> bool {
-        let path = self.running_script.path().to_str().unwrap();
-        should_hide_regex().iter().any(|re| re.is_match(path))
+        self.running_script.clone()
+            .is_some_and(|script| {
+                let path = script.path().to_str().unwrap();
+                should_hide_regex().iter().any(|re| re.is_match(path))
+            })
     }
 }
 

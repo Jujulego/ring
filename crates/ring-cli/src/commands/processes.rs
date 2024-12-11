@@ -1,7 +1,7 @@
 use bytesize::ByteSize;
 use clap::{arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
-use owo_colors::{Effect, OwoColorize, Style};
+use owo_colors::{colors, Effect, OwoColorize, Style};
 use ring_cli_table::CliTable;
 use ring_process_unit::ProcessUnitDetector;
 use ring_web::{WebProcessDetector, WebUnitDetector};
@@ -56,7 +56,13 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
 
                 table.add_row([
                     &format!("{:>5}", pid.as_u32()).style(style),
-                    &format!("{:>10}", ByteSize::b(process.memory())).style(style),
+                    &unit.running_code_unit()
+                        .map(|u| u.parent().unwrap_or(u))
+                        .and_then(|u| u.name()
+                            .map(|n| n.to_string()))
+                        .unwrap_or("unknown".to_string().fg::<colors::BrightBlack>().to_string())
+                        .style(style),
+                    &format!("{:>9}", ByteSize::b(process.memory())).style(style),
                     &unit.tags().iter().map(|tag| tag.styled()).join(" ").style(style),
                     &unit.cmd().join(" ").style(style),
                 ]);
