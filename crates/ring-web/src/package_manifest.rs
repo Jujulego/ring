@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct PackageManifest {
-    pub name: String,
+    pub name: Option<String>,
     #[serde(default)]
     pub version: Option<Version>,
     #[serde(default)]
