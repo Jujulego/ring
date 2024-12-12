@@ -3,11 +3,9 @@ use clap::{arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
 use owo_colors::{colors, Effect, OwoColorize, Style};
 use ring_cli_table::CliTable;
-use ring_core::ProcessUnitDetector;
-use ring_web::{WebProcessDetector, WebUnitDetector};
-use std::rc::Rc;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{debug, instrument, trace};
+use crate::core::RingCore;
 
 pub fn build_command() -> Command {
     Command::new("processes").visible_alias("ps")
@@ -15,15 +13,8 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.processes", skip(args))]
-pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
-    // Initiate detectors
-    let detectors: &[Box<dyn ProcessUnitDetector>] = &[
-        Box::new(WebProcessDetector::new(
-            Rc::new(WebUnitDetector::default())
-        ))
-    ];
-
+#[instrument(name = "cli.processes", skip(core, args))]
+pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
 
     // List processes
@@ -36,7 +27,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
     );
 
     for (pid, process) in sys.processes() {
-        for detector in detectors {
+        for detector in core.process_unit_detectors() {
             if let Some(unit) = detector.detect(pid, process)? {
                 let mut style = Style::new();
 

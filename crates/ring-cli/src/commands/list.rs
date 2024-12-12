@@ -1,12 +1,11 @@
+use crate::core::RingCore;
 use anyhow::Context;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
 use lscolors::LsColors;
 use owo_colors::OwoColorize;
 use ring_cli_table::CliTable;
-use ring_core::CodeUnitDetector;
 use ring_tag::Tag;
-use ring_web::WebUnitDetector;
 use std::collections::BTreeSet;
 use std::env;
 use std::fs::read_dir;
@@ -22,19 +21,14 @@ pub fn build_command() -> Command {
             .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.list", skip(args))]
-pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
+#[instrument(name = "cli.list", skip(core, args))]
+pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
     let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
         .unwrap_or(&current_dir);
 
     let show_all = args.get_one::<bool>("all").unwrap_or(&false);
-    
-    // Initiate detectors
-    let detectors: &[Box<dyn CodeUnitDetector>] = &[
-        Box::new(WebUnitDetector::default()),
-    ];
 
     // Test files
     let ls_colors = LsColors::from_env().unwrap_or_default();
@@ -50,7 +44,7 @@ pub fn handle_command(args: &ArgMatches) -> anyhow::Result<()> {
         let mut languages = BTreeSet::new();
         let mut tags = BTreeSet::new();
 
-        for detector in detectors {
+        for detector in core.code_unit_detectors() {
             if let Some(unit) = detector.detect(&path)? {
                 languages.insert(Tag::from(unit.language()));
                 tags.extend(unit.tags());

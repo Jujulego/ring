@@ -1,9 +1,11 @@
 mod commands;
+mod core;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
 use tracing::Level;
 use tracing_subscriber::prelude::*;
+use crate::core::RingCore;
 
 fn main() -> anyhow::Result<()> {
     let _guard = setup_sentry();
@@ -27,9 +29,11 @@ fn main() -> anyhow::Result<()> {
     setup_tracing(&args);
 
     // Handle subcommands
+    let core = RingCore::new();
+    
     match args.subcommand() {
-        Some(("list", args)) => commands::list::handle_command(args),
-        Some(("processes", args)) => commands::processes::handle_command(args),
+        Some(("list", args)) => commands::list::handle_command(&core, args),
+        Some(("processes", args)) => commands::processes::handle_command(&core, args),
         _ => unreachable!()
     }
 }
