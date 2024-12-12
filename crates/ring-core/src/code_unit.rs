@@ -1,43 +1,7 @@
-use ring_color::StableColor;
-use ring_tag::{Tag, Tagged};
 use std::path::Path;
 use std::rc::Rc;
-
-////////////////////////////////////////////////////////////////////////////////
-// Code Language
-////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone, Debug)]
-pub struct CodeLanguage {
-    name: String,
-    color: StableColor,
-}
-
-impl CodeLanguage {
-    pub const fn new(name: String, color: StableColor) -> CodeLanguage {
-        CodeLanguage { name, color }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn color(&self) -> &StableColor {
-        &self.color
-    }
-}
-
-impl From<CodeLanguage> for Tag {
-    fn from(l: CodeLanguage) -> Tag {
-        Tag::new(l.name).with_stable_color(l.color)
-    }
-}
-
-impl From<&CodeLanguage> for Tag {
-    fn from(l: &CodeLanguage) -> Tag {
-        Tag::new(l.name.clone()).with_stable_color(l.color)
-    }
-}
+use ring_tag::Tagged;
+use crate::CodeLanguage;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code Unit
@@ -53,12 +17,12 @@ pub trait CodeUnit: Tagged {
         self.path().file_stem()
             .and_then(|name| name.to_str())
     }
-    
+
     /// Returns a parent code unit containing this one
     fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
         None
     }
-    
+
     /// Returns location of the code unit
     fn path(&self) -> &Path;
 }
@@ -84,11 +48,11 @@ mod tests {
             fn path(&self) -> &Path;
         }
     }
-    
+
     #[test]
     fn code_unit_parent_should_return_none_by_default() {
         let tcu = MockTestUnit::new();
-        
+
         assert!(tcu.parent().is_none());
     }
 }

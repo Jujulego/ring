@@ -1,7 +1,7 @@
 use std::rc::Rc;
-use sysinfo::{Pid, Process};
-use ring_code_unit::CodeUnit;
 use ring_tag::Tagged;
+use crate::CodeUnit;
+use sysinfo::{Pid, Process};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Process Unit

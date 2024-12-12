@@ -1,3 +1,8 @@
+use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
+use crate::package_manifest::PackageManifest;
+use crate::{Package, ScriptFile, WebLanguage};
+use anyhow::anyhow;
+use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -5,12 +10,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::anyhow;
 use tracing::{info, instrument, trace};
-use ring_code_unit::{CodeUnit, CodeUnitDetector};
-use crate::{Package, ScriptFile, WebLanguage};
-use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
-use crate::package_manifest::PackageManifest;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Web Unit Detector
@@ -22,6 +22,10 @@ pub struct WebUnitDetector {
 }
 
 impl WebUnitDetector {
+    pub fn new() -> WebUnitDetector {
+        Default::default()
+    }
+
     fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
         if !path.is_file() {
             return Ok(None);
@@ -162,12 +166,11 @@ impl WebUnitDetector {
 
 impl CodeUnitDetector for WebUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        let script = self.detect_script(path)?
-            .map(|cu| cu as Rc<dyn CodeUnit>);
-
-        let package = self.detect_package(path)?
-            .map(|cu| cu as Rc<dyn CodeUnit>);
-
-        Ok(script.or(package))
+        if let Some(script) = self.detect_script(path)? {
+            Ok(Some(script))
+        } else {
+            let package = self.detect_package(path)?;
+            Ok(package.map(|cu| cu as Rc<dyn CodeUnit>))
+        }
     }
 }

@@ -1,10 +1,11 @@
 [package]
-name = "ring-code-unit"
+name = "ring-core"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.93"
+sysinfo = "0.33.0"
 
 ring-color = { path = "../ring-color" }
 ring-tag = { path = "../ring-tag" }

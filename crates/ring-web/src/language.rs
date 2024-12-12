@@ -1,8 +1,8 @@
-use std::string::ToString;
 use rgb::Rgb;
-use ring_code_unit::CodeLanguage;
 use ring_color::{ColorLabel, StableColor};
+use ring_core::CodeLanguage;
 use ring_tag::Tag;
+use std::string::ToString;
 
 ////////////////////////////////////////////////////////////////////////////////
 // WebLanguage

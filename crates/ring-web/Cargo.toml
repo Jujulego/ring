@@ -20,6 +20,5 @@ tracing = "0.1.41"
 owo-colors = { version = "4.1.0", optional = true }
 
 ring-color = { path = "../ring-color" }
-ring-code-unit = { path = "../ring-code-unit" }
-ring-process-unit = { path = "../ring-process-unit" }
+ring-core = { path = "../ring-core" }
 ring-tag = { path = "../ring-tag" }

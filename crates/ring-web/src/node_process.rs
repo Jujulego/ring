@@ -1,8 +1,7 @@
 use crate::ScriptFile;
 use regex::Regex;
-use ring_code_unit::CodeUnit;
 use ring_color::ColorLabel;
-use ring_process_unit::ProcessUnit;
+use ring_core::{CodeUnit, ProcessUnit};
 use ring_tag::{Tag, Tagged};
 use std::rc::Rc;
 use std::sync::OnceLock;
