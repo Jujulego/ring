@@ -9,12 +9,14 @@ use std::sync::OnceLock;
 use sysinfo::Pid;
 
 // Parameters
-static SHOULD_HIDE_REGEX: OnceLock<[Regex; 2]> = OnceLock::new();
+const HIDE_PACKAGES: [&str; 2] = ["npm", "yarn"];
+static HIDE_SCRIPT_REGEX: OnceLock<[Regex; 3]> = OnceLock::new();
 
-fn should_hide_regex() -> &'static [Regex; 2] {
-    SHOULD_HIDE_REGEX.get_or_init(|| [
-        Regex::new(r"yarn\.[cm]?js$").unwrap(),
+fn hide_script_regex() -> &'static [Regex; 3] {
+    HIDE_SCRIPT_REGEX.get_or_init(|| [
         Regex::new(r"yarn-([0-9]+\.){3}[cm]?js$").unwrap(),
+        Regex::new(r"WebStorm[/\\]plugins[/\\]javascript-plugin[/\\]jsLanguageServicesImpl[/\\]").unwrap(),
+        Regex::new(r"typescript[/\\]lib[/\\]typingsInstaller\.[cm]?js$").unwrap(),
     ])
 }
 
@@ -62,11 +64,21 @@ impl ProcessUnit for NodeProcess {
     }
 
     fn should_hide(&self) -> bool {
-        self.running_script.clone()
-            .is_some_and(|script| {
-                let path = script.path().to_str().unwrap();
-                should_hide_regex().iter().any(|re| re.is_match(path))
-            })
+        if let Some(script) = &self.running_script {
+            // Hide some packages
+            let package = script.package()
+                .and_then(|pkg| pkg.name());
+
+            if package.is_some_and(|name| HIDE_PACKAGES.contains(&name)) {
+                return true;
+            }
+
+            // Hide some scripts
+            let path = script.path().to_str().unwrap();
+            hide_script_regex().iter().any(|re| re.is_match(path))
+        } else {
+            false
+        }
     }
 }
 
