@@ -1,9 +1,9 @@
-use std::ffi::OsStr;
 use crate::package_manager::PackageManager;
 use crate::package_manifest::PackageManifest;
 use crate::WebLanguage;
-use ring_code_unit::{CodeLanguage, CodeUnit};
+use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::{Tag, Tagged};
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 ////////////////////////////////////////////////////////////////////////////////

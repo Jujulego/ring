@@ -1,5 +1,5 @@
 use crate::{Package, WebLanguage};
-use ring_code_unit::{CodeLanguage, CodeUnit};
+use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::Tagged;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;

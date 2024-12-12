@@ -8,32 +8,24 @@ component_management:
         target: auto
 
   individual_components:
-    - component_id: crate-ring-cli
+    - component_id: cli
       name: cli
       paths:
         - crates/ring-cli/**
-
-    - component_id: crate-ring-cli-table
-      name: cli-table
-      paths:
         - crates/ring-cli-table/**
 
-    - component_id: crate-ring-code-unit
-      name: code-unit
+    - component_id: core
+      name: core
       paths:
-        - crates/ring-code-unit/**
+        - crates/ring-core/**
 
-    - component_id: crate-ring-color
-      name: color
-      paths:
-        - crates/ring-color/**
-
-    - component_id: crate-ring-tag
-      name: tag
-      paths:
-        - crates/ring-tag/**
-
-    - component_id: crate-ring-web
-      name: web
+    - component_id: modules
+      name: modules
       paths:
         - crates/ring-web/**
+
+    - component_id: utils
+      name: utils
+      paths:
+        - crates/ring-color/**
+        - crates/ring-tag/**

@@ -3,7 +3,7 @@ use clap::{arg, ArgAction, ArgMatches, Command};
 use itertools::Itertools;
 use owo_colors::{colors, Effect, OwoColorize, Style};
 use ring_cli_table::CliTable;
-use ring_process_unit::ProcessUnitDetector;
+use ring_core::ProcessUnitDetector;
 use ring_web::{WebProcessDetector, WebUnitDetector};
 use std::rc::Rc;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};

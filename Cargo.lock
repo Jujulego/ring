@@ -1052,8 +1052,7 @@ dependencies = [
  "lscolors",
  "owo-colors",
  "ring-cli-table",
- "ring-code-unit",
- "ring-process-unit",
+ "ring-core",
  "ring-tag",
  "ring-web",
  "sentry",
@@ -1073,16 +1072,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-code-unit"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "mockall",
- "ring-color",
- "ring-tag",
-]
-
-[[package]]
 name = "ring-color"
 version = "0.1.0"
 dependencies = [
@@ -1093,11 +1082,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-process-unit"
+name = "ring-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ring-code-unit",
+ "mockall",
+ "ring-color",
  "ring-tag",
  "sysinfo",
 ]
@@ -1122,9 +1112,8 @@ dependencies = [
  "owo-colors",
  "regex",
  "rgb",
- "ring-code-unit",
  "ring-color",
- "ring-process-unit",
+ "ring-core",
  "ring-tag",
  "semver",
  "serde",

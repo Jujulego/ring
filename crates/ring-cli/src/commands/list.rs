@@ -4,7 +4,7 @@ use itertools::Itertools;
 use lscolors::LsColors;
 use owo_colors::OwoColorize;
 use ring_cli_table::CliTable;
-use ring_code_unit::CodeUnitDetector;
+use ring_core::CodeUnitDetector;
 use ring_tag::Tag;
 use ring_web::WebUnitDetector;
 use std::collections::BTreeSet;

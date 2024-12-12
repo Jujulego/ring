@@ -1,3 +1,8 @@
+use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
+use crate::package_manifest::PackageManifest;
+use crate::{Package, ScriptFile, WebLanguage};
+use anyhow::anyhow;
+use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -5,12 +10,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::anyhow;
 use tracing::{info, instrument, trace};
-use ring_code_unit::{CodeUnit, CodeUnitDetector};
-use crate::{Package, ScriptFile, WebLanguage};
-use crate::package_manager::{PackageManager, PACKAGE_MANAGERS};
-use crate::package_manifest::PackageManifest;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Web Unit Detector

@@ -1,9 +1,9 @@
-use std::collections::VecDeque;
 use crate::{NodeProcess, WebUnitDetector};
-use ring_process_unit::{ProcessUnit, ProcessUnitDetector};
+use itertools::Itertools;
+use ring_core::{ProcessUnit, ProcessUnitDetector};
+use std::collections::VecDeque;
 use std::path::Path;
 use std::rc::Rc;
-use itertools::Itertools;
 use sysinfo::{Pid, Process};
 use tracing::{info, trace};
 
