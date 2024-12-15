@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -27,6 +27,7 @@ impl WebUnitDetector {
     }
 
     fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
+        trace!("touch file {}", path.display());
         if !path.is_file() {
             return Ok(None);
         }
@@ -59,6 +60,26 @@ impl WebUnitDetector {
         }
 
         Ok(None)
+    }
+
+    fn _detect_script(&self, path: &Path) -> anyhow::Result<Option<Rc<ScriptFile>>> {
+        let script = self._detect_script_language(path)?
+            .map(|language| ScriptFile::new(path.to_path_buf(), language));
+
+        if let Some(mut script) = script {
+            let package = path.parent()
+                .and_then(|parent| self.search_package(parent).transpose())
+                .transpose()?;
+
+            if let Some(package) = package {
+                script.set_package(package)
+            }
+
+            info!("recognized {} as a web script", path.display());
+            Ok(Some(Rc::new(script)))
+        } else {
+            Ok(None)
+        }
     }
 
     fn _detect_package_manager(&self, path: &Path) -> anyhow::Result<Option<PackageManager>> {
@@ -104,23 +125,20 @@ impl WebUnitDetector {
     pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<ScriptFile>>> {
         let path = path.as_ref();
 
-        let script = self._detect_script_language(path)?
-            .map(|language| ScriptFile::new(path.to_path_buf(), language));
-        
-        if let Some(mut script) = script {
-            let package = path.parent()
-                .and_then(|parent| self.search_package(parent).transpose())
-                .transpose()?;
-            
-            if let Some(package) = package {
-                script.set_package(package)
-            }
-
-            info!("recognized {} as a web script", path.display());
-            Ok(Some(Rc::new(script)))
-        } else {
-            Ok(None)
+        if let Some(script) = self._detect_script(path)? {
+            return Ok(Some(script));
         }
+
+        for ext in [".js", ".cjs", ".mjs"] {
+            let mut extended = path.as_os_str().to_os_string();
+            extended.push(ext);
+
+            if let Some(script) = self._detect_script(Path::new(&extended))? {
+                return Ok(Some(script));
+            }
+        }
+
+        Ok(None)
     }
 
     #[instrument(name = "web.detect-package", skip(self, path))]
