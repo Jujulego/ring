@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -18,7 +18,8 @@ use tracing::{info, instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct WebUnitDetector {
-    packages: RefCell<HashMap<PathBuf, Option<Rc<Package>>>>
+    packages: RefCell<HashMap<PathBuf, Option<Rc<Package>>>>,
+    scripts: RefCell<HashMap<PathBuf, Option<Rc<ScriptFile>>>>,
 }
 
 impl WebUnitDetector {
@@ -27,7 +28,7 @@ impl WebUnitDetector {
     }
 
     fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
-        trace!("touch file {}", path.display());
+        trace!("touch {}", path.display());
         if !path.is_file() {
             return Ok(None);
         }
@@ -63,6 +64,10 @@ impl WebUnitDetector {
     }
 
     fn _detect_script(&self, path: &Path) -> anyhow::Result<Option<Rc<ScriptFile>>> {
+        if let Some(script) = self.scripts.borrow().get(path) {
+            return Ok(script.clone())
+        }
+
         let script = self._detect_script_language(path)?
             .map(|language| ScriptFile::new(path.to_path_buf(), language));
 
@@ -76,8 +81,13 @@ impl WebUnitDetector {
             }
 
             info!("recognized {} as a web script", path.display());
-            Ok(Some(Rc::new(script)))
+            let script = Rc::new(script);
+            self.scripts.borrow_mut().insert(path.to_path_buf(), Some(script.clone()));
+
+            Ok(Some(script))
         } else {
+            self.scripts.borrow_mut().insert(path.to_path_buf(), None);
+
             Ok(None)
         }
     }
@@ -86,7 +96,7 @@ impl WebUnitDetector {
         for package_manager in PACKAGE_MANAGERS {
             let lockfile_path = path.join(package_manager.lockfile());
 
-            trace!("touch file {}", lockfile_path.display());
+            trace!("touch {}", lockfile_path.display());
             if lockfile_path.try_exists()? {
                 return Ok(Some(package_manager));
             }
@@ -184,11 +194,12 @@ impl WebUnitDetector {
 
 impl CodeUnitDetector for WebUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        if let Some(script) = self.detect_script(path)? {
+        if let Some(package) = self.detect_package(path)? {
+            Ok(Some(package))
+        } else if let Some(script) = self.detect_script(path)? {
             Ok(Some(script))
         } else {
-            let package = self.detect_package(path)?;
-            Ok(package.map(|cu| cu as Rc<dyn CodeUnit>))
+            Ok(None)
         }
     }
 }
