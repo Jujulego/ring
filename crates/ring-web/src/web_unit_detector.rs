@@ -18,7 +18,8 @@ use tracing::{info, instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct WebUnitDetector {
-    packages: RefCell<HashMap<PathBuf, Option<Rc<Package>>>>
+    packages: RefCell<HashMap<PathBuf, Option<Rc<Package>>>>,
+    scripts: RefCell<HashMap<PathBuf, Option<Rc<ScriptFile>>>>,
 }
 
 impl WebUnitDetector {
@@ -27,6 +28,7 @@ impl WebUnitDetector {
     }
 
     fn _detect_script_language(&self, path: &Path) -> anyhow::Result<Option<WebLanguage>> {
+        trace!("touch {}", path.display());
         if !path.is_file() {
             return Ok(None);
         }
@@ -61,11 +63,40 @@ impl WebUnitDetector {
         Ok(None)
     }
 
+    fn _detect_script(&self, path: &Path) -> anyhow::Result<Option<Rc<ScriptFile>>> {
+        if let Some(script) = self.scripts.borrow().get(path) {
+            return Ok(script.clone())
+        }
+
+        let script = self._detect_script_language(path)?
+            .map(|language| ScriptFile::new(path.to_path_buf(), language));
+
+        if let Some(mut script) = script {
+            let package = path.parent()
+                .and_then(|parent| self.search_package(parent).transpose())
+                .transpose()?;
+
+            if let Some(package) = package {
+                script.set_package(package)
+            }
+
+            info!("recognized {} as a web script", path.display());
+            let script = Rc::new(script);
+            self.scripts.borrow_mut().insert(path.to_path_buf(), Some(script.clone()));
+
+            Ok(Some(script))
+        } else {
+            self.scripts.borrow_mut().insert(path.to_path_buf(), None);
+
+            Ok(None)
+        }
+    }
+
     fn _detect_package_manager(&self, path: &Path) -> anyhow::Result<Option<PackageManager>> {
         for package_manager in PACKAGE_MANAGERS {
             let lockfile_path = path.join(package_manager.lockfile());
 
-            trace!("touch file {}", lockfile_path.display());
+            trace!("touch {}", lockfile_path.display());
             if lockfile_path.try_exists()? {
                 return Ok(Some(package_manager));
             }
@@ -104,23 +135,20 @@ impl WebUnitDetector {
     pub fn detect_script<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<ScriptFile>>> {
         let path = path.as_ref();
 
-        let script = self._detect_script_language(path)?
-            .map(|language| ScriptFile::new(path.to_path_buf(), language));
-        
-        if let Some(mut script) = script {
-            let package = path.parent()
-                .and_then(|parent| self.search_package(parent).transpose())
-                .transpose()?;
-            
-            if let Some(package) = package {
-                script.set_package(package)
-            }
-
-            info!("recognized {} as a web script", path.display());
-            Ok(Some(Rc::new(script)))
-        } else {
-            Ok(None)
+        if let Some(script) = self._detect_script(path)? {
+            return Ok(Some(script));
         }
+
+        for ext in [".js", ".cjs", ".mjs"] {
+            let mut extended = path.as_os_str().to_os_string();
+            extended.push(ext);
+
+            if let Some(script) = self._detect_script(Path::new(&extended))? {
+                return Ok(Some(script));
+            }
+        }
+
+        Ok(None)
     }
 
     #[instrument(name = "web.detect-package", skip(self, path))]
@@ -166,11 +194,12 @@ impl WebUnitDetector {
 
 impl CodeUnitDetector for WebUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        if let Some(script) = self.detect_script(path)? {
+        if let Some(package) = self.detect_package(path)? {
+            Ok(Some(package))
+        } else if let Some(script) = self.detect_script(path)? {
             Ok(Some(script))
         } else {
-            let package = self.detect_package(path)?;
-            Ok(package.map(|cu| cu as Rc<dyn CodeUnit>))
+            Ok(None)
         }
     }
 }
