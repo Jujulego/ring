@@ -1,36 +1,41 @@
 mod language;
 mod node_process;
-mod package;
-mod package_manager;
-mod package_manifest;
-mod script_file;
+mod packages;
+mod scripts;
 mod web_process_detector;
-mod web_unit_detector;
 
 pub use crate::language::WebLanguage;
 pub use crate::node_process::NodeProcess;
-pub use crate::package::Package;
-pub use crate::script_file::ScriptFile;
+pub use crate::packages::{Package, PackageDetector, PackageManager, PackageManifest};
+pub use crate::scripts::{ScriptFile, ScriptFileDetector};
 pub use crate::web_process_detector::WebProcessDetector;
-pub use crate::web_unit_detector::WebUnitDetector;
+use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
-use ring_core::{CodeUnitDetector, ProcessUnitDetector, RingModule};
-////////////////////////////////////////////////////////////////////////////////
-// Module
-////////////////////////////////////////////////////////////////////////////////
 
 pub struct WebModule {
-    pub web_unit_detector: Rc<WebUnitDetector>,
+    pub package_detector: Rc<PackageDetector>,
+    pub script_file_detector: Rc<ScriptFileDetector>,
+    pub web_unit_detector: Rc<CombinedCodeUnitDetector<2>>,
+
     pub web_process_detector: Rc<WebProcessDetector>,
 }
 
 impl WebModule {
     pub fn new() -> WebModule {
-        let web_unit_detector = Rc::new(WebUnitDetector::new());
+        let package_detector = Rc::new(PackageDetector::new());
+        let script_file_detector = Rc::new(ScriptFileDetector::new(
+            package_detector.clone(),
+        ));
 
         WebModule {
-            web_unit_detector: web_unit_detector.clone(),
-            web_process_detector: Rc::new(WebProcessDetector::new(web_unit_detector)),
+            package_detector: package_detector.clone(),
+            script_file_detector: script_file_detector.clone(),
+
+            web_unit_detector: Rc::new([
+                package_detector.clone(),
+                script_file_detector.clone(),
+            ]),
+            web_process_detector: Rc::new(WebProcessDetector::new(script_file_detector)),
         }
     }
 }

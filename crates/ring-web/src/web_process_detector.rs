@@ -1,4 +1,5 @@
-use crate::{NodeProcess, WebUnitDetector};
+use crate::scripts::ScriptFileDetector;
+use crate::NodeProcess;
 use itertools::Itertools;
 use ring_core::{ProcessUnit, ProcessUnitDetector};
 use std::collections::VecDeque;
@@ -8,12 +9,12 @@ use sysinfo::{Pid, Process};
 use tracing::{info, trace};
 
 pub struct WebProcessDetector {
-    web_unit_detector: Rc<WebUnitDetector>
+    script_file_detector: Rc<ScriptFileDetector>
 }
 
 impl WebProcessDetector {
-    pub fn new(web_unit_detector: Rc<WebUnitDetector>) -> WebProcessDetector {
-        WebProcessDetector { web_unit_detector }
+    pub fn new(script_file_detector: Rc<ScriptFileDetector>) -> WebProcessDetector {
+        WebProcessDetector { script_file_detector }
     }
 }
 
@@ -46,7 +47,7 @@ impl ProcessUnitDetector for WebProcessDetector {
             if let Some(script_path) = args.pop_front().as_deref().map(Path::new) {
                 info!("recognized {pid} as a node process");
 
-                let process = if let Some(running_script) = self.web_unit_detector.detect_script(script_path)? {
+                let process = if let Some(running_script) = self.script_file_detector.detect_script(script_path)? {
                     NodeProcess::new(*pid, args.into(), Some(running_script))
                 } else {
                     args.push_front(script_path.file_name().unwrap().to_str().unwrap().to_string());
