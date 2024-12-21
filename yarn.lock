@@ -368,7 +368,7 @@ __metadata:
     "@swc/helpers": "npm:0.5.15"
     "@types/node": "npm:20.17.10"
     "@types/yargs": "npm:17.0.33"
-    chalk: "npm:5.4.0"
+    chalk: "npm:5.4.1"
     chalk-template: "npm:1.1.0"
     kyrielle: "npm:2.2.1"
     rollup: "npm:4.29.1"
@@ -1017,10 +1017,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:5.4.0, chalk@npm:^5.2.0":
-  version: 5.4.0
-  resolution: "chalk@npm:5.4.0"
-  checksum: 10c0/474266abd1a69879e367690b3090541deb985a54d3263efa4c82ffc623ea12b8ab9afdba082e853bb5e3f64c6619ac4951a154622b6cc8f66265f85c943d0481
+"chalk@npm:5.4.1, chalk@npm:^5.2.0":
+  version: 5.4.1
+  resolution: "chalk@npm:5.4.1"
+  checksum: 10c0/b23e88132c702f4855ca6d25cb5538b1114343e41472d5263ee8a37cccfccd9c4216d111e1097c6a27830407a1dc81fecdf2a56f2c63033d4dbbd88c10b0dcef
   languageName: node
   linkType: hard
 
