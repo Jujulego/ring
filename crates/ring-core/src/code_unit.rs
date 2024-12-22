@@ -35,6 +35,24 @@ pub trait CodeUnitDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>>;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Combined Code Unit Detector
+////////////////////////////////////////////////////////////////////////////////
+
+pub type CombinedCodeUnitDetector<const N: usize> = [Rc<dyn CodeUnitDetector>; N];
+
+impl<const N: usize> CodeUnitDetector for CombinedCodeUnitDetector<N> {
+    fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
+        for detector in self {
+            if let Some(unit) = detector.detect(path)? {
+                return Ok(Some(unit));
+            }
+        }
+
+        Ok(None)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

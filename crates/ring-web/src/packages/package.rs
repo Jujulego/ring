@@ -1,16 +1,12 @@
-use crate::package_manager::PackageManager;
-use crate::package_manifest::PackageManifest;
+use crate::packages::package_manager::PackageManager;
+use crate::packages::package_manifest::PackageManifest;
 use crate::WebLanguage;
 use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::{Tag, Tagged};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-////////////////////////////////////////////////////////////////////////////////
-// Package
-////////////////////////////////////////////////////////////////////////////////
-
-/// Represents a script package
+/// Represents a web package
 #[derive(Clone, Debug)]
 pub struct Package {
     manifest: PackageManifest,
@@ -19,20 +15,36 @@ pub struct Package {
 }
 
 impl Package {
+    /// Builds a new web package
     pub fn new(path: PathBuf, manifest: PackageManifest) -> Package {
         Package { path, manifest, package_manager: None }
     }
 
+    /// Returns parsed manifest of this package
     pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
     }
-    
+
+    /// Returns name of package, from its manifest. If not defined in the manifest,
+    /// it gives the directory name.
+    pub fn name(&self) -> Option<&str> {
+        self.manifest.name.as_deref()
+            .or_else(|| self.path.file_name().and_then(OsStr::to_str))
+    }
+
+    /// Returns detected package manager (based on lockfile)
+    /// Returns [`PackageManager::Npm`] if none is detected
     pub fn package_manager(&self) -> Option<&PackageManager> {
         self.package_manager.as_ref()
     }
 
-    pub fn set_package_manager(&mut self, package_manager: PackageManager) {
-        self.package_manager = Some(package_manager);
+    pub fn package_manager_mut(&mut self) -> &mut Option<PackageManager> {
+        &mut self.package_manager
+    }
+
+    /// Returns path to this script
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 }
 
@@ -42,8 +54,7 @@ impl CodeUnit for Package {
     }
 
     fn name(&self) -> Option<&str> {
-        self.manifest.name.as_deref()
-            .or_else(|| self.path.file_name().and_then(OsStr::to_str))
+        self.name()
     }
 
     fn path(&self) -> &Path {

@@ -1,4 +1,4 @@
-use crate::{NodeProcess, WebUnitDetector};
+use crate::{NodeProcess, ScriptFileDetector};
 use itertools::Itertools;
 use ring_core::{ProcessUnit, ProcessUnitDetector};
 use std::collections::VecDeque;
@@ -7,18 +7,19 @@ use std::rc::Rc;
 use sysinfo::{Pid, Process};
 use tracing::{info, trace};
 
-pub struct WebProcessDetector {
-    web_unit_detector: Rc<WebUnitDetector>
+/// Detector for node processes
+#[derive(Clone, Debug)]
+pub struct NodeProcessDetector {
+    script_file_detector: Rc<ScriptFileDetector>
 }
 
-impl WebProcessDetector {
-    pub fn new(web_unit_detector: Rc<WebUnitDetector>) -> WebProcessDetector {
-        WebProcessDetector { web_unit_detector }
+
+impl NodeProcessDetector {
+    pub fn new(script_file_detector: Rc<ScriptFileDetector>) -> NodeProcessDetector {
+        NodeProcessDetector { script_file_detector }
     }
-}
 
-impl ProcessUnitDetector for WebProcessDetector {
-    fn detect(&self, pid: &Pid, process: &Process) -> anyhow::Result<Option<Rc<dyn ProcessUnit>>> {
+    pub fn detect_process(&self, pid: &Pid, process: &Process) -> anyhow::Result<Option<Rc<NodeProcess>>> {
         let exe = process.exe()
             .and_then(|p| p.file_stem())
             .and_then(|n| n.to_str());
@@ -46,7 +47,7 @@ impl ProcessUnitDetector for WebProcessDetector {
             if let Some(script_path) = args.pop_front().as_deref().map(Path::new) {
                 info!("recognized {pid} as a node process");
 
-                let process = if let Some(running_script) = self.web_unit_detector.detect_script(script_path)? {
+                let process = if let Some(running_script) = self.script_file_detector.detect_script(script_path)? {
                     NodeProcess::new(*pid, args.into(), Some(running_script))
                 } else {
                     args.push_front(script_path.file_name().unwrap().to_str().unwrap().to_string());
@@ -58,5 +59,11 @@ impl ProcessUnitDetector for WebProcessDetector {
         }
 
         Ok(None)
+    }
+}
+
+impl ProcessUnitDetector for NodeProcessDetector {
+    fn detect(&self, pid: &Pid, process: &Process) -> anyhow::Result<Option<Rc<dyn ProcessUnit>>> {
+        self.detect_process(pid, process).map(|opt| opt.map(|prc| prc as Rc<dyn ProcessUnit>))
     }
 }

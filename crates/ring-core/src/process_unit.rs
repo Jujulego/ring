@@ -1,6 +1,6 @@
-use std::rc::Rc;
-use ring_tag::Tagged;
 use crate::CodeUnit;
+use ring_tag::Tagged;
+use std::rc::Rc;
 use sysinfo::{Pid, Process};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,4 +31,22 @@ pub trait ProcessUnit: Tagged {
 /// Object detecting a process unit
 pub trait ProcessUnitDetector {
     fn detect(&self, pid: &Pid, process: &Process) -> anyhow::Result<Option<Rc<dyn ProcessUnit>>>;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Combined Code Unit Detector
+////////////////////////////////////////////////////////////////////////////////
+
+pub type CombinedProcessUnitDetector<const N: usize> = [Rc<dyn ProcessUnitDetector>; N];
+
+impl<const N: usize> ProcessUnitDetector for CombinedProcessUnitDetector<N> {
+    fn detect(&self, pid: &Pid, process: &Process) -> anyhow::Result<Option<Rc<dyn ProcessUnit>>> {
+        for detector in self {
+            if let Some(unit) = detector.detect(pid, process)? {
+                return Ok(Some(unit));
+            }
+        }
+
+        Ok(None)
+    }
 }

@@ -1,27 +1,12 @@
 use crate::ScriptFile;
-use regex::Regex;
 use ring_color::ColorLabel;
 use ring_core::{CodeUnit, ProcessUnit};
 use ring_tag::{Tag, Tagged};
 use std::rc::Rc;
-use std::sync::OnceLock;
 use sysinfo::Pid;
 
-// Parameters
+// Constants
 const HIDE_PACKAGES: [&str; 2] = ["npm", "yarn"];
-static HIDE_SCRIPT_REGEX: OnceLock<[Regex; 3]> = OnceLock::new();
-
-fn hide_script_regex() -> &'static [Regex; 3] {
-    HIDE_SCRIPT_REGEX.get_or_init(|| [
-        Regex::new(r"yarn-([0-9]+\.){3}[cm]?js$").unwrap(),
-        Regex::new(r"WebStorm[/\\]plugins[/\\]javascript-plugin[/\\]jsLanguageServicesImpl[/\\]").unwrap(),
-        Regex::new(r"typescript[/\\]lib[/\\]typingsInstaller\.[cm]?js$").unwrap(),
-    ])
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Node Process
-////////////////////////////////////////////////////////////////////////////////
 
 /// Represent a process running a script file using node
 pub struct NodeProcess {
@@ -68,13 +53,7 @@ impl ProcessUnit for NodeProcess {
             let package = script.package()
                 .and_then(|pkg| pkg.name());
 
-            if package.is_some_and(|name| HIDE_PACKAGES.contains(&name)) {
-                return true;
-            }
-
-            // Hide some scripts
-            let path = script.path().to_str().unwrap();
-            hide_script_regex().iter().any(|re| re.is_match(path))
+            package.is_some_and(|name| HIDE_PACKAGES.contains(&name))
         } else {
             false
         }
