@@ -1,15 +1,13 @@
 mod language;
-mod node_process;
 mod packages;
+mod processes;
 mod scripts;
-mod web_process_detector;
 
 pub use crate::language::WebLanguage;
-pub use crate::node_process::NodeProcess;
 pub use crate::packages::{Package, PackageDetector, PackageManager, PackageManifest};
+pub use crate::processes::{NodeProcess, NodeProcessDetector};
 pub use crate::scripts::{ScriptFile, ScriptFileDetector};
-pub use crate::web_process_detector::WebProcessDetector;
-use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, ProcessUnitDetector, RingModule};
+use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, CombinedProcessUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
 
 pub struct WebModule {
@@ -17,7 +15,8 @@ pub struct WebModule {
     pub script_file_detector: Rc<ScriptFileDetector>,
     pub web_unit_detector: Rc<CombinedCodeUnitDetector<2>>,
 
-    pub web_process_detector: Rc<WebProcessDetector>,
+    pub node_process_detector: Rc<NodeProcessDetector>,
+    pub web_process_detector: Rc<CombinedProcessUnitDetector<1>>,
 }
 
 impl WebModule {
@@ -27,15 +26,18 @@ impl WebModule {
             package_detector.clone(),
         ));
 
+        let node_process_detector = Rc::new(NodeProcessDetector::new(script_file_detector.clone()));
+
         WebModule {
             package_detector: package_detector.clone(),
             script_file_detector: script_file_detector.clone(),
-
             web_unit_detector: Rc::new([
                 package_detector.clone(),
                 script_file_detector.clone(),
             ]),
-            web_process_detector: Rc::new(WebProcessDetector::new(script_file_detector)),
+
+            node_process_detector: node_process_detector.clone(),
+            web_process_detector: Rc::new([node_process_detector.clone()]),
         }
     }
 }

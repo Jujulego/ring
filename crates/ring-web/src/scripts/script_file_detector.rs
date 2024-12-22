@@ -1,3 +1,6 @@
+use crate::packages::PackageDetector;
+use crate::{ScriptFile, WebLanguage};
+use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -6,9 +9,6 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{info, instrument, trace};
-use ring_core::{CodeUnit, CodeUnitDetector};
-use crate::packages::PackageDetector;
-use crate::{ScriptFile, WebLanguage};
 
 /// Detector for script files
 #[derive(Clone, Debug)]
