@@ -54,10 +54,10 @@ impl PackageDetector {
 
         match path.metadata() {
             Ok(metadata) if metadata.is_dir() => {
-                if let Some(manifest) = self.load_manifest(&path)? {
+                if let Some(manifest) = self.load_manifest(path)? {
                     let mut package = Package::new(path.to_path_buf(), manifest);
 
-                    if let Some(manager) = self.detect_package_manager(&path)? {
+                    if let Some(manager) = self.detect_package_manager(path)? {
                         *package.package_manager_mut() = Some(manager);
                     }
 

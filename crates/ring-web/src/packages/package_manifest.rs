@@ -1,7 +1,8 @@
-use std::io::Read;
 use anyhow::Context;
 use semver::Version;
 use serde::Deserialize;
+use std::io::Read;
+use std::str::FromStr;
 
 /// Parsed npm package manifest
 #[derive(Clone, Debug, Deserialize)]
@@ -14,15 +15,19 @@ pub struct PackageManifest {
 }
 
 impl PackageManifest {
-    /// Parse given content
-    pub fn from_str(content: &str) -> anyhow::Result<Self> {
-        serde_json::from_str(content)
-            .context("Error while parsing package manifest")
-    }
-
     /// Parse content from given reader
     pub fn from_reader<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
         serde_json::from_reader(reader)
+            .context("Error while parsing package manifest")
+    }
+}
+
+impl FromStr for PackageManifest {
+    type Err = anyhow::Error;
+
+    /// Parse given content
+    fn from_str(content: &str) -> anyhow::Result<Self> {
+        serde_json::from_str(content)
             .context("Error while parsing package manifest")
     }
 }
