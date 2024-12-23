@@ -3,13 +3,14 @@ mod mock_supports_color;
 
 use rgb::RGB;
 
-#[cfg(feature = "owo-colors")]
+#[cfg(feature = "ansi")]
 use ansi_colours::ansi256_from_rgb;
 
 #[cfg(feature = "owo-colors")]
 use owo_colors::{DynColors, Style, XtermColors};
 
 #[cfg(not(test))]
+#[cfg(feature = "ansi")]
 use supports_color::on as supports_color_on;
 
 #[cfg(test)]
@@ -23,14 +24,13 @@ use mock_supports_color::on as supports_color_on;
 /// Mapped to an ANSI basic color
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ColorLabel {
-    Black,      BrightBlack,
-    Red,        BrightRed,
-    Green,      BrightGreen,
-    Yellow,     BrightYellow,
-    Blue,       BrightBlue,
-    Magenta,    BrightMagenta,
-    Cyan,       BrightCyan,
-    White,      BrightWhite,
+    Black, Grey, White,
+    Red,         BrightRed,
+    Green,       BrightGreen,
+    Yellow,      BrightYellow,
+    Blue,        BrightBlue,
+    Magenta,     BrightMagenta,
+    Cyan,        BrightCyan,
 }
 
 #[cfg(feature = "owo-colors")]
@@ -45,14 +45,13 @@ impl ColorLabel {
             ColorLabel::Magenta => owo_colors::AnsiColors::Magenta,
             ColorLabel::Cyan => owo_colors::AnsiColors::Cyan,
             ColorLabel::White => owo_colors::AnsiColors::White,
-            ColorLabel::BrightBlack => owo_colors::AnsiColors::BrightBlack,
+            ColorLabel::Grey => owo_colors::AnsiColors::BrightBlack,
             ColorLabel::BrightRed => owo_colors::AnsiColors::BrightRed,
             ColorLabel::BrightGreen => owo_colors::AnsiColors::BrightGreen,
             ColorLabel::BrightYellow => owo_colors::AnsiColors::BrightYellow,
             ColorLabel::BrightBlue => owo_colors::AnsiColors::BrightBlue,
             ColorLabel::BrightMagenta => owo_colors::AnsiColors::BrightMagenta,
             ColorLabel::BrightCyan => owo_colors::AnsiColors::BrightCyan,
-            ColorLabel::BrightWhite => owo_colors::AnsiColors::BrightWhite,
         }
     }
 }
@@ -61,6 +60,29 @@ impl ColorLabel {
 impl From<ColorLabel> for owo_colors::AnsiColors {
     fn from(value: ColorLabel) -> Self {
         value.to_owo()
+    }
+}
+
+#[cfg(feature = "crossterm")]
+impl From<ColorLabel> for crossterm::style::Color {
+    fn from(value: ColorLabel) -> Self {
+        match value {
+            ColorLabel::Black => crossterm::style::Color::Black,
+            ColorLabel::Red => crossterm::style::Color::DarkRed,
+            ColorLabel::Green => crossterm::style::Color::DarkGreen,
+            ColorLabel::Yellow => crossterm::style::Color::DarkYellow,
+            ColorLabel::Blue => crossterm::style::Color::DarkBlue,
+            ColorLabel::Magenta => crossterm::style::Color::DarkMagenta,
+            ColorLabel::Cyan => crossterm::style::Color::DarkCyan,
+            ColorLabel::White => crossterm::style::Color::White,
+            ColorLabel::Grey => crossterm::style::Color::Grey,
+            ColorLabel::BrightRed => crossterm::style::Color::Red,
+            ColorLabel::BrightGreen => crossterm::style::Color::Green,
+            ColorLabel::BrightYellow => crossterm::style::Color::Yellow,
+            ColorLabel::BrightBlue => crossterm::style::Color::Blue,
+            ColorLabel::BrightMagenta => crossterm::style::Color::Magenta,
+            ColorLabel::BrightCyan => crossterm::style::Color::Cyan,
+        }
     }
 }
 
@@ -107,18 +129,39 @@ impl StableColor {
     }
 }
 
-#[cfg(feature = "owo-colors")]
-impl From<&StableColor> for Style {
-    fn from(stable_color: &StableColor) -> Self {
-        stable_color.to_owo()
-            .map(|owo| Style::new().color(owo))
-            .unwrap_or_default()
+#[cfg(feature = "crossterm")]
+impl StableColor {
+    pub fn style_for<T: crossterm::style::Stylize>(&self, val: T, stream: supports_color::Stream) -> T::Styled {
+        if let Some(support) = supports_color_on(stream) {
+            if support.has_16m {
+                val.with(crossterm::style::Color::Rgb { 
+                    r: self.rgb().r,
+                    g: self.rgb().g,
+                    b: self.rgb().b,
+                })
+            } else if support.has_256 {
+                val.with(crossterm::style::Color::AnsiValue(ansi256_from_rgb(self.rgb)))
+            } else {
+                val.with(self.label.into())
+            }
+        } else {
+            val.stylize()
+        }
     }
 }
 
 impl From<&StableColor> for RGB<u8> {
     fn from(stable_color: &StableColor) -> Self {
         stable_color.rgb
+    }
+}
+
+#[cfg(feature = "owo-colors")]
+impl From<&StableColor> for Style {
+    fn from(stable_color: &StableColor) -> Self {
+        stable_color.to_owo()
+            .map(|owo| Style::new().color(owo))
+            .unwrap_or_default()
     }
 }
 
