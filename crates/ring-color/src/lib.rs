@@ -131,7 +131,11 @@ impl StableColor {
 
 #[cfg(feature = "crossterm")]
 impl StableColor {
-    pub fn style_for<T: crossterm::style::Stylize>(&self, val: T, stream: supports_color::Stream) -> T::Styled {
+    pub fn stylize<T: crossterm::style::Stylize>(&self, val: T) -> T::Styled {
+        self.stylize_for(val, supports_color::Stream::Stdout)
+    }
+    
+    pub fn stylize_for<T: crossterm::style::Stylize>(&self, val: T, stream: supports_color::Stream) -> T::Styled {
         if let Some(support) = supports_color_on(stream) {
             if support.has_16m {
                 val.with(crossterm::style::Color::Rgb { 

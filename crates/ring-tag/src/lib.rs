@@ -4,6 +4,7 @@ use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
+use crossterm::style::Stylize;
 use ring_color::{ColorLabel, StableColor};
 
 #[cfg(feature = "owo-colors")]
@@ -92,6 +93,20 @@ impl Tag {
         }
 
         style.style(self)
+    }
+
+    /// Displays colored tag using crossterm, according to supported colors of stdout
+    #[cfg(feature = "crossterm")]
+    pub fn stylize(&self) -> crossterm::style::StyledContent<String> {
+        self.stylize_for(supports_color::Stream::Stdout)
+    }
+
+    /// Displays colored tag using crossterm, according to supported colors of given stream
+    #[cfg(feature = "crossterm")]
+    pub fn stylize_for(&self, stream: supports_color::Stream) -> crossterm::style::StyledContent<String> {
+        self.color
+            .map(|color| color.stylize_for(self.label.clone(), stream))
+            .unwrap_or_else(|| self.label.clone().stylize())
     }
 
     pub fn label(&self) -> &str {

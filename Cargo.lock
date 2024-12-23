@@ -1165,6 +1165,7 @@ dependencies = [
 name = "ring-tag"
 version = "0.1.0"
 dependencies = [
+ "crossterm",
  "mockall",
  "owo-colors",
  "rgb",
