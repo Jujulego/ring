@@ -1,11 +1,12 @@
+use crate::core::RingCore;
 use bytesize::ByteSize;
 use clap::{arg, ArgAction, ArgMatches, Command};
+use crossterm::style::{self, Stylize};
 use itertools::Itertools;
-use owo_colors::{colors, Effect, OwoColorize, Style};
 use ring_cli_table::CliTable;
+use ring_tag::Tag;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{debug, instrument, trace};
-use crate::core::RingCore;
 
 pub fn build_command() -> Command {
     Command::new("processes").visible_alias("ps")
@@ -29,7 +30,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
     for (pid, process) in sys.processes() {
         for detector in core.process_unit_detectors() {
             if let Some(unit) = detector.detect(pid, process)? {
-                let mut style = Style::new();
+                let mut style = style::ContentStyle::new();
 
                 if unit.should_hide() {
                     if !show_all {
@@ -41,21 +42,20 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
 
                         break;
                     } else {
-                        style = style.effect(Effect::Dimmed)
+                        style = style.attribute(style::Attribute::Dim);
                     }
                 }
 
                 table.add_row([
-                    &format!("{:>5}", pid.as_u32()).style(style),
-                    &unit.running_code_unit()
+                    &style.apply(format!("{:>5}", pid.as_u32())),
+                    &style.apply(unit.running_code_unit()
                         .map(|u| u.parent().unwrap_or(u))
                         .and_then(|u| u.name()
                             .map(|n| n.to_string()))
-                        .unwrap_or("unknown".to_string().fg::<colors::BrightBlack>().to_string())
-                        .style(style),
-                    &format!("{:>9}", ByteSize::b(process.memory())).style(style),
-                    &unit.tags().iter().map(|tag| tag.styled()).join(" ").style(style),
-                    &unit.cmd().join(" ").style(style),
+                        .unwrap_or("unknown".to_string().grey().to_string())),
+                    &style.apply(format!("{:>9}", ByteSize::b(process.memory()))),
+                    &style.apply(unit.tags().iter().map(Tag::stylize).join(" ")),
+                    &style.apply(unit.cmd().join(" ")),
                 ]);
 
                 break;

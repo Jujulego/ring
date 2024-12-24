@@ -439,12 +439,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
-name = "hermit-abi"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc"
-
-[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -578,17 +572,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddc24109865250148c2e0f3d25d4f0f479571723792d3802153c60922a4fb708"
 
 [[package]]
-name = "is-terminal"
-version = "0.4.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "261f68e344040fbd0edea105bef17c66edf46f984ddb1115b775ce31be948f4b"
-dependencies = [
- "hermit-abi 0.4.0",
- "libc",
- "windows-sys 0.52.0",
-]
-
-[[package]]
 name = "is_ci"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -665,8 +648,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61183da5de8ba09a58e330d55e5ea796539d8443bd00fdeb863eac39724aa4ab"
 dependencies = [
  "aho-corasick",
+ "crossterm",
  "nu-ansi-term 0.50.1",
- "owo-colors",
 ]
 
 [[package]]
@@ -696,7 +679,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80e04d1dcff3aae0704555fe5fee3bcfaf3d1fdf8a7e521d5b9d2b42acb52cec"
 dependencies = [
- "hermit-abi 0.3.9",
+ "hermit-abi",
  "libc",
  "log",
  "wasi",
@@ -861,10 +844,6 @@ name = "owo-colors"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb37767f6569cd834a413442455e0f066d0d522de8630436e2a1761d9726ba56"
-dependencies = [
- "supports-color 2.1.0",
- "supports-color 3.0.2",
-]
 
 [[package]]
 name = "parking_lot"
@@ -1116,15 +1095,15 @@ dependencies = [
  "anyhow",
  "bytesize",
  "clap",
+ "crossterm",
  "itertools",
  "lscolors",
- "owo-colors",
  "ring-cli-table",
  "ring-core",
  "ring-tag",
  "ring-web",
  "sentry",
- "supports-color 3.0.2",
+ "supports-color",
  "sysinfo",
  "tracing",
  "tracing-subscriber",
@@ -1145,9 +1124,8 @@ version = "0.1.0"
 dependencies = [
  "ansi_colours",
  "crossterm",
- "owo-colors",
  "rgb",
- "supports-color 3.0.2",
+ "supports-color",
 ]
 
 [[package]]
@@ -1167,10 +1145,9 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "mockall",
- "owo-colors",
  "rgb",
  "ring-color",
- "supports-color 3.0.2",
+ "supports-color",
 ]
 
 [[package]]
@@ -1178,9 +1155,8 @@ name = "ring-web"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "crossterm",
  "itertools",
- "owo-colors",
- "regex",
  "rgb",
  "ring-color",
  "ring-core",
@@ -1533,16 +1509,6 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
-
-[[package]]
-name = "supports-color"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6398cde53adc3c4557306a96ce67b302968513830a77a95b2b17305d9719a89"
-dependencies = [
- "is-terminal",
- "is_ci",
-]
 
 [[package]]
 name = "supports-color"

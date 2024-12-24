@@ -6,12 +6,10 @@ edition = "2021"
 [features]
 ansi = ["dep:ansi_colours", "dep:supports-color"]
 crossterm = ["ansi", "dep:crossterm"]
-owo-colors = ["ansi", "dep:owo-colors"]
 
 [dependencies]
 rgb = "0.8.50"
 
 ansi_colours = { version = "1.2.3", optional = true }
 crossterm = { version = "0.28.1", optional = true }
-owo-colors = { version = "4.1.0", optional = true }
 supports-color = { version = "3.0.2", optional = true }

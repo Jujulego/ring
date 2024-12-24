@@ -1,9 +1,9 @@
 use crate::core::RingCore;
 use anyhow::Context;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
+use crossterm::style::Stylize;
 use itertools::Itertools;
 use lscolors::LsColors;
-use owo_colors::OwoColorize;
 use ring_cli_table::CliTable;
 use ring_tag::Tag;
 use std::collections::BTreeSet;
@@ -51,17 +51,25 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
             }
         }
 
-        let file_style = ls_colors.style_for_path(&path)
-            .map(lscolors::Style::to_owo_colors_style)
-            .unwrap_or_default();
+        if supports_color::on(supports_color::Stream::Stdout).is_some_and(|s| s.has_basic) {
+            let file_style = ls_colors.style_for_path(&path)
+                .map(lscolors::Style::to_crossterm_style)
+                .unwrap_or_default();
 
-        table.add_row([
-            &file_name.if_supports_color(supports_color::Stream::Stdout, |txt| txt.style(file_style)),
-            &languages.iter().map(|tag| tag.styled()).join(" "),
-            &tags.iter().map(|tag| tag.styled()).join(" "),
-        ]);
+            table.add_row([
+                &file_style.apply(file_name),
+                &languages.iter().map(Tag::stylize).join(" "),
+                &tags.iter().map(Tag::stylize).join(" "),
+            ]);
+        } else {
+            table.add_row([
+                &file_name.stylize(),
+                &languages.iter().map(Tag::stylize).join(" "),
+                &tags.iter().map(Tag::stylize).join(" "),
+            ]);
+        }
     }
-
+    
     for row in &table {
         println!("{row}");
     }
