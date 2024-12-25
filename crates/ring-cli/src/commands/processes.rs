@@ -1,7 +1,7 @@
 use crate::core::RingCore;
 use bytesize::ByteSize;
 use clap::{arg, ArgAction, ArgMatches, Command};
-use crossterm::style::{self, Stylize};
+use crossterm::style::{self, ContentStyle, Stylize};
 use itertools::Itertools;
 use ring_cli_table::CliTable;
 use ring_tag::Tag;
@@ -30,33 +30,34 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
     for (pid, process) in sys.processes() {
         for detector in core.process_unit_detectors() {
             if let Some(unit) = detector.detect(pid, process)? {
-                let mut style = style::ContentStyle::new();
+                table.add_styled_row(
+                    [
+                        &format!("{:>5}", pid.as_u32()),
+                        &unit.running_code_unit()
+                            .map(|u| u.parent().unwrap_or(u))
+                            .and_then(|u| u.name()
+                                .map(|n| n.to_string()))
+                            .unwrap_or("unknown".to_string().grey().to_string()),
+                        &format!("{:>9}", ByteSize::b(process.memory())),
+                        &unit.tags().iter().map(Tag::stylize).join(" "),
+                        &unit.cmd().join(" "),
+                    ],
+                    if unit.should_hide() {
+                        if !show_all {
+                            if let Some(name) = unit.running_code_unit().and_then(|u| u.name().map(|n| n.to_string())) {
+                                debug!("hide process {pid} running on {name}");
+                            } else {
+                                debug!("hide process {pid}");
+                            }
 
-                if unit.should_hide() {
-                    if !show_all {
-                        if let Some(name) = unit.running_code_unit().and_then(|u| u.name().map(|n| n.to_string())) {
-                            debug!("hide process {pid} running on {name}");
+                            break;
                         } else {
-                            debug!("hide process {pid}");
+                            ContentStyle::new().attribute(style::Attribute::Dim)
                         }
-
-                        break;
                     } else {
-                        style = style.attribute(style::Attribute::Dim);
+                        Default::default()
                     }
-                }
-
-                table.add_row([
-                    &style.apply(format!("{:>5}", pid.as_u32())),
-                    &style.apply(unit.running_code_unit()
-                        .map(|u| u.parent().unwrap_or(u))
-                        .and_then(|u| u.name()
-                            .map(|n| n.to_string()))
-                        .unwrap_or("unknown".to_string().grey().to_string())),
-                    &style.apply(format!("{:>9}", ByteSize::b(process.memory()))),
-                    &style.apply(unit.tags().iter().map(Tag::stylize).join(" ")),
-                    &style.apply(unit.cmd().join(" ")),
-                ]);
+                );
 
                 break;
             }

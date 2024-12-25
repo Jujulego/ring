@@ -1,12 +1,18 @@
 use std::cmp::{max, Ordering};
 use std::fmt::{Display, Formatter};
 use std::iter::FusedIterator;
+use crossterm::style::ContentStyle;
 use textwrap::core::display_width;
-use unicode_width::UnicodeWidthStr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cli Table
 ////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone, Debug)]
+struct TableRow<const N: usize> {
+    items: [String; N],
+    style: ContentStyle,
+}
 
 /// Formats given data as table with aligned columns
 ///
@@ -25,7 +31,7 @@ use unicode_width::UnicodeWidthStr;
 /// ```
 #[derive(Clone, Debug)]
 pub struct CliTable<const N: usize> {
-    rows: Vec<[String; N]>,
+    rows: Vec<TableRow<N>>,
     widths: [usize; N],
 }
 
@@ -39,14 +45,20 @@ impl<const N: usize> CliTable<N> {
     }
 
     /// Adds given row to the table, and updates columns width
+    #[inline]
     pub fn add_row(&mut self, row: [&dyn Display; N]) {
-        let items = core::array::from_fn(|idx| format!("{}", row[idx]));
+        self.add_styled_row(row, Default::default())
+    }
+
+    /// Adds given row to the table, and updates columns width
+    pub fn add_styled_row(&mut self, row: [&dyn Display; N], style: ContentStyle) {
+        let items = row.map(|d| format!("{}", d));
 
         self.widths.iter_mut()
             .zip(&items)
             .for_each(|(w, item)| *w = max(*w, display_width(item)));
 
-        self.rows.push(items);
+        self.rows.push(TableRow { items, style });
     }
 
     /// Returns an iterator over table rows
@@ -97,8 +109,8 @@ impl<const N: usize> CliTable<N> {
         F: FnMut(CliTableRow<N>, CliTableRow<N>) -> Ordering
     {
         self.rows.sort_by(|a, b| compare(
-            CliTableRow { items: a, widths: &self.widths },
-            CliTableRow { items: b, widths: &self.widths },
+            CliTableRow { row: a, widths: &self.widths },
+            CliTableRow { row: b, widths: &self.widths },
         ))
     }
 }
@@ -125,7 +137,7 @@ impl<'a, const N: usize> IntoIterator for &'a CliTable<N> {
 
 #[derive(Clone, Copy, Debug)]
 pub struct CliTableIter<'a, const N: usize> {
-    rows: &'a [[String; N]],
+    rows: &'a [TableRow<N>],
     widths: &'a [usize; N],
 }
 
@@ -135,7 +147,7 @@ impl<'a, const N: usize> Iterator for CliTableIter<'a, N> {
     fn next(&mut self) -> Option<Self::Item> {
         if !self.rows.is_empty() {
             let row = CliTableRow {
-                items: &self.rows[0],
+                row: &self.rows[0],
                 widths: self.widths,
             };
 
@@ -157,7 +169,7 @@ impl<const N: usize> DoubleEndedIterator for CliTableIter<'_, N> {
             let last_idx = self.rows.len() - 1;
 
             let row = CliTableRow {
-                items: &self.rows[last_idx],
+                row: &self.rows[last_idx],
                 widths: self.widths,
             };
 
@@ -179,35 +191,35 @@ impl<const N: usize> FusedIterator for CliTableIter<'_, N> {}
 /// Reference over a CliTable's row
 #[derive(Clone, Copy, Debug)]
 pub struct CliTableRow<'a, const N: usize> {
-    items: &'a [String; N],
+    row: &'a TableRow<N>,
     widths: &'a [usize; N],
 }
 
 impl<'a, const N: usize> CliTableRow<'a, N> {
     pub fn get(&self, idx: usize) -> Option<&'a String> {
-        self.items.get(idx)
+        self.row.items.get(idx)
     }
 }
 
 impl<const N: usize> Display for CliTableRow<'_, N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for (idx, item) in self.items.iter().enumerate() {
+        let mut line = String::new();
+        
+        for (idx, item) in self.row.items.iter().enumerate() {
+            line += item;
+            
             if idx < N - 1 {
-                let width = self.widths[idx] + item.width() - display_width(item);
-                write!(f, "{item:width$} ")?;
-            } else {
-                write!(f, "{item}")?;
+                line += &" ".repeat(self.widths[idx] - display_width(item) + 1);
             }
         }
-
-        Ok(())
+        
+        write!(f, "{}", self.row.style.apply(line))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use owo_colors::colors::Red;
-    use owo_colors::OwoColorize;
+    use crossterm::style::Stylize;
     use super::*;
 
     #[test]
@@ -237,11 +249,11 @@ mod tests {
     #[test]
     fn it_should_print_colored_rows_with_aligned_columns() {
         let mut table = CliTable::new();
-        table.add_row([&"Test".fg::<Red>(), &"successful"]);
+        table.add_row([&"Test".red(), &"successful"]);
         table.add_row([&"Test with a long name", &"successful"]);
 
         let mut it = table.iter();
-        assert_eq!(format!("{}", it.next().unwrap()), "\u{1b}[31mTest\u{1b}[39m                  successful");
+        assert_eq!(format!("{}", it.next().unwrap()), "\x1b[38;5;9mTest\x1b[39m                  successful");
         assert_eq!(format!("{}", it.next().unwrap()), "Test with a long name successful");
         assert!(it.next().is_none());
     }
