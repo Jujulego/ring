@@ -1,13 +1,10 @@
 use rgb::Rgb;
+use ring_color::{ColorLabel, StableColor};
 use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
-use ring_color::{ColorLabel, StableColor};
-
-#[cfg(feature = "owo-colors")]
-use owo_colors::{Style, Styled};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tag
@@ -76,22 +73,18 @@ impl Tag {
         Tag { scope: Some(scope), ..self }
     }
 
-    /// Displays colored tag using owo-colors
-    #[cfg(feature = "owo-colors")]
-    pub fn styled(&self) -> Styled<&Tag> {
-        self.styled_for(supports_color::Stream::Stdout)
+    /// Displays colored tag using crossterm, according to supported colors of stdout
+    #[cfg(feature = "crossterm")]
+    pub fn stylize(&self) -> crossterm::style::StyledContent<String> {
+        self.stylize_for(supports_color::Stream::Stdout)
     }
 
-    /// Displays colored tag using owo-colors, according to supported colors of given stream
-    #[cfg(feature = "owo-colors")]
-    pub fn styled_for(&self, stream: supports_color::Stream) -> Styled<&Tag> {
-        let mut style = Style::new();
-
-        if let Some(color) = self.color.and_then(|color| color.to_owo_for_stream(stream)) {
-            style = style.color(color);
-        }
-
-        style.style(self)
+    /// Displays colored tag using crossterm, according to supported colors of given stream
+    #[cfg(feature = "crossterm")]
+    pub fn stylize_for(&self, stream: supports_color::Stream) -> crossterm::style::StyledContent<String> {
+        self.color
+            .map(|color| color.stylize_for(self.label.clone(), stream))
+            .unwrap_or_else(|| crossterm::style::Stylize::stylize(self.label.clone()))
     }
 
     pub fn label(&self) -> &str {

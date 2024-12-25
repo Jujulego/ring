@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-owo-colors = ["ring-color/owo-colors", "dep:owo-colors", "dep:supports-color"]
+crossterm = ["ring-color/crossterm", "dep:crossterm", "dep:supports-color"]
 
 [dependencies]
 rgb = "0.8.50"
 
-owo-colors = { version = "4.1.0", optional = true }
+crossterm = { version = "0.28.1", optional = true }
 supports-color = { version = "3.0.2", optional = true }
 
 ring-color = { path = "../ring-color" }
