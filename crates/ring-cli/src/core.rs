@@ -10,7 +10,7 @@ impl RingCore {
         RingCore {
             modules: vec![
                 #[cfg(feature = "rust")]
-                { Box::new(rust::RustModule::default()) },
+                { Box::new(ring_rust::RustModule::default()) },
                 #[cfg(feature = "web")]
                 { Box::new(ring_web::WebModule::default()) }
             ]

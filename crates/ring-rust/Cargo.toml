@@ -7,7 +7,9 @@ edition = "2021"
 crossterm = ["ring-color/crossterm", "ring-tag/crossterm"]
 
 [dependencies]
+anyhow = "1.0.95"
 rgb = "0.8.50"
+tracing = "0.1.41"
 
 ring-color = { path = "../ring-color" }
 ring-core = { path = "../ring-core" }

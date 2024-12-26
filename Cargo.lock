@@ -1137,10 +1137,12 @@ dependencies = [
 name = "ring-rust"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "rgb",
  "ring-color",
  "ring-core",
  "ring-tag",
+ "tracing",
 ]
 
 [[package]]

@@ -1,13 +1,20 @@
 mod language;
+mod crates;
 
-use std::rc::Rc;
+pub use crate::crates::SourceFile;
 use ring_core::{CodeUnitDetector, ProcessUnitDetector, RingModule};
+use std::rc::Rc;
+use crate::crates::SourceFileDetector;
 
-pub struct RustModule {}
+pub struct RustModule {
+    pub source_file_detector: Rc<SourceFileDetector>,
+}
 
 impl RustModule {
     pub fn new() -> Self {
-        RustModule {}
+        RustModule {
+            source_file_detector: Rc::new(SourceFileDetector::new()),
+        }
     }
 }
 
@@ -19,7 +26,7 @@ impl Default for RustModule {
 
 impl RingModule for RustModule {
     fn code_unit_detector(&self) -> Vec<Rc<dyn CodeUnitDetector>> {
-        vec![]
+        vec![self.source_file_detector.clone()]
     }
 
     fn process_unit_detector(&self) -> Vec<Rc<dyn ProcessUnitDetector>> {
