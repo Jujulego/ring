@@ -1094,6 +1094,7 @@ dependencies = [
  "lscolors",
  "ring-cli-table",
  "ring-core",
+ "ring-rust",
  "ring-tag",
  "ring-web",
  "sentry",
@@ -1133,6 +1134,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-rust"
+version = "0.1.0"
+dependencies = [
+ "rgb",
+ "ring-color",
+ "ring-core",
+ "ring-tag",
+]
+
+[[package]]
 name = "ring-tag"
 version = "0.1.0"
 dependencies = [
@@ -1148,7 +1159,6 @@ name = "ring-web"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "crossterm",
  "itertools",
  "rgb",
  "ring-color",

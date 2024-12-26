@@ -1,5 +1,5 @@
 [package]
-name = "ring-web"
+name = "ring-rust"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,14 +7,7 @@ edition = "2021"
 crossterm = ["ring-color/crossterm", "ring-tag/crossterm"]
 
 [dependencies]
-anyhow = "1.0.93"
-itertools = "0.13.0"
 rgb = "0.8.50"
-semver = { version = "1.0.23", features = ["serde"] }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-sysinfo = "0.33.0"
-tracing = "0.1.41"
 
 ring-color = { path = "../ring-color" }
 ring-core = { path = "../ring-core" }

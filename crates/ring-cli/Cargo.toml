@@ -5,6 +5,7 @@ edition = "2021"
 
 [features]
 default = ["web"]
+rust = ["dep:ring-rust"]
 web = ["dep:ring-web"]
 
 [dependencies]
@@ -22,5 +23,6 @@ tracing-subscriber = "0.3.18"
 
 ring-cli-table = { path = "../ring-cli-table" }
 ring-core = { path = "../ring-core" }
+ring-rust = { path = "../ring-rust", features = ["crossterm"], optional = true }
 ring-tag = { path = "../ring-tag", features = ["crossterm"] }
 ring-web = { path = "../ring-web", features = ["crossterm"], optional = true }
