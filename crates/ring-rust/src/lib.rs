@@ -1,18 +1,28 @@
 mod language;
 mod crates;
 
-pub use crate::crates::{CargoCrate, CargoManifest, SourceFile, SourceFileDetector};
-use ring_core::{CodeUnitDetector, ProcessUnitDetector, RingModule};
+pub use crate::crates::{CargoCrate, CargoCrateDetector, CargoManifest, SourceFile, SourceFileDetector};
+use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
 
 pub struct RustModule {
+    pub cargo_crate_detector: Rc<CargoCrateDetector>,
     pub source_file_detector: Rc<SourceFileDetector>,
+    pub rust_unit_detector: Rc<CombinedCodeUnitDetector<2>>
 }
 
 impl RustModule {
     pub fn new() -> Self {
+        let cargo_crate_detector = Rc::new(CargoCrateDetector::new());
+        let source_file_detector = Rc::new(SourceFileDetector::new());
+
         RustModule {
-            source_file_detector: Rc::new(SourceFileDetector::new()),
+            cargo_crate_detector: cargo_crate_detector.clone(),
+            source_file_detector: source_file_detector.clone(),
+            rust_unit_detector: Rc::new([
+                cargo_crate_detector,
+                source_file_detector,
+            ])
         }
     }
 }
@@ -25,7 +35,7 @@ impl Default for RustModule {
 
 impl RingModule for RustModule {
     fn code_unit_detector(&self) -> Vec<Rc<dyn CodeUnitDetector>> {
-        vec![self.source_file_detector.clone()]
+        vec![self.rust_unit_detector.clone()]
     }
 
     fn process_unit_detector(&self) -> Vec<Rc<dyn ProcessUnitDetector>> {

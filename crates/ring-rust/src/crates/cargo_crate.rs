@@ -5,6 +5,7 @@ use ring_tag::Tagged;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
+#[derive(Clone, Debug)]
 pub struct CargoCrate {
     manifest: CargoManifest,
     path: PathBuf,

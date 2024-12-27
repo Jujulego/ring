@@ -3,19 +3,19 @@ use anyhow::Context;
 use semver::Version;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct CargoPackage {
     pub name: String,
     #[serde(default)]
     pub version: Option<Version>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct CargoWorkspace {
     pub members: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct CargoManifest {
     pub package: Option<CargoPackage>,
     pub workspace: Option<CargoWorkspace>,

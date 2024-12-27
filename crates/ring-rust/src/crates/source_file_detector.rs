@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use tracing::{instrument, trace};
+use tracing::{info, instrument, trace};
 use ring_core::{CodeUnit, CodeUnitDetector};
 
 /// Detector for script files
@@ -32,6 +32,7 @@ impl SourceFileDetector {
         let path = path.to_path_buf();
 
         let result = if self._is_source_file(&path) {
+            info!("recognized {} as a rust source file", path.display());
             Some(Rc::new(SourceFile::new(path.clone())))
         } else {
             None
