@@ -1,9 +1,10 @@
-use crate::language::rust_language;
+use crate::language::{rust_language, RUST_COLOR};
 use crate::CargoManifest;
 use ring_core::{CodeLanguage, CodeUnit};
-use ring_tag::Tagged;
+use ring_tag::{Tag, Tagged};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
+use ring_color::ColorLabel;
 
 #[derive(Clone, Debug)]
 pub struct CargoCrate {
@@ -45,4 +46,10 @@ impl CodeUnit for CargoCrate {
     }
 }
 
-impl Tagged for CargoCrate {}
+impl Tagged for CargoCrate {
+    fn tags(&self) -> Vec<Tag> {
+        vec![
+            Tag::from("rust:cargo").with_color(ColorLabel::Red, RUST_COLOR),
+        ]
+    }
+}

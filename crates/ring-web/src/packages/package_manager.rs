@@ -25,9 +25,9 @@ impl PackageManager {
     /// Builds a tag matching this package manager
     pub fn tag(&self) -> Tag {
         match self {
-            PackageManager::Npm => Tag::from("npm").with_color(ColorLabel::Red, (0xcc, 0x35, 0x34)),
-            PackageManager::Pnpm => Tag::from("pnpm").with_color(ColorLabel::Yellow, (0xf9, 0xad, 0x00)),
-            PackageManager::Yarn => Tag::from("yarn").with_color(ColorLabel::Blue, (0x2c, 0x8e, 0xbb)),
+            PackageManager::Npm => Tag::from("web:npm").with_color(ColorLabel::Red, (0xcc, 0x35, 0x34)),
+            PackageManager::Pnpm => Tag::from("web:pnpm").with_color(ColorLabel::Yellow, (0xf9, 0xad, 0x00)),
+            PackageManager::Yarn => Tag::from("web:yarn").with_color(ColorLabel::Blue, (0x2c, 0x8e, 0xbb)),
         }
     }
 }
