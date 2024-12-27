@@ -1,10 +1,9 @@
 mod language;
 mod crates;
 
-pub use crate::crates::SourceFile;
+pub use crate::crates::{CargoManifest, SourceFile, SourceFileDetector};
 use ring_core::{CodeUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
-use crate::crates::SourceFileDetector;
 
 pub struct RustModule {
     pub source_file_detector: Rc<SourceFileDetector>,

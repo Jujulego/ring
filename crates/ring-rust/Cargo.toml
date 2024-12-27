@@ -9,6 +9,9 @@ crossterm = ["ring-color/crossterm", "ring-tag/crossterm"]
 [dependencies]
 anyhow = "1.0.95"
 rgb = "0.8.50"
+semver = { version = "1.0.24", features = ["serde"] }
+serde = { version = "1.0.217", features = ["derive"] }
+toml = "0.8.19"
 tracing = "0.1.41"
 
 ring-color = { path = "../ring-color" }
