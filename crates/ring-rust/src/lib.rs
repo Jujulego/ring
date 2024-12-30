@@ -20,6 +20,10 @@ impl RustModule {
         let cargo_crate_detector = Rc::new(CargoCrateDetector::new());
         let source_file_detector = Rc::new(SourceFileDetector::new());
 
+        let cargo_process_detector = Rc::new(CargoProcessDetector::new(
+            cargo_crate_detector.clone(),
+        ));
+
         RustModule {
             cargo_crate_detector: cargo_crate_detector.clone(),
             source_file_detector: source_file_detector.clone(),
@@ -28,7 +32,7 @@ impl RustModule {
                 source_file_detector,
             ]),
             
-            cargo_process_detector: Rc::new(CargoProcessDetector::new()),
+            cargo_process_detector,
         }
     }
 }

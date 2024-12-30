@@ -1,4 +1,5 @@
 use crate::language::RUST_COLOR;
+use crate::CargoCrate;
 use ring_color::ColorLabel;
 use ring_core::{CodeUnit, ProcessUnit};
 use ring_tag::{Tag, Tagged};
@@ -9,11 +10,16 @@ use sysinfo::Pid;
 pub struct CargoProcess {
     pid: Pid,
     arguments: Vec<String>,
+    cargo_crate: Option<Rc<CargoCrate>>,
 }
 
 impl CargoProcess {
-    pub fn new(pid: Pid, arguments: Vec<String>) -> CargoProcess {
-        CargoProcess { pid, arguments }
+    pub fn new(pid: Pid, arguments: Vec<String>, cargo_crate: Option<Rc<CargoCrate>>) -> CargoProcess {
+        CargoProcess { pid, arguments, cargo_crate }
+    }
+
+    pub fn cargo_crate(&self) -> Option<&Rc<CargoCrate>> {
+        self.cargo_crate.as_ref()
     }
 }
 
@@ -27,7 +33,8 @@ impl ProcessUnit for CargoProcess {
     }
 
     fn running_code_unit(&self) -> Option<Rc<dyn CodeUnit>> {
-        None
+        self.cargo_crate.clone()
+            .map(|crt| crt as Rc<dyn CodeUnit>)
     }
 }
 
