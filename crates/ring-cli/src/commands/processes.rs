@@ -36,8 +36,8 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
                         &unit.running_code_unit()
                             .map(|u| u.parent().unwrap_or(u))
                             .and_then(|u| u.name()
-                                .map(|n| n.to_string()))
-                            .unwrap_or("unknown".to_string().grey().to_string()),
+                                .map(|n| n.to_string().stylize()))
+                            .unwrap_or("unknown".to_string().dark_grey()),
                         &format!("{:>9}", ByteSize::b(process.memory())),
                         &unit.tags().iter().map(Tag::stylize).join(" "),
                         &unit.cmd().join(" "),

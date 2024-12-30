@@ -1,14 +1,14 @@
+use crate::packages::package_manager::PACKAGE_MANAGERS;
+use crate::{Package, PackageManager, PackageManifest};
+use anyhow::anyhow;
+use ring_core::{CodeUnit, CodeUnitDetector};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::anyhow;
 use tracing::{info, instrument, trace};
-use ring_core::{CodeUnit, CodeUnitDetector};
-use crate::{Package, PackageManager, PackageManifest};
-use crate::packages::package_manager::PACKAGE_MANAGERS;
 
 /// Detector for packages
 #[derive(Clone, Debug, Default)]
@@ -119,6 +119,7 @@ impl PackageDetector {
 
 impl CodeUnitDetector for PackageDetector {
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        self.detect_package(path).map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))
+        self.detect_package(path)
+            .map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))
     }
 }

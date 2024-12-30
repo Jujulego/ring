@@ -1,9 +1,6 @@
 use std::rc::Rc;
 use ring_core::{CodeUnitDetector, ProcessUnitDetector, RingModule};
 
-#[cfg(feature = "web")]
-use ring_web::WebModule;
-
 pub struct RingCore {
     modules: Vec<Box<dyn RingModule>>,
 }
@@ -12,8 +9,10 @@ impl RingCore {
     pub fn new() -> RingCore {
         RingCore {
             modules: vec![
+                #[cfg(feature = "rust")]
+                { Box::new(ring_rust::RustModule::default()) },
                 #[cfg(feature = "web")]
-                { Box::new(WebModule::default()) }
+                { Box::new(ring_web::WebModule::default()) }
             ]
         }
     }

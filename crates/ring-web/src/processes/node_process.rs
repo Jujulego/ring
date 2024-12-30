@@ -62,6 +62,6 @@ impl ProcessUnit for NodeProcess {
 
 impl Tagged for NodeProcess {
     fn tags(&self) -> Vec<Tag> {
-        vec![Tag::from("node").with_color(ColorLabel::Green, (0x5f, 0xa0, 0x4e))]
+        vec![Tag::from("web:node").with_color(ColorLabel::Green, (0x5f, 0xa0, 0x4e))]
     }
 }

@@ -63,7 +63,7 @@ impl ScriptFileDetector {
 
     fn _detect_script(&self, path: &Path) -> anyhow::Result<Option<Rc<ScriptFile>>> {
         if let Some(script) = self.scripts.borrow().get(path) {
-            return Ok(script.clone())
+            return Ok(script.clone());
         }
 
         let script = self.detect_script_language(path)?
