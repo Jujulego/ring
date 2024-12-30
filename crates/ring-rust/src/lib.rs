@@ -1,14 +1,18 @@
 mod language;
 mod crates;
+mod processes;
 
 pub use crate::crates::{CargoCrate, CargoCrateDetector, CargoManifest, SourceFile, SourceFileDetector};
+pub use crate::processes::{CargoProcess, CargoProcessDetector};
 use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
 
 pub struct RustModule {
     pub cargo_crate_detector: Rc<CargoCrateDetector>,
     pub source_file_detector: Rc<SourceFileDetector>,
-    pub rust_unit_detector: Rc<CombinedCodeUnitDetector<2>>
+    pub rust_unit_detector: Rc<CombinedCodeUnitDetector<2>>,
+
+    pub cargo_process_detector: Rc<CargoProcessDetector>,
 }
 
 impl RustModule {
@@ -22,7 +26,9 @@ impl RustModule {
             rust_unit_detector: Rc::new([
                 cargo_crate_detector,
                 source_file_detector,
-            ])
+            ]),
+            
+            cargo_process_detector: Rc::new(CargoProcessDetector::new()),
         }
     }
 }
@@ -39,6 +45,6 @@ impl RingModule for RustModule {
     }
 
     fn process_unit_detector(&self) -> Vec<Rc<dyn ProcessUnitDetector>> {
-        vec![]
+        vec![self.cargo_process_detector.clone()]
     }
 }
