@@ -8,7 +8,7 @@ crossterm = ["ring-color/crossterm", "ring-tag/crossterm"]
 
 [dependencies]
 anyhow = "1.0.93"
-itertools = "0.13.0"
+itertools = "0.14.0"
 rgb = "0.8.50"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
