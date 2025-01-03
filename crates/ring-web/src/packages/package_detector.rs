@@ -118,6 +118,10 @@ impl PackageDetector {
 }
 
 impl CodeUnitDetector for PackageDetector {
+    fn name(&self) -> &str {
+        "web:package"
+    }
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         self.detect_package(path)
             .map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))

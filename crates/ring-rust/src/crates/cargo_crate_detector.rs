@@ -82,6 +82,10 @@ impl CargoCrateDetector {
 }
 
 impl CodeUnitDetector for CargoCrateDetector {
+    fn name(&self) -> &str {
+        "rust:crate"
+    }
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         self.detect_crate(path)
             .map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))

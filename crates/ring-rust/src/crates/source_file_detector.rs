@@ -45,6 +45,10 @@ impl SourceFileDetector {
 }
 
 impl CodeUnitDetector for SourceFileDetector {
+    fn name(&self) -> &str {
+        "rust:source-file"
+    }
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         Ok(self.detect_source(path)
             .map(|source| source as Rc<dyn CodeUnit>))

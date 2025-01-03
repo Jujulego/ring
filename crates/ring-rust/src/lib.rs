@@ -10,7 +10,7 @@ use std::rc::Rc;
 pub struct RustModule {
     pub cargo_crate_detector: Rc<CargoCrateDetector>,
     pub source_file_detector: Rc<SourceFileDetector>,
-    pub rust_unit_detector: Rc<CombinedCodeUnitDetector<2>>,
+    pub rust_unit_detector: Rc<CombinedCodeUnitDetector>,
 
     pub cargo_process_detector: Rc<CargoProcessDetector>,
 }
@@ -27,10 +27,10 @@ impl RustModule {
         RustModule {
             cargo_crate_detector: cargo_crate_detector.clone(),
             source_file_detector: source_file_detector.clone(),
-            rust_unit_detector: Rc::new([
+            rust_unit_detector: Rc::new(CombinedCodeUnitDetector::new("rust".to_string(), &[
                 cargo_crate_detector,
                 source_file_detector,
-            ]),
+            ])),
             
             cargo_process_detector,
         }
