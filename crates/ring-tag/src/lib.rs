@@ -75,16 +75,30 @@ impl Tag {
 
     /// Displays colored tag using crossterm, according to supported colors of stdout
     #[cfg(feature = "crossterm")]
-    pub fn stylize(&self) -> crossterm::style::StyledContent<String> {
+    pub fn stylize(&self) -> crossterm::style::StyledContent<&String> {
         self.stylize_for(supports_color::Stream::Stdout)
     }
 
     /// Displays colored tag using crossterm, according to supported colors of given stream
     #[cfg(feature = "crossterm")]
-    pub fn stylize_for(&self, stream: supports_color::Stream) -> crossterm::style::StyledContent<String> {
+    pub fn stylize_for(&self, stream: supports_color::Stream) -> crossterm::style::StyledContent<&String> {
         self.color
-            .map(|color| color.stylize_for(self.label.clone(), stream))
-            .unwrap_or_else(|| crossterm::style::Stylize::stylize(self.label.clone()))
+            .map(|color| color.style_for(stream)).unwrap_or_default()
+            .apply(&self.label)
+    }
+
+    /// Displays colored tag using crossterm, according to supported colors of stdout
+    #[cfg(feature = "crossterm")]
+    pub fn stylize_full(&self) -> crossterm::style::StyledContent<&Tag> {
+        self.stylize_full_for(supports_color::Stream::Stdout)
+    }
+
+    /// Displays colored tag using crossterm, according to supported colors of given stream
+    #[cfg(feature = "crossterm")]
+    pub fn stylize_full_for(&self, stream: supports_color::Stream) -> crossterm::style::StyledContent<&Tag> {
+        self.color
+            .map(|color| color.style_for(stream)).unwrap_or_default()
+            .apply(self)
     }
 
     pub fn label(&self) -> &str {
