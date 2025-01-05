@@ -79,6 +79,13 @@ impl CargoCrateDetector {
 
         Ok(crt)
     }
+    
+    /// Detect if given path is within a crate, and return it
+    pub fn search_crate(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        path.ancestors()
+            .find_map(|path| self.detect_crate(path).transpose())
+            .transpose()
+    }
 }
 
 impl CodeUnitDetector for CargoCrateDetector {

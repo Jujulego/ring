@@ -4,27 +4,47 @@ use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::{Tag, Tagged};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
+use crate::CargoCrate;
 
 /// Represents a rust source file
 #[derive(Clone, Debug)]
 pub struct SourceFile {
     path: PathBuf,
+    cargo_crate: Option<Rc<CargoCrate>>,
 }
 
 impl SourceFile {
     pub fn new(path: PathBuf) -> SourceFile {
-        SourceFile { path }
+        SourceFile {
+            path,
+            cargo_crate: None,
+        }
     }
 
     /// Returns path to this script
     pub fn path(&self) -> &Path {
         &self.path
     }
+    
+    pub fn cargo_crate(&self) -> Option<&Rc<CargoCrate>> {
+        self.cargo_crate.as_ref()
+    }
+    
+    pub fn cargo_crate_mut(&mut self) -> &mut Option<Rc<CargoCrate>> {
+        &mut self.cargo_crate
+    }
 }
 
 impl CodeUnit for SourceFile {
     fn language(&self) -> CodeLanguage {
         rust_language()
+    }
+
+    fn parent(&self) -> Option<Rc<dyn CodeUnit>> {
+        self.cargo_crate
+            .clone()
+            .map(|c| c as Rc<dyn CodeUnit>)
     }
 
     fn path(&self) -> &Path {

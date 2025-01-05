@@ -22,7 +22,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         .unwrap_or(&current_dir);
 
     for detector in core.code_unit_detectors() {
-        if let Some(unit) = detector.detect(&path)? {
+        if let Some(unit) = detector.detect(path)? {
             println!("{} detected by {}",
                      unit.name().map(Stylize::bold).unwrap_or("unknown".dark_grey()),
                      detector.name());

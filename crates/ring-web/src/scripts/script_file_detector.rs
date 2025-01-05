@@ -70,13 +70,9 @@ impl ScriptFileDetector {
             .map(|language| ScriptFile::new(path.to_path_buf(), language));
 
         if let Some(mut script) = script {
-            let package = path.parent()
+            *script.package_mut() = path.parent()
                 .and_then(|parent| self.package_detector.search_package(parent).transpose())
                 .transpose()?;
-
-            if let Some(package) = package {
-                *script.package_mut() = Some(package);
-            }
 
             info!("recognized {} as a web script", path.display());
             let script = Rc::new(script);
@@ -117,6 +113,7 @@ impl CodeUnitDetector for ScriptFileDetector {
     }
     
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        self.detect_script(path).map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))
+        self.detect_script(path)
+            .map(|opt| opt.map(|scr| scr as Rc<dyn CodeUnit>))
     }
 }

@@ -18,7 +18,9 @@ pub struct RustModule {
 impl RustModule {
     pub fn new() -> Self {
         let cargo_crate_detector = Rc::new(CargoCrateDetector::new());
-        let source_file_detector = Rc::new(SourceFileDetector::new());
+        let source_file_detector = Rc::new(SourceFileDetector::new(
+            cargo_crate_detector.clone(),
+        ));
 
         let cargo_process_detector = Rc::new(CargoProcessDetector::new(
             cargo_crate_detector.clone(),
