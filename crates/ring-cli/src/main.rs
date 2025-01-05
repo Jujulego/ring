@@ -16,6 +16,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .subcommand_required(true)
         .subcommands([
+            commands::describe::build_command(),
             commands::list::build_command(),
             commands::processes::build_command(),
         ])
@@ -32,6 +33,7 @@ fn main() -> anyhow::Result<()> {
     let core = RingCore::new();
     
     match args.subcommand() {
+        Some(("describe", args)) => commands::describe::handle_command(&core, args),
         Some(("list", args)) => commands::list::handle_command(&core, args),
         Some(("processes", args)) => commands::processes::handle_command(&core, args),
         _ => unreachable!()

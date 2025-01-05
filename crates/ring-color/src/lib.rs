@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod mock_supports_color;
 
+use std::fmt::Display;
 use rgb::RGB;
 
 #[cfg(not(test))]
@@ -76,26 +77,38 @@ impl StableColor {
 
 #[cfg(feature = "crossterm")]
 impl StableColor {
-    pub fn stylize<T: crossterm::style::Stylize>(&self, val: T) -> T::Styled {
+    pub fn stylize<T: Display>(&self, val: T) -> crossterm::style::StyledContent<T> {
         self.stylize_for(val, supports_color::Stream::Stdout)
     }
-    
-    pub fn stylize_for<T: crossterm::style::Stylize>(&self, val: T, stream: supports_color::Stream) -> T::Styled {
+
+    pub fn stylize_for<T: Display>(&self, val: T, stream: supports_color::Stream) -> crossterm::style::StyledContent<T> {
+        self.style_for(stream).apply(val)
+    }
+
+    pub fn style<T: Display>(&self) -> crossterm::style::ContentStyle {
+        self.style_for(supports_color::Stream::Stdout)
+    }
+
+    pub fn style_for(&self, stream: supports_color::Stream) -> crossterm::style::ContentStyle {
+        let mut style = crossterm::style::ContentStyle::new();
+
         if let Some(support) = supports_color_on(stream) {
             if support.has_16m {
-                val.with(crossterm::style::Color::Rgb { 
+                style.foreground_color = Some(crossterm::style::Color::Rgb {
                     r: self.rgb().r,
                     g: self.rgb().g,
                     b: self.rgb().b,
-                })
+                });
             } else if support.has_256 {
-                val.with(crossterm::style::Color::AnsiValue(ansi_colours::ansi256_from_rgb(self.rgb)))
+                style.foreground_color = Some(crossterm::style::Color::AnsiValue(
+                    ansi_colours::ansi256_from_rgb(self.rgb)
+                ));
             } else {
-                val.with(self.label.into())
+                style.foreground_color = Some(self.label.into())
             }
-        } else {
-            val.stylize()
         }
+
+        style
     }
 }
 

@@ -13,7 +13,7 @@ use std::rc::Rc;
 pub struct WebModule {
     pub package_detector: Rc<PackageDetector>,
     pub script_file_detector: Rc<ScriptFileDetector>,
-    pub web_unit_detector: Rc<CombinedCodeUnitDetector<2>>,
+    pub web_unit_detector: Rc<CombinedCodeUnitDetector>,
 
     pub node_process_detector: Rc<NodeProcessDetector>,
     pub web_process_detector: Rc<CombinedProcessUnitDetector<1>>,
@@ -31,10 +31,10 @@ impl WebModule {
         WebModule {
             package_detector: package_detector.clone(),
             script_file_detector: script_file_detector.clone(),
-            web_unit_detector: Rc::new([
+            web_unit_detector: Rc::new(CombinedCodeUnitDetector::new("web".to_string(), &[
                 package_detector.clone(),
                 script_file_detector.clone(),
-            ]),
+            ])),
 
             node_process_detector: node_process_detector.clone(),
             web_process_detector: Rc::new([node_process_detector.clone()]),

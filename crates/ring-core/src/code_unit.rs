@@ -1,7 +1,7 @@
+use crate::CodeLanguage;
+use ring_tag::Tagged;
 use std::path::Path;
 use std::rc::Rc;
-use ring_tag::Tagged;
-use crate::CodeLanguage;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Code Unit
@@ -32,6 +32,8 @@ pub trait CodeUnit: Tagged {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait CodeUnitDetector {
+    fn name(&self) -> &str;
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>>;
 }
 
@@ -39,11 +41,31 @@ pub trait CodeUnitDetector {
 // Combined Code Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
 
-pub type CombinedCodeUnitDetector<const N: usize> = [Rc<dyn CodeUnitDetector>; N];
+pub struct CombinedCodeUnitDetector {
+    name: String,
+    detectors: Vec<Rc<dyn CodeUnitDetector>>,
+}
 
-impl<const N: usize> CodeUnitDetector for CombinedCodeUnitDetector<N> {
+impl CombinedCodeUnitDetector {
+    pub fn new(name: String, detectors: &[Rc<dyn CodeUnitDetector>]) -> CombinedCodeUnitDetector {
+        CombinedCodeUnitDetector {
+            name,
+            detectors: Vec::from(detectors),
+        }
+    }
+
+    pub fn detectors(&self) -> &[Rc<dyn CodeUnitDetector>] {
+        &self.detectors
+    }
+}
+
+impl CodeUnitDetector for CombinedCodeUnitDetector {
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
-        for detector in self {
+        for detector in &self.detectors {
             if let Some(unit) = detector.detect(path)? {
                 return Ok(Some(unit));
             }

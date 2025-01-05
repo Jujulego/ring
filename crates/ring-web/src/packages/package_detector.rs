@@ -102,22 +102,18 @@ impl PackageDetector {
     }
 
     /// Detect if given path is within a package, and return it
-    pub fn search_package(&self, mut path: &Path) -> anyhow::Result<Option<Rc<Package>>> {
-        loop {
-            if let Some(package) = self.detect_package(path)? {
-                break Ok(Some(package));
-            }
-
-            if let Some(parent) = path.parent() {
-                path = parent;
-            } else {
-                break Ok(None);
-            }
-        }
+    pub fn search_package(&self, path: &Path) -> anyhow::Result<Option<Rc<Package>>> {
+        path.ancestors()
+            .find_map(|path| self.detect_package(path).transpose())
+            .transpose()
     }
 }
 
 impl CodeUnitDetector for PackageDetector {
+    fn name(&self) -> &str {
+        "web:package"
+    }
+    
     fn detect(&self, path: &Path) -> anyhow::Result<Option<Rc<dyn CodeUnit>>> {
         self.detect_package(path)
             .map(|opt| opt.map(|pkg| pkg as Rc<dyn CodeUnit>))
