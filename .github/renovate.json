@@ -11,10 +11,10 @@
   "packageRules": [
     {
       "matchCategories": [
-        "rust"
+        "ci"
       ],
       "addLabels": [
-        "rust"
+        "github-actions"
       ]
     },
     {
@@ -26,6 +26,14 @@
       ],
       "postUpdateOptions": [
         "yarnDedupeHighest"
+      ]
+    },
+    {
+      "matchCategories": [
+        "rust"
+      ],
+      "addLabels": [
+        "rust"
       ]
     },
     {
@@ -42,10 +50,5 @@
       "automergeType": "pr",
       "platformAutomerge": true
     }
-  ],
-  "github-actions": {
-    "addLabels": [
-      "github-actions"
-    ]
-  }
+  ]
 }
