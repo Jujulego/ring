@@ -111,7 +111,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
         );
 
         // Print its children
-        for (idx, child) in node.children.values().enumerate() {
+        for (idx, child) in node.children.values().enumerate().rev() {
             let mut child_prefix = prefix.clone();
             child_prefix.push(idx >= node.children.len() - 1);
 
