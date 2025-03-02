@@ -99,7 +99,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
                     .and_then(|u| u.name()
                         .map(|n| n.to_string().stylize()))
                     .unwrap_or("unknown".to_string().dark_grey()),
-                &format!("{:>9}", ByteSize::b(node.process.memory())),
+                &format!("{:>10}", ByteSize::b(node.process.memory())),
                 &node.unit.tags().iter().map(Tag::stylize).join(" "),
                 &node.unit.cmd().join(" "),
             ],
