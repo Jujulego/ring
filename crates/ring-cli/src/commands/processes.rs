@@ -84,7 +84,7 @@ pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> 
     }
 
     // Render as a table
-    let mut stack: VecDeque<(Rc<RefCell<ProcessUnitTree>>, Vec<bool>)> = VecDeque::from_iter(roots.values().cloned().map(|n| (n, vec![])));
+    let mut stack: VecDeque<(_, Vec<bool>)> = VecDeque::from_iter(roots.values().cloned().map(|n| (n, vec![])));
     let mut table = CliTable::new();
 
     while let Some((node, prefix)) = stack.pop_front() {
@@ -165,8 +165,8 @@ struct ProcessUnitTree<'a> {
     children: BTreeMap<Pid, Rc<RefCell<ProcessUnitTree<'a>>>>,
 }
 
-fn display_prefix(prefix: &Vec<bool>) -> String {
-    if prefix.len() == 0 {
+fn display_prefix(prefix: &[bool]) -> String {
+    if prefix.is_empty() {
         return "\u{25CF} ".to_string();
     }
 
