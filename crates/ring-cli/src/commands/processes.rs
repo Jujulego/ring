@@ -176,7 +176,7 @@ fn display_prefix(prefix: &[bool]) -> String {
         if is_last {
             result.push_str("  ");
         } else {
-            result.push_str(" \u{2502}");
+            result.push_str("\u{2502} ");
         }
     }
 
