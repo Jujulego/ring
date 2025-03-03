@@ -94,6 +94,7 @@ impl<V> PathCache<V> {
     /// cache.clear();
     /// assert!(cache.is_empty());
     /// ```
+    #[inline]
     pub fn clear(&mut self) {
         self.cache.clear()
     }
