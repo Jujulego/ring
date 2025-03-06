@@ -4,5 +4,5 @@ use crate::file::Language;
 /// Represents a file containing code
 pub trait CodeUnit: FileUnit {
     /// Returns code unit's language
-    fn language(&self) -> Language;
+    fn language(&self) -> &Language;
 }
