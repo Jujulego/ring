@@ -58,7 +58,7 @@ impl Language {
     /// assert_eq!(LANGUAGE.color(), None);
     ///
     /// const COLORED: Language = LANGUAGE.with_color(Rgb { r: 0x12, g: 0xa4, b: 0x62 });
-    /// assert_eq!(LANGUAGE.color(), Some(Rgb { r: 0x12, g: 0xa4, b: 0x62 }));
+    /// assert_eq!(COLORED.color(), Some(Rgb { r: 0x12, g: 0xa4, b: 0x62 }));
     /// ```
     pub const fn color(&self) -> Option<Rgb<u8>> {
         self.color
