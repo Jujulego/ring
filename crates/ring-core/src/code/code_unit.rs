@@ -1,14 +1,18 @@
+use crate::code::Language;
 use std::path::Path;
 
-/// Represents a file
-pub trait FileUnit {
-    /// Returns file's name
+/// Represents a file containing code
+pub trait CodeUnit {
+    /// Returns code unit's language
+    fn language(&self) -> &Language;
+
+    /// Returns code unit's name
     fn name(&self) -> Option<&str> {
         self.path().file_stem()
             .and_then(|name| name.to_str())
     }
 
-    /// Returns path to the file
+    /// Returns path to the code unit
     fn path(&self) -> &Path;
 }
 
@@ -21,7 +25,8 @@ mod tests {
     mock! {
         TestUnit {}
 
-        impl FileUnit for TestUnit {
+        impl CodeUnit for TestUnit {
+            fn language(&self) -> &Language;
             fn path(&self) -> &Path;
         }
     }

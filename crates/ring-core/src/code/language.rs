@@ -12,7 +12,7 @@ impl Language {
     ///
     /// # Example
     /// ```
-    /// use ring_core::file::Language;
+    /// use ring_core::code::Language;
     ///
     /// const LANGUAGE: Language = Language::new("html");
     /// ```
@@ -25,7 +25,7 @@ impl Language {
     /// # Example
     /// ```
     /// use rgb::Rgb;
-    /// use ring_core::file::Language;
+    /// use ring_core::code::Language;
     ///
     /// const LANGUAGE: Language = Language::new("html").with_color(Rgb { r: 0x12, g: 0xa4, b: 0x62 });
     /// ```
@@ -38,7 +38,7 @@ impl Language {
     ///
     /// # Example
     /// ```
-    /// use ring_core::file::Language;
+    /// use ring_core::code::Language;
     ///
     /// const LANGUAGE: Language = Language::new("html");
     /// assert_eq!(LANGUAGE.name(), "html");
@@ -52,7 +52,7 @@ impl Language {
     /// # Example
     /// ```
     /// use rgb::Rgb;
-    /// use ring_core::file::Language;
+    /// use ring_core::code::Language;
     ///
     /// const LANGUAGE: Language = Language::new("html");
     /// assert_eq!(LANGUAGE.color(), None);
