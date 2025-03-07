@@ -1,8 +1,8 @@
-use crate::code::Language;
+use crate::unit::Language;
 use std::path::Path;
 
 /// Object representing a file containing code
-pub trait CodeUnit {
+pub trait Unit {
     /// Returns code unit's language
     fn language(&self) -> &Language;
 
@@ -25,7 +25,7 @@ mod tests {
     mock! {
         TestUnit {}
 
-        impl CodeUnit for TestUnit {
+        impl Unit for TestUnit {
             fn language(&self) -> &Language;
             fn path(&self) -> &Path;
         }

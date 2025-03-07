@@ -4,4 +4,4 @@ mod unit;
 
 pub use identifier::Identifier;
 pub use language::Language;
-pub use unit::CodeUnit;
+pub use unit::Unit;
