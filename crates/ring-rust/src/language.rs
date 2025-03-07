@@ -1,8 +1,6 @@
-use rgb::Rgb;
 use ring_color::{ColorLabel, StableColor};
 use ring_core::CodeLanguage;
-
-pub const RUST_COLOR: Rgb<u8> = Rgb { r: 0xe3, g: 0x3b, b: 0x26 };
+use crate::constants::RUST_COLOR;
 
 pub fn rust_language() -> CodeLanguage {
     CodeLanguage::new(

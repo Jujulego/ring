@@ -1,4 +1,4 @@
-use crate::language::RUST_COLOR;
+use crate::constants::RUST_COLOR;
 use crate::CargoCrate;
 use ring_color::ColorLabel;
 use ring_core::{CodeUnit, ProcessUnit};

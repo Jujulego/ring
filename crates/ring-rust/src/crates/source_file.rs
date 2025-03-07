@@ -1,4 +1,4 @@
-use crate::language::{rust_language, RUST_COLOR};
+use crate::language::rust_language;
 use ring_color::ColorLabel;
 use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::{Tag, Tagged};
@@ -6,6 +6,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use crate::CargoCrate;
+use crate::constants::RUST_COLOR;
 
 /// Represents a rust source file
 #[derive(Clone, Debug)]
