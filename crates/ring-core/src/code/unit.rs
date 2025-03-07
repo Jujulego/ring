@@ -1,7 +1,7 @@
 use crate::code::Language;
 use std::path::Path;
 
-/// Represents a file containing code
+/// Object representing a file containing code
 pub trait CodeUnit {
     /// Returns code unit's language
     fn language(&self) -> &Language;
