@@ -25,9 +25,6 @@ mod tests {
     mock! {
         TestUnit {}
 
-        impl Clone for TestUnit {
-            fn clone(&self) -> Self;
-        }
         impl Unit for TestUnit {
             fn language(&self) -> &Language;
             fn path(&self) -> &Path;

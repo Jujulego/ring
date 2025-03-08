@@ -35,7 +35,7 @@ impl<I: Identifier> CachedIdentifier<I> {
 }
 
 impl<I: Identifier> Identifier for CachedIdentifier<I>
-where 
+where
     I::Unit: Clone,
 {
     type Unit = I::Unit;
@@ -44,8 +44,10 @@ where
     fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<Self::Output>> {
         if let Some(cached) = self.cache.borrow().get(path)? {
             debug!("return cached unit for {}", path.display());
-            Ok(Some(cached.clone()))
-        } else if let Some(unit) = self.identifier.identify_unit(path)? {
+            return Ok(Some(cached.clone()));
+        }
+
+        if let Some(unit) = self.identifier.identify_unit(path)? {
             let unit = Rc::new(unit.borrow().clone());
 
             debug!("cache unit at {}", path.display());
@@ -55,5 +57,66 @@ where
         } else {
             Ok(None)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::units::{Language, Unit};
+    use mockall::mock;
+
+    #[derive(Clone, Debug)]
+    struct TestUnit {}
+
+    impl Unit for TestUnit {
+        fn language(&self) -> &Language {
+            unimplemented!();
+        }
+
+        fn path(&self) -> &Path {
+            unimplemented!();
+        }
+    }
+
+    mock! {
+        TestIdentifier {}
+
+        impl Identifier for TestIdentifier {
+            type Unit = TestUnit;
+            type Output = TestUnit;
+
+            fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<TestUnit>>;
+        }
+    }
+
+    #[test]
+    fn it_should_call_successful_wrapped_identifier_once() {
+        let mut identifier = MockTestIdentifier::new();
+        identifier.expect_identify_unit()
+            .once()
+            .returning(|_| Ok(Some(TestUnit {})));
+
+        let cached = CachedIdentifier::new(identifier);
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+    }
+
+    #[test]
+    fn it_should_call_empty_wrapped_identifier_three_times() {
+        let mut identifier = MockTestIdentifier::new();
+        identifier.expect_identify_unit()
+            .times(3)
+            .returning(|_| Ok(None));
+
+        let mut cached = CachedIdentifier::new(identifier);
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
+
+        cached.identifier.checkpoint();
     }
 }
