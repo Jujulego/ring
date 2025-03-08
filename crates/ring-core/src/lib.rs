@@ -3,7 +3,7 @@ mod code_unit;
 mod process_unit;
 mod ring_module;
 pub mod cache;
-pub mod unit;
+pub mod units;
 
 pub use code_language::CodeLanguage;
 pub use code_unit::{CodeUnit, CodeUnitDetector, CombinedCodeUnitDetector};

@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use ring_core::unit::{Language, Unit};
+use ring_core::units::{Language, Unit};
 use crate::constants::RUST_LANGUAGE;
 
 /// Represents a file written in rust
