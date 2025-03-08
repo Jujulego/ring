@@ -39,7 +39,7 @@ impl<V> PathCache<V> {
     /// cache.insert("/toto", 42).unwrap();
     /// assert_eq!(cache.get("/toto").unwrap(), Some(&42));
     /// ```
-    pub fn get<P: AsRef<Path>>(&mut self, path: P) -> io::Result<Option<&V>> {
+    pub fn get<P: AsRef<Path>>(&self, path: P) -> io::Result<Option<&V>> {
         Ok(self.cache.get(&std::path::absolute(path)?))
     }
 

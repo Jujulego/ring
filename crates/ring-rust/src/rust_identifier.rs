@@ -1,8 +1,8 @@
+use crate::rust_unit::RustUnit;
+use ring_core::units::Identifier;
 use std::ffi::OsStr;
 use std::path::Path;
 use tracing::{info, instrument};
-use ring_core::units::Identifier;
-use crate::rust_unit::RustUnit;
 
 pub struct RustIdentifier();
 
@@ -21,6 +21,7 @@ impl Default for RustIdentifier {
 
 impl Identifier for RustIdentifier {
     type Unit = RustUnit;
+    type Output = RustUnit;
 
     #[instrument(name = "rust.identify_unit", skip(self, path))]
     fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<RustUnit>> {
@@ -35,9 +36,9 @@ impl Identifier for RustIdentifier {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use ring_core::units::Unit;
     use super::*;
+    use ring_core::units::Unit;
+    use std::path::PathBuf;
 
     #[test]
     fn it_should_identify_as_rust_unit() {
