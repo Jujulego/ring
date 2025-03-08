@@ -94,14 +94,16 @@ mod tests {
     fn it_should_call_successful_wrapped_identifier_once() {
         let mut identifier = MockTestIdentifier::new();
         identifier.expect_identify_unit()
-            .once()
+            .times(1)
             .returning(|_| Ok(Some(TestUnit {})));
 
-        let cached = CachedIdentifier::new(identifier);
+        let mut cached = CachedIdentifier::new(identifier);
 
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+
+        cached.identifier.checkpoint();
     }
 
     #[test]
@@ -116,6 +118,52 @@ mod tests {
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
         assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_none());
+
+        cached.identifier.checkpoint();
+    }
+
+    #[test]
+    fn it_should_reset_given_path_cache_entry() {
+        let mut identifier = MockTestIdentifier::new();
+        identifier.expect_identify_unit()
+            .times(3)
+            .returning(|_| Ok(Some(TestUnit {})));
+
+        let mut cached = CachedIdentifier::new(identifier);
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/tata.rs")).unwrap().is_some());
+        cached.reset("/test/toto.rs");
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/tata.rs")).unwrap().is_some());
+
+        cached.identifier.checkpoint();
+    }
+
+    #[test]
+    fn it_should_ignore_reset_error() {
+        let identifier = MockTestIdentifier::new();
+
+        let cached = CachedIdentifier::new(identifier);
+        cached.reset("");
+    }
+
+    #[test]
+    fn it_should_reset_all_cache_entries() {
+        let mut identifier = MockTestIdentifier::new();
+        identifier.expect_identify_unit()
+            .times(4)
+            .returning(|_| Ok(Some(TestUnit {})));
+
+        let mut cached = CachedIdentifier::new(identifier);
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/tata.rs")).unwrap().is_some());
+        cached.reset_all();
+
+        assert!(cached.identify_unit(Path::new("/test/toto.rs")).unwrap().is_some());
+        assert!(cached.identify_unit(Path::new("/test/tata.rs")).unwrap().is_some());
 
         cached.identifier.checkpoint();
     }
