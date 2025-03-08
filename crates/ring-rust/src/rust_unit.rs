@@ -7,7 +7,7 @@ use crate::constants::RUST_LANGUAGE;
 pub struct RustUnit(PathBuf);
 
 impl RustUnit {
-    fn new(path: PathBuf) -> RustUnit {
+    pub(crate) fn new(path: PathBuf) -> RustUnit {
         RustUnit(path)
     }
 }
