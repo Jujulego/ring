@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.93"
+rgb = "0.8.50"
 sysinfo = "0.33.0"
 
 ring-color = { path = "../ring-color" }

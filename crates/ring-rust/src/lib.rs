@@ -1,6 +1,9 @@
-mod language;
+mod constants;
 mod crates;
+mod language;
 mod processes;
+mod rust_unit;
+mod rust_identifier;
 
 pub use crate::crates::{CargoCrate, CargoCrateDetector, CargoManifest, SourceFile, SourceFileDetector};
 pub use crate::processes::{CargoProcess, CargoProcessDetector};

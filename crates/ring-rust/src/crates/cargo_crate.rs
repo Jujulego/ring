@@ -1,10 +1,11 @@
-use crate::language::{rust_language, RUST_COLOR};
+use crate::language::rust_language;
 use crate::CargoManifest;
 use ring_core::{CodeLanguage, CodeUnit};
 use ring_tag::{Tag, Tagged};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use ring_color::ColorLabel;
+use crate::constants::RUST_COLOR;
 
 #[derive(Clone, Debug)]
 pub struct CargoCrate {
