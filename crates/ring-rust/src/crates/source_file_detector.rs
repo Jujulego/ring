@@ -8,6 +8,7 @@ use tracing::{info, instrument, trace};
 use ring_core::{CodeUnit, CodeUnitDetector};
 
 /// Detector for script files
+#[deprecated(note = "Please use `ring-rust::RustIdentifier` instead")]
 #[derive(Clone, Debug)]
 pub struct SourceFileDetector {
     crate_detector: Rc<CargoCrateDetector>,

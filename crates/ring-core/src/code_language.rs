@@ -5,6 +5,7 @@ use ring_tag::Tag;
 // Code Language
 ////////////////////////////////////////////////////////////////////////////////
 
+#[deprecated(note = "Please use `ring-core::units::Language` instead")]
 #[derive(Clone, Debug)]
 pub struct CodeLanguage {
     name: String,

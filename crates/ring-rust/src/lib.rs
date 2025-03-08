@@ -7,6 +7,8 @@ mod rust_identifier;
 
 pub use crate::crates::{CargoCrate, CargoCrateDetector, CargoManifest, SourceFile, SourceFileDetector};
 pub use crate::processes::{CargoProcess, CargoProcessDetector};
+pub use rust_identifier::RustIdentifier;
+pub use rust_unit::RustUnit;
 use ring_core::{CodeUnitDetector, CombinedCodeUnitDetector, ProcessUnitDetector, RingModule};
 use std::rc::Rc;
 

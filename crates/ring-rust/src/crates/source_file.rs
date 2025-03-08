@@ -9,6 +9,7 @@ use crate::CargoCrate;
 use crate::constants::RUST_COLOR;
 
 /// Represents a rust source file
+#[deprecated(note = "Please use `ring-rust::RustUnit` instead")]
 #[derive(Clone, Debug)]
 pub struct SourceFile {
     path: PathBuf,

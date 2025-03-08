@@ -8,6 +8,7 @@ use std::rc::Rc;
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines a code unit.
+#[deprecated(note = "Please use `ring-core::units::Unit` instead")]
 pub trait CodeUnit: Tagged {
     /// Returns unit's language
     fn language(&self) -> CodeLanguage;
@@ -31,6 +32,7 @@ pub trait CodeUnit: Tagged {
 // Code Unit Detector
 ////////////////////////////////////////////////////////////////////////////////
 
+#[deprecated(note = "Please use `ring-core::units::Identifier` instead")]
 pub trait CodeUnitDetector {
     fn name(&self) -> &str;
     
