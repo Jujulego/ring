@@ -38,10 +38,9 @@ impl<I: Identifier> Identifier for CachedIdentifier<I>
 where
     I::Unit: Clone,
 {
-    type Unit = I::Unit;
-    type Output = Rc<I::Unit>;
+    type Unit = Rc<I::Unit>;
 
-    fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<Self::Output>> {
+    fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<Self::Unit>> {
         if let Some(cached) = self.cache.borrow().get(path)? {
             debug!("return cached unit for {}", path.display());
             return Ok(Some(cached.clone()));
@@ -84,7 +83,6 @@ mod tests {
 
         impl Identifier for TestIdentifier {
             type Unit = TestUnit;
-            type Output = TestUnit;
 
             fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<TestUnit>>;
         }

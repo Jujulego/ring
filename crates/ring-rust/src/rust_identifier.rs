@@ -21,7 +21,6 @@ impl Default for RustIdentifier {
 
 impl Identifier for RustIdentifier {
     type Unit = RustUnit;
-    type Output = RustUnit;
 
     #[instrument(name = "rust.identify_unit", skip(self, path))]
     fn identify_unit(&self, path: &Path) -> anyhow::Result<Option<RustUnit>> {
