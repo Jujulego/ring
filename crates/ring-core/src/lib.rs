@@ -8,5 +8,6 @@ mod combined_identifier;
 
 pub use code_language::CodeLanguage;
 pub use code_unit::{CodeUnit, CodeUnitDetector, CombinedCodeUnitDetector};
+pub use combined_identifier::CombinedIdentifier;
 pub use process_unit::{ProcessUnit, ProcessUnitDetector, CombinedProcessUnitDetector};
 pub use ring_module::RingModule;

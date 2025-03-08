@@ -14,7 +14,11 @@ impl CombinedIdentifier {
         CombinedIdentifier { fns: Vec::new() }
     }
 
-    pub fn add<U: Unit + 'static, I: Identifier<Unit = Rc<U>> + 'static>(&mut self, identifier: I) {
+    pub fn add<U, I>(&mut self, identifier: I)
+    where
+        U: Unit + 'static,
+        I: Identifier<Unit = Rc<U>> + 'static
+    {
         self.fns.push(Box::new(move |path| identifier.identify_unit(path)
             .map(|opt| opt
                 .map(|unit| unit as Rc<dyn Unit>)
