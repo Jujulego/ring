@@ -23,7 +23,7 @@
     "@swc/helpers": "0.5.15",
     "chalk": "5.4.1",
     "chalk-template": "1.1.0",
-    "kyrielle": "2.2.1",
+    "kyrielle": "2.2.2",
     "yargs": "17.7.2",
     "yocto-spinner": "0.2.1"
   },
