@@ -12,3 +12,4 @@ component_management:
       name: cli
       paths:
         - crates/ring-cli/**
+        - crates/ring-cli-list/**
