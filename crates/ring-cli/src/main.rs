@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
 
     // Setup tracing
     setup_tracing(&args);
-    
+
     Ok(())
 }
 
