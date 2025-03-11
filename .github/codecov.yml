@@ -12,21 +12,3 @@ component_management:
       name: cli
       paths:
         - crates/ring-cli/**
-        - crates/ring-cli-table/**
-
-    - component_id: core
-      name: core
-      paths:
-        - crates/ring-core/**
-
-    - component_id: modules
-      name: modules
-      paths:
-        - crates/ring-rust/**
-        - crates/ring-web/**
-
-    - component_id: utils
-      name: utils
-      paths:
-        - crates/ring-color/**
-        - crates/ring-tag/**
