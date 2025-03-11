@@ -59,31 +59,52 @@ impl lscolors::Colorable for ListFilesItem {
 
 /// Iterates over files within given path.
 /// If the given path is a file, return this file.
-pub struct ListFilesIterator {
+pub struct FilesIterator {
     content: ListFilesContent,
     show_all: bool,
 }
 
-impl ListFilesIterator {
-    pub fn new(path: PathBuf) -> io::Result<ListFilesIterator> {
+impl FilesIterator {
+    /// Create a new files iterator, using given path.
+    /// 
+    /// Can fail if the given path is a directory. See [`fs::read_dir`] for possible error cause.
+    ///
+    /// # Example
+    /// ```
+    /// use ring_cli_list::FilesIterator;
+    ///
+    /// let files = FilesIterator::new(".".into()).unwrap();
+    /// ```
+    pub fn new(path: PathBuf) -> io::Result<FilesIterator> {
         let content = if path.is_dir() {
             ListFilesContent::Contents(fs::read_dir(path)?)
         } else {
             ListFilesContent::Path(path)
         };
 
-        Ok(ListFilesIterator {
+        Ok(FilesIterator {
             content,
             show_all: false,
         })
     }
 
+    /// Enables show all mode. Hidden file will no longer be filtered.
+    /// A "hidden" file is a file with a name starting by a "."
+    /// 
+    /// # Example
+    /// ```
+    /// use ring_cli_list::FilesIterator;
+    ///
+    /// let mut files = FilesIterator::new(".".into()).unwrap();
+    /// files.enable_show_all();
+    /// ```
+    #[inline]
     pub fn enable_show_all(&mut self) {
         self.show_all = true;
     }
 }
 
-impl Iterator for ListFilesIterator {
+impl Iterator for FilesIterator {
     type Item = io::Result<ListFilesItem>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -124,7 +145,7 @@ mod tests {
 
     #[test]
     fn it_should_list_not_hidden_files() {
-        let files = ListFilesIterator::new(".".into()).unwrap();
+        let files = FilesIterator::new(".".into()).unwrap();
         let files = files
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
@@ -136,7 +157,7 @@ mod tests {
 
     #[test]
     fn it_should_list_all_files() {
-        let mut files = ListFilesIterator::new(".".into()).unwrap();
+        let mut files = FilesIterator::new(".".into()).unwrap();
         files.enable_show_all();
 
         let files = files

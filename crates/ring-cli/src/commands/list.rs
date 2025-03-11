@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use tracing::{debug, instrument};
-use ring_cli_list::ListFilesIterator;
+use ring_cli_list::FilesIterator;
 
 /// Prepare list command parsing
 pub fn setup() -> Command {
@@ -30,7 +30,7 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Print files
     let ls_colors = lscolors::LsColors::from_env().unwrap_or_default();
-    let mut files = ListFilesIterator::new(path)?;
+    let mut files = FilesIterator::new(path)?;
     
     if args.get_flag("all") {
         files.enable_show_all();
