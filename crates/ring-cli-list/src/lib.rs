@@ -114,3 +114,36 @@ impl Iterator for ListFilesIterator {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_list_not_hidden_files() {
+        let files = ListFilesIterator::new(".".into()).unwrap();
+        let files = files
+            .filter_map(Result::ok)
+            .filter_map(|item| item.file_name().map(String::from))
+            .collect::<Vec<_>>();
+
+        assert!(files.contains(&"Cargo.toml".into()));
+        assert!(!files.contains(&".github".into()));
+    }
+
+    #[test]
+    fn it_should_list_all_files() {
+        let mut files = ListFilesIterator::new(".".into()).unwrap();
+        files.enable_show_all();
+        
+        let files = files
+            .filter_map(Result::ok)
+            .filter_map(|item| item.file_name().map(String::from))
+            .collect::<Vec<_>>();
+
+        dbg!(&files);
+        
+        assert!(files.contains(&"Cargo.toml".into()));
+        assert!(files.contains(&".github".into()));
+    }
+}
