@@ -1,3 +1,5 @@
+mod commands;
+
 use clap::{arg, ArgAction, ArgMatches, Command};
 use std::io;
 use tracing::Level;
@@ -10,6 +12,10 @@ fn main() -> anyhow::Result<()> {
     let args = Command::new("ring")
         .version(env!("RING_CLI_VERSION"))
         .propagate_version(true)
+        .subcommand_required(true)
+        .subcommands([
+            commands::list::setup()
+        ])
         .arg(arg!(-v --verbose)
             .global(true)
             .required(false)
@@ -18,8 +24,12 @@ fn main() -> anyhow::Result<()> {
 
     // Setup tracing
     setup_tracing(&args);
-
-    Ok(())
+    
+    // Handle subcommands
+    match args.subcommand() {
+        Some(("list", args)) => commands::list::handle(args),
+        _ => unreachable!(),
+    }
 }
 
 fn setup_sentry() -> sentry::ClientInitGuard {
