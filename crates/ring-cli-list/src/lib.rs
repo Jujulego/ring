@@ -10,17 +10,20 @@ enum ListFilesContent {
 
 pub struct ListFilesItem {
     path: PathBuf,
-    metadata: fs::Metadata,
+    metadata: Option<fs::Metadata>,
 }
 
 impl ListFilesItem {
     fn from_path(path: PathBuf) -> io::Result<Self> {
-        let metadata = fs::metadata(&path)?;
+        let metadata = fs::metadata(&path).ok();
         Ok(ListFilesItem { path, metadata })
     }
 
     fn from_entry(entry: fs::DirEntry) -> io::Result<Self> {
-        Ok(ListFilesItem { path: entry.path(), metadata: entry.metadata()? })
+        Ok(ListFilesItem {
+            path: entry.path(),
+            metadata: entry.metadata().ok()
+        })
     }
 
     pub fn path(&self) -> &Path {
@@ -31,8 +34,8 @@ impl ListFilesItem {
         self.path.file_name().and_then(OsStr::to_str)
     }
 
-    pub fn metadata(&self) -> &fs::Metadata {
-        &self.metadata
+    pub fn metadata(&self) -> Option<&fs::Metadata> {
+        self.metadata.as_ref()
     }
 }
 
@@ -46,11 +49,11 @@ impl lscolors::Colorable for ListFilesItem {
     }
 
     fn file_type(&self) -> Option<fs::FileType> {
-        Some(self.metadata().file_type())
+        self.metadata().map(fs::Metadata::file_type)
     }
 
     fn metadata(&self) -> Option<fs::Metadata> {
-        Some(self.metadata.clone())
+        self.metadata.clone()
     }
 }
 
@@ -128,22 +131,20 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert!(files.contains(&"Cargo.toml".into()));
-        assert!(!files.contains(&".github".into()));
+        assert!(!files.contains(&".hidden".into()));
     }
 
     #[test]
     fn it_should_list_all_files() {
         let mut files = ListFilesIterator::new(".".into()).unwrap();
         files.enable_show_all();
-        
+
         let files = files
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
-
-        dbg!(&files);
         
         assert!(files.contains(&"Cargo.toml".into()));
-        assert!(files.contains(&".github".into()));
+        assert!(files.contains(&".hidden".into()));
     }
 }
