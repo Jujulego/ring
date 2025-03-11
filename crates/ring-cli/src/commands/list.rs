@@ -2,6 +2,7 @@ use std::env;
 use std::path::PathBuf;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use tracing::{debug, instrument};
+use ring_cli_list::ListFilesIterator;
 
 /// Prepare list command parsing
 pub fn setup() -> Command {
@@ -19,12 +20,25 @@ pub fn setup() -> Command {
 #[instrument(name = "cli.list", skip_all)]
 pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
-    let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
-        .unwrap_or(&current_dir);
+        .cloned()
+        .unwrap_or(env::current_dir()?);
 
-    let show_all = args.get_flag("all");
-    debug!(message = "detected options", all = show_all);
+    debug!(message = "detected options",
+        options.all = args.get_flag("all")
+    );
 
+    // Print files
+    let mut files = ListFilesIterator::new(path)?;
+    
+    if args.get_flag("all") {
+        files.enable_show_all();
+    }
+    
+    for file in files {
+        let file = file?;
+        println!("{}", file.file_name().unwrap().to_str().unwrap_or_default());
+    }
+    
     Ok(())
 }
