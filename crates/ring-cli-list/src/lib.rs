@@ -66,7 +66,7 @@ pub struct FilesIterator {
 
 impl FilesIterator {
     /// Create a new files iterator, using given path.
-    /// 
+    ///
     /// Can fail if the given path is a directory. See [`fs::read_dir`] for possible error cause.
     ///
     /// # Example
@@ -90,7 +90,7 @@ impl FilesIterator {
 
     /// Enables show all mode. Hidden file will no longer be filtered.
     /// A "hidden" file is a file with a name starting by a "."
-    /// 
+    ///
     /// # Example
     /// ```
     /// use ring_cli_list::FilesIterator;
@@ -151,8 +151,7 @@ mod tests {
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
 
-        assert!(files.contains(&"Cargo.toml".into()));
-        assert!(!files.contains(&".hidden".into()));
+        assert_eq!(files, vec!["Cargo.toml".to_string(), "src".to_string()]);
     }
 
     #[test]
@@ -164,8 +163,20 @@ mod tests {
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
-        
-        assert!(files.contains(&"Cargo.toml".into()));
-        assert!(files.contains(&".hidden".into()));
+
+        assert_eq!(files, vec![".hidden".to_string(), "Cargo.toml".to_string(), "src".to_string()]);
+    }
+
+    #[test]
+    fn it_should_only_list_given_file() {
+        let mut files = FilesIterator::new(".hidden".into()).unwrap();
+        files.enable_show_all();
+
+        let files = files
+            .filter_map(Result::ok)
+            .filter_map(|item| item.file_name().map(String::from))
+            .collect::<Vec<_>>();
+
+        assert_eq!(files, vec![".hidden".to_string()]);
     }
 }
