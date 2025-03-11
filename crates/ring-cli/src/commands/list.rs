@@ -29,6 +29,7 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     );
 
     // Print files
+    let ls_colors = lscolors::LsColors::from_env().unwrap_or_default();
     let mut files = ListFilesIterator::new(path)?;
     
     if args.get_flag("all") {
@@ -37,7 +38,11 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     
     for file in files {
         let file = file?;
-        println!("{}", file.file_name().unwrap().to_str().unwrap_or_default());
+        let style = ls_colors.style_for(&file)
+            .map(lscolors::Style::to_crossterm_style)
+            .unwrap_or_default();
+        
+        println!("{}", style.apply(file.file_name().unwrap_or_default()));
     }
     
     Ok(())
