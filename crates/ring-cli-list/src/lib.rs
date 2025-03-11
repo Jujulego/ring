@@ -146,11 +146,14 @@ mod tests {
     #[test]
     fn it_should_list_not_hidden_files() {
         let files = FilesIterator::new(".".into()).unwrap();
-        let files = files
+        
+        let mut files = files
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
 
+        files.sort();
+        
         assert_eq!(files, vec!["Cargo.toml".to_string(), "src".to_string()]);
     }
 
@@ -159,10 +162,12 @@ mod tests {
         let mut files = FilesIterator::new(".".into()).unwrap();
         files.enable_show_all();
 
-        let files = files
+        let mut files = files
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
+        
+        files.sort();
 
         assert_eq!(files, vec![".hidden".to_string(), "Cargo.toml".to_string(), "src".to_string()]);
     }
@@ -172,10 +177,12 @@ mod tests {
         let mut files = FilesIterator::new(".hidden".into()).unwrap();
         files.enable_show_all();
 
-        let files = files
+        let mut files = files
             .filter_map(Result::ok)
             .filter_map(|item| item.file_name().map(String::from))
             .collect::<Vec<_>>();
+
+        files.sort();
 
         assert_eq!(files, vec![".hidden".to_string()]);
     }
