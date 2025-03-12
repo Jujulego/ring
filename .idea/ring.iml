@@ -19,6 +19,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-list/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-language/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-rust/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-modules/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
