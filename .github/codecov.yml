@@ -13,3 +13,8 @@ component_management:
       paths:
         - crates/ring-cli/**
         - crates/ring-cli-list/**
+
+    - component_id: core
+      name: core
+      paths:
+        - crates/ring-core-language/**
