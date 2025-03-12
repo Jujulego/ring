@@ -1,4 +1,5 @@
-use std::env;
+use std::{env, io};
+use std::io::IsTerminal;
 use std::path::PathBuf;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use tracing::{debug, instrument};
@@ -38,11 +39,16 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     
     for file in files {
         let file = file?;
-        let style = ls_colors.style_for(&file)
-            .map(lscolors::Style::to_crossterm_style)
-            .unwrap_or_default();
         
-        println!("{}", style.apply(file.file_name().unwrap_or_default()));
+        if io::stdout().is_terminal() {
+            let style = ls_colors.style_for(&file)
+                .map(lscolors::Style::to_crossterm_style)
+                .unwrap_or_default();
+
+            println!("{}", style.apply(file.file_name().unwrap_or_default()));
+        } else {
+            println!("{}", file.file_name().unwrap_or_default());
+        }
     }
     
     Ok(())
