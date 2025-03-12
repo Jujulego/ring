@@ -1,9 +1,12 @@
+use crossterm::style::{style, Color, Stylize};
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use ring_cli_list::FilesIterator;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
 use tracing::instrument;
+use ring_core::detect_language;
+use ring_core_language::Language;
 
 /// Prepare list command parsing
 pub fn setup() -> Command {
@@ -35,17 +38,38 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     
     for file in files {
         let file = file?;
+        let file_name = file.file_name().unwrap_or_default();
+        let language = detect_language(file.path());
         
         if io::stdout().is_terminal() {
-            let style = ls_colors.style_for(&file)
+            let file_name = ls_colors.style_for(&file)
                 .map(lscolors::Style::to_crossterm_style)
+                .unwrap_or_default()
+                .apply(file_name);
+
+            let language = language
+                .map(|l| {
+                    if let Some(color) = l.color() {
+                        let color = Color::Rgb { r: color.r, g: color.g, b: color.b };
+                        style(l).with(color)
+                    } else {
+                        style(l)
+                    }
+                })
+                .unwrap_or_else(|| style(unknown_language()).dark_grey());
+
+            println!("{file_name} {language}");
+        } else {
+            let language = language.map(|l| l.name().to_string())
                 .unwrap_or_default();
 
-            println!("{}", style.apply(file.file_name().unwrap_or_default()));
-        } else {
-            println!("{}", file.file_name().unwrap_or_default());
+            println!("{file_name} {language}");
         }
     }
     
     Ok(())
+}
+
+pub fn unknown_language() -> Language {
+    Language::new("unknown".to_string())
 }
