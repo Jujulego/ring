@@ -64,7 +64,7 @@ impl Language {
     /// assert_eq!(language.color(), None);
     ///
     /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
-    /// assert_eq!(language.color(), Some(Rgb::new(0x00, 0xff, 0x00)));
+    /// assert_eq!(language.color(), Some(&Rgb::new(0x00, 0xff, 0x00)));
     /// ```
     #[inline]
     pub fn color(&self) -> Option<&Rgb<u8>> {
