@@ -949,6 +949,9 @@ dependencies = [
 [[package]]
 name = "ring-module-rust"
 version = "0.1.0"
+dependencies = [
+ "ring-core-language",
+]
 
 [[package]]
 name = "rustc-demangle"

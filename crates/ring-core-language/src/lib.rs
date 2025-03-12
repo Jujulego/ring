@@ -77,3 +77,12 @@ impl Language {
         self.color.as_ref()
     }
 }
+
+impl PartialEq for Language {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.name() == other.name()
+    }
+}
+
+impl Eq for Language {}
