@@ -924,8 +924,11 @@ version = "0.4.0"
 dependencies = [
  "anyhow",
  "clap",
+ "crossterm",
  "lscolors",
  "ring-cli-list",
+ "ring-core",
+ "ring-core-language",
  "sentry",
  "tracing",
  "tracing-subscriber",
@@ -942,6 +945,10 @@ dependencies = [
 [[package]]
 name = "ring-core"
 version = "0.1.0"
+dependencies = [
+ "ring-core-language",
+ "ring-module-rust",
+]
 
 [[package]]
 name = "ring-core-language"

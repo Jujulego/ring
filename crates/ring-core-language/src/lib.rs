@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use std::path::Path;
 use rgb::Rgb;
 
@@ -86,3 +87,9 @@ impl PartialEq for Language {
 }
 
 impl Eq for Language {}
+
+impl Display for Language {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.name.fmt(f)
+    }
+}
