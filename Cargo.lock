@@ -947,6 +947,7 @@ name = "ring-core"
 version = "0.1.0"
 dependencies = [
  "ring-core-language",
+ "ring-core-modules",
  "ring-module-rust",
 ]
 
@@ -960,12 +961,16 @@ dependencies = [
 [[package]]
 name = "ring-core-modules"
 version = "0.1.0"
+dependencies = [
+ "ring-core-language",
+]
 
 [[package]]
 name = "ring-module-rust"
 version = "0.1.0"
 dependencies = [
  "ring-core-language",
+ "ring-core-modules",
  "tracing",
 ]
 
