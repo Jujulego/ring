@@ -1,4 +1,10 @@
+use std::path::Path;
 use rgb::Rgb;
+
+/// Object able to detect language of a given path
+pub trait DetectLanguage {
+    fn detect_language(&self, path: &Path) -> Option<Language>;
+}
 
 /// Represents a language
 #[derive(Clone, Debug)]
