@@ -1,6 +1,7 @@
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::{fs, io, mem};
+use tracing::trace;
 
 enum ListFilesContent {
     Path(PathBuf),
@@ -77,6 +78,7 @@ impl FilesIterator {
     /// ```
     pub fn new(path: PathBuf) -> io::Result<FilesIterator> {
         let content = if path.is_dir() {
+            trace!("reading directory {}", path.display());
             ListFilesContent::Contents(fs::read_dir(path)?)
         } else {
             ListFilesContent::Path(path)

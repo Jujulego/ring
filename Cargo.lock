@@ -921,6 +921,7 @@ name = "ring-cli-list"
 version = "0.1.0"
 dependencies = [
  "lscolors",
+ "tracing",
 ]
 
 [[package]]
