@@ -940,6 +940,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-core"
+version = "0.1.0"
+
+[[package]]
 name = "ring-core-language"
 version = "0.1.0"
 dependencies = [

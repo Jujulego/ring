@@ -35,15 +35,17 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     
     for file in files {
         let file = file?;
+        let file_name = file.file_name().unwrap_or_default();
         
         if io::stdout().is_terminal() {
-            let style = ls_colors.style_for(&file)
+            let file_name = ls_colors.style_for(&file)
                 .map(lscolors::Style::to_crossterm_style)
-                .unwrap_or_default();
+                .unwrap_or_default()
+                .apply(file_name);
 
-            println!("{}", style.apply(file.file_name().unwrap_or_default()));
+            println!("{file_name}");
         } else {
-            println!("{}", file.file_name().unwrap_or_default());
+            println!("{file_name}");
         }
     }
     
