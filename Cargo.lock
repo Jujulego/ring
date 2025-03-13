@@ -926,7 +926,7 @@ dependencies = [
  "clap",
  "crossterm",
  "lscolors",
- "ring-cli-list",
+ "ring-cli-fs",
  "ring-core",
  "ring-core-language",
  "sentry",
@@ -935,7 +935,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-cli-list"
+name = "ring-cli-fs"
 version = "0.1.0"
 dependencies = [
  "lscolors",

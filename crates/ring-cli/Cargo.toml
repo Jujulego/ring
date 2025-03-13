@@ -15,6 +15,6 @@ sentry = { version = "0.36.0", features = ["anyhow", "tracing"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 
-ring-cli-list = { path = "../ring-cli-list" }
+ring-cli-fs = { path = "../ring-cli-fs" }
 ring-core = { path = "../ring-core", features = ["rust"] }
 ring-core-language = { path = "../ring-core-language" }

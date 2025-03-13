@@ -1,6 +1,6 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::{style, Color, Stylize};
-use ring_cli_list::FilesIterator;
+use ring_cli_fs::FilesIterator;
 use ring_core::Core;
 use ring_core_language::Language;
 use std::io::IsTerminal;
