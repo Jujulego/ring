@@ -18,10 +18,10 @@ impl Core {
     /// let core = Core::new();
     /// ```
     pub fn new() -> Self {
-        let mut modules: Vec<Box<dyn Module>> = Vec::new();
-
-        #[cfg(feature = "rust")]
-        modules.push(Box::new(ring_module_rust::RustModule::new()));
+        let modules: Vec<Box<dyn Module>> = vec![
+            #[cfg(feature = "rust")]
+            Box::new(ring_module_rust::RustModule::new())
+        ];
 
         Core { modules }
     }
@@ -48,5 +48,11 @@ impl Core {
             .flat_map(|module| module.language_detectors())
             .filter_map(|detector| detector.detect_language(path))
             .next()
+    }
+}
+
+impl Default for Core {
+    fn default() -> Self {
+        Self::new()
     }
 }
