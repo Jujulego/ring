@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
         .subcommands([
             commands::list::setup()
         ])
-        .arg(arg!(-v --verbose)
+        .arg(arg!(-v --verbose "Prints more logs")
             .global(true)
             .required(false)
             .action(ArgAction::Count))
