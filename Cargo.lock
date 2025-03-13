@@ -926,7 +926,7 @@ dependencies = [
  "clap",
  "crossterm",
  "lscolors",
- "ring-cli-list",
+ "ring-cli-fs",
  "ring-core",
  "ring-core-language",
  "sentry",
@@ -935,7 +935,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-cli-list"
+name = "ring-cli-fs"
 version = "0.1.0"
 dependencies = [
  "lscolors",
@@ -947,6 +947,7 @@ name = "ring-core"
 version = "0.1.0"
 dependencies = [
  "ring-core-language",
+ "ring-core-modules",
  "ring-module-rust",
 ]
 
@@ -958,10 +959,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-core-modules"
+version = "0.1.0"
+dependencies = [
+ "ring-core-language",
+]
+
+[[package]]
 name = "ring-module-rust"
 version = "0.1.0"
 dependencies = [
  "ring-core-language",
+ "ring-core-modules",
  "tracing",
 ]
 

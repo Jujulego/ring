@@ -72,7 +72,7 @@ impl FilesIterator {
     ///
     /// # Example
     /// ```
-    /// use ring_cli_list::FilesIterator;
+    /// use ring_cli_fs::FilesIterator;
     ///
     /// let files = FilesIterator::new(".".into()).unwrap();
     /// ```
@@ -95,7 +95,7 @@ impl FilesIterator {
     ///
     /// # Example
     /// ```
-    /// use ring_cli_list::FilesIterator;
+    /// use ring_cli_fs::FilesIterator;
     ///
     /// let mut files = FilesIterator::new(".".into()).unwrap();
     /// files.enable_show_all();

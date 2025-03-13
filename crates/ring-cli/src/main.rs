@@ -1,6 +1,7 @@
 mod commands;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
+use ring_core::Core;
 use std::io;
 use tracing::Level;
 use tracing_subscriber::prelude::*;
@@ -26,8 +27,10 @@ fn main() -> anyhow::Result<()> {
     setup_tracing(&args);
     
     // Handle subcommands
+    let core = Core::new();
+    
     match args.subcommand() {
-        Some(("list", args)) => commands::list::handle(args),
+        Some(("list", args)) => commands::list::handle(&core, args),
         _ => unreachable!(),
     }
 }

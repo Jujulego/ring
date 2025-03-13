@@ -1,5 +1,5 @@
 [package]
-name = "ring-cli-list"
+name = "ring-cli-fs"
 version = "0.1.0"
 edition = "2024"
 

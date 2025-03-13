@@ -1,12 +1,12 @@
-use crossterm::style::{style, Color, Stylize};
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
-use ring_cli_list::FilesIterator;
+use crossterm::style::{style, Color, Stylize};
+use ring_cli_fs::FilesIterator;
+use ring_core::Core;
+use ring_core_language::Language;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
 use tracing::instrument;
-use ring_core::detect_language;
-use ring_core_language::Language;
 
 /// Prepare list command parsing
 pub fn setup() -> Command {
@@ -22,7 +22,7 @@ pub fn setup() -> Command {
 
 /// Handle list command execution
 #[instrument(name = "cli.list", skip_all, fields(options.all = args.get_flag("all")))]
-pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
+pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
     let path = args.get_one::<PathBuf>("path")
         .cloned()
@@ -39,7 +39,7 @@ pub fn handle(args: &ArgMatches) -> anyhow::Result<()> {
     for file in files {
         let file = file?;
         let file_name = file.file_name().unwrap_or_default();
-        let language = detect_language(file.path());
+        let language = core.detect_language(file.path());
         
         if io::stdout().is_terminal() {
             let file_name = ls_colors.style_for(&file)
