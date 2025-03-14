@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
-use crossterm::style::{Color, Stylize};
+use crossterm::style::{Color, ContentStyle, Stylize};
 use ring_cli_fs::FilesIterator;
 use ring_cli_list::List;
 use ring_core::Core;
@@ -45,29 +45,30 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
         
         if io::stdout().is_terminal() {
             // for humans : colored !
-            let file_name = ls_colors.style_for(&file)
+            let file_style = ls_colors.style_for(&file)
                 .map(lscolors::Style::to_crossterm_style)
-                .unwrap_or_default()
-                .apply(file_name);
+                .unwrap_or_default();
 
-            let language = language
+            let language_style = language.as_ref()
                 .map(|language| {
-                    let name = language.name().to_string();
+                    let mut style = ContentStyle::new();
+                    style.foreground_color = language.color().map(|color| Color::Rgb { r: color.r, g: color.g, b: color.b });
 
-                    if let Some(color) = language.color() {
-                        name.with(Color::Rgb { r: color.r, g: color.g, b: color.b })
-                    } else {
-                        name.stylize()
-                    }
+                    style
                 })
-                .unwrap_or_else(|| "<unknown>".to_string().dark_grey());
+                .unwrap_or_default();
 
-            list.push([file_name, language]);
+            list.push(vec![
+                file_style.apply(file_name).to_string(),
+                language.map(|language| language_style.apply(language).to_string())
+                    .unwrap_or_else(|| "<unknown>".dark_grey().to_string())
+            ]);
         } else {
             // for machines
-            list.push([
+            list.push(vec![
                 file_name,
-                language.map(|l| l.name().to_string()).unwrap_or_else(|| "<unknown>".to_string()),
+                language.map(|language| language.to_string())
+                    .unwrap_or_else(|| "<unknown>".to_string()),
             ]);
         }
     }

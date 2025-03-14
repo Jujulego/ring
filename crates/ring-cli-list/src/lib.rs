@@ -11,8 +11,8 @@ use textwrap::core::display_width;
 /// use ring_cli_list::List;
 ///
 /// let mut list = List::new();
-/// list.push([&"Test", &"successful"]);
-/// list.push([&"Test with a long name", &"successful"]);
+/// list.push(vec!["Test".into(), "successful".into()]);
+/// list.push(vec!["Test with a long name".into(), "successful".into()]);
 /// ```
 #[derive(Clone, Debug)]
 pub struct List {
@@ -28,16 +28,7 @@ impl List {
     }
 
     /// Pushes a new value array to the end of the list
-    pub fn push<I>(&mut self, values: I)
-    where 
-        I: IntoIterator,
-        I::Item: Display,
-    {
-        // Render values
-        let values = values.into_iter()
-            .map(|v| v.to_string())
-            .collect::<Vec<_>>();
-
+    pub fn push(&mut self, values: Vec<String>) {
         // Update values max widths
         self.widths.resize(values.len(), 0);
 
@@ -68,7 +59,7 @@ impl List {
     /// let mut list = List::new();
     /// assert!(list.is_empty());
     ///
-    /// list.push([&"Test", &"successful"]);
+    /// list.push(vec!["Test".into(), "successful".into()]);
     /// assert!(!list.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
@@ -83,8 +74,8 @@ impl List {
     /// use ring_cli_list::List;
     ///
     /// let mut list = List::new();
-    /// list.push([&"Test", &"successful"]);
-    /// list.push([&"Test with a long name", &"successful"]);
+    /// list.push(vec!["Test".into(), "successful".into()]);
+    /// list.push(vec!["Test with a long name".into(), "successful".into()]);
     ///
     /// assert_eq!(list.len(), 2);
     /// ```
@@ -202,8 +193,8 @@ mod tests {
     #[test]
     fn it_should_print_rows_with_aligned_columns() {
         let mut list = List::new();
-        list.push([&"Test", &"successful"]);
-        list.push([&"Test with a long name", &"successful"]);
+        list.push(vec!["Test".into(), "successful".into()]);
+        list.push(vec!["Test with a long name".into(), "successful".into()]);
 
         let mut it = list.iter();
         assert_eq!(format!("{}", it.next().unwrap()), "Test                  successful");
@@ -214,8 +205,8 @@ mod tests {
     #[test]
     fn it_should_print_rows_in_reverse_order() {
         let mut list = List::new();
-        list.push(["Test", "successful"]);
-        list.push(["Test with a long name", "successful"]);
+        list.push(vec!["Test".into(), "successful".into()]);
+        list.push(vec!["Test with a long name".into(), "successful".into()]);
 
         let mut it = list.iter();
         assert_eq!(format!("{}", it.next_back().unwrap()), "Test with a long name successful");
@@ -226,8 +217,8 @@ mod tests {
     #[test]
     fn it_should_print_colored_rows_with_aligned_columns() {
         let mut list = List::new();
-        list.push([&"Test".red(), &"successful".stylize()]);
-        list.push([&"Test with a long name", &"successful"]);
+        list.push(vec!["Test".red().to_string(), "successful".stylize().to_string()]);
+        list.push(vec!["Test with a long name".into(), "successful".into()]);
 
         let mut it = list.iter();
         assert_eq!(format!("{}", it.next().unwrap()), "\x1b[38;5;9mTest\x1b[39m                  successful");
