@@ -26,7 +26,13 @@ impl List {
     pub fn new() -> Self {
         List { items: Vec::new(), widths: Vec::new() }
     }
-
+    
+    /// Creates a new empty list
+    #[inline]
+    pub fn with_capacity(capacity: usize) -> Self {
+        List { items: Vec::with_capacity(capacity), widths: Vec::new() }
+    }
+    
     /// Pushes a new value array to the end of the list
     pub fn push(&mut self, values: Vec<String>) {
         // Update values max widths
@@ -95,6 +101,25 @@ impl Display for List {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.iter()
             .try_for_each(|item| writeln!(f, "{item}"))
+    }
+}
+
+impl Extend<Vec<String>> for List {
+    fn extend<I: IntoIterator<Item = Vec<String>>>(&mut self, iter: I) {
+        for item in iter {
+            self.push(item);
+        }
+    }
+}
+
+impl FromIterator<Vec<String>> for List {
+    fn from_iter<I: IntoIterator<Item = Vec<String>>>(items: I) -> Self {
+        let iter = items.into_iter();
+        
+        let mut list = List::with_capacity(iter.size_hint().0);
+        list.extend(iter);
+        
+        list
     }
 }
 

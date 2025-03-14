@@ -3,25 +3,27 @@ use std::path::{Path, PathBuf};
 use std::{fs, io, mem};
 use tracing::trace;
 
-enum ListFilesContent {
+#[derive(Debug)]
+enum FilesContent {
     Path(PathBuf),
-    Contents(fs::ReadDir),
+    Contents(Box<fs::ReadDir>),
     Empty,
 }
 
-pub struct ListFilesItem {
+#[derive(Clone, Debug)]
+pub struct FilesItem {
     path: PathBuf,
     metadata: Option<fs::Metadata>,
 }
 
-impl ListFilesItem {
+impl FilesItem {
     fn from_path(path: PathBuf) -> io::Result<Self> {
         let metadata = fs::metadata(&path).ok();
-        Ok(ListFilesItem { path, metadata })
+        Ok(FilesItem { path, metadata })
     }
 
     fn from_entry(entry: fs::DirEntry) -> io::Result<Self> {
-        Ok(ListFilesItem {
+        Ok(FilesItem {
             path: entry.path(),
             metadata: entry.metadata().ok()
         })
@@ -40,7 +42,7 @@ impl ListFilesItem {
     }
 }
 
-impl lscolors::Colorable for ListFilesItem {
+impl lscolors::Colorable for FilesItem {
     fn path(&self) -> PathBuf {
         self.path.clone()
     }
@@ -60,8 +62,9 @@ impl lscolors::Colorable for ListFilesItem {
 
 /// Iterates over files within given path.
 /// If the given path is a file, return this file.
+#[derive(Debug)]
 pub struct FilesIterator {
-    content: ListFilesContent,
+    content: FilesContent,
     show_all: bool,
 }
 
@@ -79,9 +82,9 @@ impl FilesIterator {
     pub fn new(path: PathBuf) -> io::Result<FilesIterator> {
         let content = if path.is_dir() {
             trace!("reading directory {}", path.display());
-            ListFilesContent::Contents(fs::read_dir(path)?)
+            FilesContent::Contents(Box::new(fs::read_dir(path)?))
         } else {
-            ListFilesContent::Path(path)
+            FilesContent::Path(path)
         };
 
         Ok(FilesIterator {
@@ -107,17 +110,17 @@ impl FilesIterator {
 }
 
 impl Iterator for FilesIterator {
-    type Item = io::Result<ListFilesItem>;
+    type Item = io::Result<FilesItem>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.content {
-            ListFilesContent::Path(path) => {
+            FilesContent::Path(path) => {
                 let path = mem::take(path);
-                self.content = ListFilesContent::Empty;
+                self.content = FilesContent::Empty;
 
-                Some(ListFilesItem::from_path(path))
+                Some(FilesItem::from_path(path))
             }
-            ListFilesContent::Contents(inner) => {
+            FilesContent::Contents(inner) => {
                 for entry in inner {
                     match entry {
                         Ok(entry) => {
@@ -125,7 +128,7 @@ impl Iterator for FilesIterator {
                                 continue;
                             }
 
-                            return Some(ListFilesItem::from_entry(entry));
+                            return Some(FilesItem::from_entry(entry));
                         }
                         Err(error) => {
                             return Some(Err(error));
@@ -133,10 +136,18 @@ impl Iterator for FilesIterator {
                     }
                 }
 
-                self.content = ListFilesContent::Empty;
+                self.content = FilesContent::Empty;
                 None
             }
-            ListFilesContent::Empty => None
+            FilesContent::Empty => None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match &self.content {
+            FilesContent::Path(_) => (1, Some(1)),
+            FilesContent::Contents(inner) => inner.size_hint(),
+            FilesContent::Empty => (0, Some(0)),
         }
     }
 }

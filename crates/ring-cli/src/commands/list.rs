@@ -1,11 +1,12 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
-use ring_cli_fs::FilesIterator;
+use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
 use ring_core::Core;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
+use lscolors::LsColors;
 use tracing::instrument;
 
 /// Prepare list command parsing
@@ -31,47 +32,49 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     // Print files
     let ls_colors = lscolors::LsColors::from_env().unwrap_or_default();
 
-    let mut list = List::new();
     let mut files = FilesIterator::new(path)?;
     
     if args.get_flag("all") {
         files.enable_show_all();
     }
-    
-    for file in files {
-        let file = file?;
-        let file_name = file.file_name().unwrap_or_default().to_string();
-        let language = core.detect_language(file.path());
 
-        let is_dir = file.metadata().map(|mtd| mtd.is_dir()).unwrap_or_default();
-        let default_language = if is_dir { "directory" } else { "<unknown>" };
-        
-        if io::stdout().is_terminal() {
-            // for humans : colored !
-            let file_style = ls_colors.style_for(&file)
-                .map(lscolors::Style::to_crossterm_style)
-                .unwrap_or_default();
-
-            let language_style = language.as_ref()
-                .map(|language| language.style())
-                .unwrap_or_default();
-
-            list.push(vec![
-                file_style.apply(file_name).to_string(),
-                language.map(|language| language_style.apply(language).to_string())
-                    .unwrap_or_else(|| default_language.dark_grey().to_string())
-            ]);
-        } else {
-            // for machines
-            list.push(vec![
-                file_name,
-                language.map(|language| language.to_string())
-                    .unwrap_or_else(|| default_language.to_string()),
-            ]);
-        }
-    }
+    let list = files
+        .map(|file| Ok(format_file(core, file?, &ls_colors)))
+        .collect::<anyhow::Result<List>>()?;
 
     println!("{list}");
 
     Ok(())
+}
+
+fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String> {
+    let file_name = file.file_name().unwrap_or_default().to_string();
+    let language = core.detect_language(file.path());
+
+    let is_dir = file.metadata().map(|mtd| mtd.is_dir()).unwrap_or_default();
+    let default_language = if is_dir { "directory" } else { "unknown" };
+
+    if io::stdout().is_terminal() {
+        // for humans : colored !
+        let file_style = ls_colors.style_for(&file)
+            .map(lscolors::Style::to_crossterm_style)
+            .unwrap_or_default();
+
+        let language_style = language.as_ref()
+            .map(|language| language.style())
+            .unwrap_or_default();
+
+        vec![
+            file_style.apply(file_name).to_string(),
+            language.map(|language| language_style.apply(language).to_string())
+                .unwrap_or_else(|| default_language.dark_grey().to_string())
+        ]
+    } else {
+        // for machines
+        vec![
+            file_name,
+            language.map(|language| language.to_string())
+                .unwrap_or_else(|| default_language.to_string()),
+        ]
+    }
 }
