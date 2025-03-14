@@ -3,8 +3,7 @@
     "config:recommended"
   ],
   "baseBranches": [
-    "latest",
-    "next"
+    "latest"
   ],
   "labels": [
     "dependencies"
