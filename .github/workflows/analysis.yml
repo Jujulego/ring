@@ -118,7 +118,7 @@ jobs:
         with:
           fail_ci_if_error: true
           files: codecov-unit.json
-          flags: ${{ matrix.name }}
+          flags: unit-${{ matrix.name }}
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results to Codecov
@@ -126,7 +126,7 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           files: target/nextest/ci/junit.xml
-          flags: ${{ matrix.name }}
+          flags: unit-${{ matrix.name }}
           token: ${{ secrets.CODECOV_TOKEN }}
 
   docs-tests:
