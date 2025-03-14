@@ -1,8 +1,8 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
-use crossterm::style::{style, Color, Stylize};
+use crossterm::style::{Color, Stylize};
 use ring_cli_fs::FilesIterator;
+use ring_cli_list::List;
 use ring_core::Core;
-use ring_core_language::Language;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
@@ -30,6 +30,8 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     // Print files
     let ls_colors = lscolors::LsColors::from_env().unwrap_or_default();
+
+    let mut list = List::new();
     let mut files = FilesIterator::new(path)?;
     
     if args.get_flag("all") {
@@ -38,38 +40,39 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     
     for file in files {
         let file = file?;
-        let file_name = file.file_name().unwrap_or_default();
+        let file_name = file.file_name().unwrap_or_default().to_string();
         let language = core.detect_language(file.path());
         
         if io::stdout().is_terminal() {
+            // for humans : colored !
             let file_name = ls_colors.style_for(&file)
                 .map(lscolors::Style::to_crossterm_style)
                 .unwrap_or_default()
                 .apply(file_name);
 
             let language = language
-                .map(|l| {
-                    if let Some(color) = l.color() {
-                        let color = Color::Rgb { r: color.r, g: color.g, b: color.b };
-                        style(l).with(color)
+                .map(|language| {
+                    let name = language.name().to_string();
+
+                    if let Some(color) = language.color() {
+                        name.with(Color::Rgb { r: color.r, g: color.g, b: color.b })
                     } else {
-                        style(l)
+                        name.stylize()
                     }
                 })
-                .unwrap_or_else(|| style(unknown_language()).dark_grey());
+                .unwrap_or_else(|| "<unknown>".to_string().dark_grey());
 
-            println!("{file_name} {language}");
+            list.push([file_name, language]);
         } else {
-            let language = language.map(|l| l.name().to_string())
-                .unwrap_or_default();
-
-            println!("{file_name} {language}");
+            // for machines
+            list.push([
+                file_name,
+                language.map(|l| l.name().to_string()).unwrap_or_else(|| "<unknown>".to_string()),
+            ]);
         }
     }
-    
-    Ok(())
-}
 
-pub fn unknown_language() -> Language {
-    Language::new("unknown".to_string())
+    println!("{list}");
+
+    Ok(())
 }
