@@ -1,3 +1,3 @@
 mod files_iterator;
 
-pub use files_iterator::FilesIterator;
+pub use files_iterator::*;

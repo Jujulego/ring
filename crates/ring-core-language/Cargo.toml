@@ -3,5 +3,10 @@ name = "ring-core-language"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+crossterm = ["dep:crossterm"]
+
 [dependencies]
 rgb = "0.8.50"
+
+crossterm = { version = "0.28.1", optional = true }
