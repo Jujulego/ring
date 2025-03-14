@@ -1,5 +1,5 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
-use crossterm::style::{Color, ContentStyle, Stylize};
+use crossterm::style::Stylize;
 use ring_cli_fs::FilesIterator;
 use ring_cli_list::List;
 use ring_core::Core;
@@ -50,12 +50,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                 .unwrap_or_default();
 
             let language_style = language.as_ref()
-                .map(|language| {
-                    let mut style = ContentStyle::new();
-                    style.foreground_color = language.color().map(|color| Color::Rgb { r: color.r, g: color.g, b: color.b });
-
-                    style
-                })
+                .map(|language| language.style())
                 .unwrap_or_default();
 
             list.push(vec![

@@ -963,6 +963,7 @@ dependencies = [
 name = "ring-core-language"
 version = "0.1.0"
 dependencies = [
+ "crossterm",
  "rgb",
 ]
 

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
+crossterm = ["ring-core-language/crossterm"]
 rust = ["dep:ring-module-rust"]
 
 [dependencies]

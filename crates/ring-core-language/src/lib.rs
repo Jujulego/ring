@@ -77,6 +77,27 @@ impl Language {
     pub fn color(&self) -> Option<&Rgb<u8>> {
         self.color.as_ref()
     }
+
+    /// Returns a crossterm style that can be used to print language name in a terminal
+    ///
+    /// Need feature _crossterm_
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_core_language::Language;
+    /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
+    ///
+    /// println!("{}", language.style().apply(language.name()));
+    /// ```
+    #[cfg(feature = "crossterm")]
+    pub fn style(&self) -> crossterm::style::ContentStyle {
+        crossterm::style::ContentStyle {
+            foreground_color: self.color
+                .map(|color| crossterm::style::Color::Rgb { r: color.r, g: color.g, b: color.b }),
+            ..Default::default()
+        }
+    }
 }
 
 impl PartialEq for Language {
@@ -91,5 +112,20 @@ impl Eq for Language {}
 impl Display for Language {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.name.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_put_language_color_as_foreground_color() {
+        let language = Language::new("example".to_string());
+        assert_eq!(language.style().foreground_color, None);
+        
+        let language = language.with_color((0x00, 0xff, 0x00).into());
+        assert_eq!(language.style().foreground_color, Some(crossterm::style::Color::Rgb { r: 0x00, g: 0xff, b: 0x00 }));
     }
 }
