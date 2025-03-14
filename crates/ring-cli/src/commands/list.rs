@@ -42,6 +42,9 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
         let file = file?;
         let file_name = file.file_name().unwrap_or_default().to_string();
         let language = core.detect_language(file.path());
+
+        let is_dir = file.metadata().map(|mtd| mtd.is_dir()).unwrap_or_default();
+        let default_language = if is_dir { "directory" } else { "<unknown>" };
         
         if io::stdout().is_terminal() {
             // for humans : colored !
@@ -56,14 +59,14 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
             list.push(vec![
                 file_style.apply(file_name).to_string(),
                 language.map(|language| language_style.apply(language).to_string())
-                    .unwrap_or_else(|| "<unknown>".dark_grey().to_string())
+                    .unwrap_or_else(|| default_language.dark_grey().to_string())
             ]);
         } else {
             // for machines
             list.push(vec![
                 file_name,
                 language.map(|language| language.to_string())
-                    .unwrap_or_else(|| "<unknown>".to_string()),
+                    .unwrap_or_else(|| default_language.to_string()),
             ]);
         }
     }
