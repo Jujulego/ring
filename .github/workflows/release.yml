@@ -118,7 +118,7 @@ jobs:
         run: |
           tag='latest'
           
-          if ${{ contains('-alpha.', steps.info.outputs.version) }}; then
+          if ${{ contains(steps.info.outputs.version, '-alpha.') }}; then
             tag='next'
           fi
           
