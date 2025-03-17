@@ -22,7 +22,7 @@ impl TomlFileDetector {
     /// use ring_module_toml::TomlFileDetector;
     ///
     /// let detector = TomlFileDetector::new();
-    /// assert!(detector.is_toml_file("src/lib.rs"));
+    /// assert!(detector.is_toml_file("Cargo.toml"));
     /// assert!(!detector.is_toml_file("src"));
     /// ```
     #[inline]

@@ -30,7 +30,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
         .unwrap_or(env::current_dir()?);
 
     // Print files
-    let ls_colors = lscolors::LsColors::from_env().unwrap_or_default();
+    let ls_colors = LsColors::from_env().unwrap_or_default();
 
     let mut files = FilesIterator::new(path)?;
     
