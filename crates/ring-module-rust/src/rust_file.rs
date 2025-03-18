@@ -50,7 +50,11 @@ impl DetectLanguage for RustFileDetector {
 
 impl QualifyPath for RustFileDetector {
     #[instrument(name = "rust-file.qualify-content", skip_all)]
-    fn qualify_content(&self, _: &Path) -> Option<FileContent> {
+    fn qualify_content(&self, path: &Path) -> Option<FileContent> {
+        if !self.is_rust_file(path) {
+            return None;
+        }
+        
         Some(FileContent::Source)
     }
 }
@@ -78,6 +82,7 @@ mod tests {
     fn it_should_qualify_path_as_source() {
         let detector = RustFileDetector {};
         
+        assert_eq!(detector.qualify_content(Path::new("do-not-exists.rs")), None);
         assert_eq!(detector.qualify_content(Path::new("src/lib.rs")), Some(FileContent::Source));
     }
 }

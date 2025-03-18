@@ -56,6 +56,10 @@ impl DetectLanguage for TomlFileDetector {
 impl QualifyPath for TomlFileDetector {
     #[instrument(name = "toml-file.qualify-content", skip_all)]
     fn qualify_content(&self, path: &Path) -> Option<FileContent> {
+        if !self._is_toml_file(path) {
+            return None;
+        }
+
         match path.file_name().and_then(OsStr::to_str) {
             Some("Cargo.lock") => Some(FileContent::Lockfile),
             Some("Cargo.toml") => Some(FileContent::Manifest),
@@ -99,11 +103,12 @@ mod tests {
     fn it_should_qualify_path_content() {
         let detector = TomlFileDetector::new();
 
+        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
         assert_eq!(detector.qualify_content(Path::new("Cargo.toml")), Some(FileContent::Manifest));
         assert_eq!(detector.qualify_content(Path::new("../../Cargo.lock")), Some(FileContent::Lockfile));
-        assert_eq!(detector.qualify_content(Path::new(".cargo/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new(".config/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new(".github/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new("test.toml")), None);
+        assert_eq!(detector.qualify_content(Path::new("assets/.cargo/config.toml")), Some(FileContent::Configuration));
+        assert_eq!(detector.qualify_content(Path::new("assets/.config/config.toml")), Some(FileContent::Configuration));
+        assert_eq!(detector.qualify_content(Path::new("assets/.github/config.toml")), Some(FileContent::Configuration));
+        assert_eq!(detector.qualify_content(Path::new("assets/test.toml")), None);
     }
 }
