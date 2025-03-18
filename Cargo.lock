@@ -954,6 +954,7 @@ dependencies = [
 name = "ring-core"
 version = "0.1.0"
 dependencies = [
+ "ring-core-file",
  "ring-core-language",
  "ring-core-modules",
  "ring-module-rust",
@@ -976,6 +977,7 @@ dependencies = [
 name = "ring-core-modules"
 version = "0.1.0"
 dependencies = [
+ "ring-core-file",
  "ring-core-language",
 ]
 

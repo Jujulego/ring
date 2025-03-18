@@ -11,6 +11,7 @@ module-rust = ["dep:ring-module-rust"]
 module-toml = ["dep:ring-module-toml"]
 
 [dependencies]
+ring-core-file = { path = "../ring-core-file" }
 ring-core-language = { path = "../ring-core-language" }
 ring-core-modules = { path = "../ring-core-modules" }
 ring-module-rust = { path = "../ring-module-rust", optional = true }

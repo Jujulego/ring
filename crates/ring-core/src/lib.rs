@@ -1,3 +1,4 @@
+use ring_core_file::FileContent;
 use ring_core_language::Language;
 use ring_core_modules::Module;
 use std::path::Path;
@@ -49,6 +50,31 @@ impl Core {
         self.modules.iter()
             .flat_map(|module| module.language_detectors())
             .filter_map(|detector| detector.detect_language(path))
+            .next()
+    }
+
+    /// Uses all modules to qualify given path's content
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_core::Core;
+    /// use ring_core_file::FileContent;
+    /// use ring_module_rust::rust_language;
+    ///
+    /// let core = Core::new();
+    /// assert_eq!(core.qualify_content("src"), None);
+    /// assert_eq!(core.qualify_content("src/lib.rs"), Some(FileContent::Source));
+    /// ```
+    #[inline]
+    pub fn qualify_content<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
+        self._qualify_content(path.as_ref())
+    }
+
+    fn _qualify_content(&self, path: &Path) -> Option<FileContent> {
+        self.modules.iter()
+            .flat_map(|module| module.path_qualifiers())
+            .filter_map(|detector| detector.qualify_content(path))
             .next()
     }
 }

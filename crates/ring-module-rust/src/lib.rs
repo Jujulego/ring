@@ -3,6 +3,7 @@ mod utils;
 
 pub use crate::rust_file::RustFileDetector;
 pub use crate::utils::rust_language;
+use ring_core_file::QualifyPath;
 use ring_core_language::DetectLanguage;
 use ring_core_modules::Module;
 use std::rc::Rc;
@@ -38,6 +39,11 @@ impl RustModule {
 impl Module for RustModule {
     #[inline]
     fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
+        vec![self.rust_file_detector()]
+    }
+
+    #[inline]
+    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![self.rust_file_detector()]
     }
 }
