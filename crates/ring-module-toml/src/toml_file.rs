@@ -40,6 +40,19 @@ impl TomlFileDetector {
         path.extension().and_then(OsStr::to_str) == Some("toml")
             || path.file_name().and_then(OsStr::to_str) == Some("Cargo.lock")
     }
+    
+    fn _qualify_toml_file(&self, path: &Path) -> Option<FileContent> {
+        match path.file_name().and_then(OsStr::to_str) {
+            Some("Cargo.lock") => Some(FileContent::Lockfile),
+            Some("Cargo.toml") => Some(FileContent::Manifest),
+            _ => {
+                match path.parent().and_then(Path::file_name).and_then(OsStr::to_str) {
+                    Some(".cargo") | Some(".config") | Some(".github") => Some(FileContent::Configuration),
+                    _ => None
+                }
+            },
+        }
+    }
 }
 
 impl DetectLanguage for TomlFileDetector {
@@ -57,18 +70,9 @@ impl QualifyPath for TomlFileDetector {
     #[instrument(name = "toml-file.qualify-content", skip_all)]
     fn qualify_content(&self, path: &Path) -> Option<FileContent> {
         if !self._is_toml_file(path) {
-            return None;
-        }
-
-        match path.file_name().and_then(OsStr::to_str) {
-            Some("Cargo.lock") => Some(FileContent::Lockfile),
-            Some("Cargo.toml") => Some(FileContent::Manifest),
-            _ => {
-                match path.parent().and_then(Path::file_name).and_then(OsStr::to_str) {
-                    Some(".cargo") | Some(".config") | Some(".github") => Some(FileContent::Configuration),
-                    _ => None
-                }
-            },
+            None
+        } else {
+            self._qualify_toml_file(path)
         }
     }
 }
