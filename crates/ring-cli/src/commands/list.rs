@@ -88,14 +88,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                 .map(|language| language.to_string())
                 .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
             core.qualify_content(file.path())
-                .map(|content| match content {
-                    FileContent::Configuration => "config".to_string(),
-                    FileContent::Lockfile => "lockfile".to_string(),
-                    FileContent::Manifest => "manifest".to_string(),
-                    FileContent::Source => "source".to_string(),
-                    FileContent::Test => "test".to_string(),
-                    FileContent::Other(name) => name
-                })
+                .map(|content| content.to_string())
                 .unwrap_or_else(|| "unknown".to_string()),
         ]
     }
