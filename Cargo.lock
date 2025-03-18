@@ -929,6 +929,7 @@ dependencies = [
  "ring-cli-fs",
  "ring-cli-list",
  "ring-core",
+ "ring-core-file",
  "sentry",
  "tracing",
  "tracing-subscriber",

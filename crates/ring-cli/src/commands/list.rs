@@ -1,12 +1,13 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
+use lscolors::LsColors;
 use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
 use ring_core::Core;
+use ring_core_file::FileContent;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
-use lscolors::LsColors;
 use tracing::instrument;
 
 /// Prepare list command parsing
@@ -52,7 +53,6 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
     let language = core.detect_language(file.path());
 
     let is_dir = file.metadata().map(|mtd| mtd.is_dir()).unwrap_or_default();
-    let default_language = if is_dir { "directory" } else { "unknown" };
 
     if io::stdout().is_terminal() {
         // for humans : colored !
@@ -66,15 +66,37 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
 
         vec![
             file_style.apply(file_name).to_string(),
-            language.map(|language| language_style.apply(language).to_string())
-                .unwrap_or_else(|| default_language.dark_grey().to_string())
+            language
+                .map(|language| language_style.apply(language).to_string())
+                .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
+            core.qualify_content(file.path())
+                .map(|content| match content {
+                    FileContent::Configuration => "config".dim().to_string(),
+                    FileContent::Lockfile => "lockfile".dark_magenta().dim().to_string(),
+                    FileContent::Manifest => "manifest".dark_magenta().to_string(),
+                    FileContent::Source => "source".blue().to_string(),
+                    FileContent::Test => "test".green().to_string(),
+                    FileContent::Other(name) => name
+                })
+                .unwrap_or_else(|| "unknown".dark_grey().to_string()),
         ]
     } else {
         // for machines
         vec![
             file_name,
-            language.map(|language| language.to_string())
-                .unwrap_or_else(|| default_language.to_string()),
+            language
+                .map(|language| language.to_string())
+                .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
+            core.qualify_content(file.path())
+                .map(|content| match content {
+                    FileContent::Configuration => "config".to_string(),
+                    FileContent::Lockfile => "lockfile".to_string(),
+                    FileContent::Manifest => "manifest".to_string(),
+                    FileContent::Source => "source".to_string(),
+                    FileContent::Test => "test".to_string(),
+                    FileContent::Other(name) => name
+                })
+                .unwrap_or_else(|| "unknown".to_string()),
         ]
     }
 }
