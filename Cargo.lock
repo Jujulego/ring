@@ -929,7 +929,6 @@ dependencies = [
  "ring-cli-fs",
  "ring-cli-list",
  "ring-core",
- "ring-core-file",
  "sentry",
  "tracing",
  "tracing-subscriber",
@@ -965,6 +964,9 @@ dependencies = [
 [[package]]
 name = "ring-core-file"
 version = "0.1.0"
+dependencies = [
+ "crossterm",
+]
 
 [[package]]
 name = "ring-core-language"

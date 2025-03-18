@@ -4,7 +4,6 @@ use lscolors::LsColors;
 use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
 use ring_core::Core;
-use ring_core_file::FileContent;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
@@ -70,14 +69,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                 .map(|language| language_style.apply(language).to_string())
                 .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
             core.qualify_content(file.path())
-                .map(|content| match content {
-                    FileContent::Configuration => "config".dim().to_string(),
-                    FileContent::Lockfile => "lockfile".dark_magenta().dim().to_string(),
-                    FileContent::Manifest => "manifest".dark_magenta().to_string(),
-                    FileContent::Source => "source".blue().to_string(),
-                    FileContent::Test => "test".green().to_string(),
-                    FileContent::Other(name) => name
-                })
+                .map(|content| content.style().apply(content).to_string())
                 .unwrap_or_else(|| "unknown".dark_grey().to_string()),
         ]
     } else {

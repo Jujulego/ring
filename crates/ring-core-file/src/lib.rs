@@ -17,6 +17,27 @@ pub enum FileContent {
     Other(String),
 }
 
+impl FileContent {
+    #[cfg(feature = "crossterm")]
+    pub fn style(&self) -> crossterm::style::ContentStyle {
+        crossterm::style::ContentStyle {
+            foreground_color: match self {
+                FileContent::Lockfile
+                | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
+                FileContent::Source => Some(crossterm::style::Color::Blue),
+                FileContent::Test => Some(crossterm::style::Color::Green),
+                _ => None
+            },
+            attributes: match self {
+                FileContent::Configuration
+                | FileContent::Lockfile => crossterm::style::Attribute::Dim.into(),
+                _ => Default::default()
+            },
+            ..Default::default()
+        }
+    }
+}
+
 impl Display for FileContent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
