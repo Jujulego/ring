@@ -1,6 +1,7 @@
 use std::ffi::OsStr;
 use std::path::Path;
 use tracing::{instrument, trace};
+use ring_core_file::{FileContent, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
 use crate::rust_language;
 
@@ -47,6 +48,13 @@ impl DetectLanguage for RustFileDetector {
     }
 }
 
+impl QualifyPath for RustFileDetector {
+    #[instrument(name = "rust-file.qualify-content", skip_all)]
+    fn qualify_content(&self, _: &Path) -> Option<FileContent> {
+        Some(FileContent::Source)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +72,12 @@ mod tests {
 
         assert_eq!(detector.detect_language(Path::new("Cargo.toml")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
+    }
+    
+    #[test]
+    fn it_should_qualify_path_as_source() {
+        let detector = RustFileDetector {};
+        
+        assert_eq!(detector.qualify_content(Path::new("src/lib.rs")), Some(FileContent::Source));
     }
 }
