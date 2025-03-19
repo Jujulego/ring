@@ -50,3 +50,18 @@ impl Display for FileContent {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn it_should_display_to_a_string_matching_content() {
+        assert_eq!(FileContent::Configuration.to_string(), "config");
+        assert_eq!(FileContent::Lockfile.to_string(), "lockfile");
+        assert_eq!(FileContent::Manifest.to_string(), "manifest");
+        assert_eq!(FileContent::Source.to_string(), "source");
+        assert_eq!(FileContent::Test.to_string(), "test");
+        assert_eq!(FileContent::Other("toto".into()).to_string(), "toto");
+    }
+}
