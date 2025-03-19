@@ -54,7 +54,7 @@ impl Display for FileContent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn it_should_display_to_a_string_matching_content() {
         assert_eq!(FileContent::Configuration.to_string(), "config");
@@ -63,5 +63,59 @@ mod tests {
         assert_eq!(FileContent::Source.to_string(), "source");
         assert_eq!(FileContent::Test.to_string(), "test");
         assert_eq!(FileContent::Other("toto".into()).to_string(), "toto");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_config_style() {
+        let style = FileContent::Configuration.style();
+
+        assert_eq!(style.foreground_color, None);
+        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_lockfile_style() {
+        let style = FileContent::Lockfile.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_manifest_style() {
+        let style = FileContent::Manifest.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_source_style() {
+        let style = FileContent::Source.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_test_style() {
+        let style = FileContent::Test.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Green));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_return_other_style() {
+        let style = FileContent::Other("toto".into()).style();
+
+        assert_eq!(style.foreground_color, None);
+        assert!(style.attributes.is_empty());
     }
 }
