@@ -3,6 +3,7 @@ mod utils;
 
 pub use crate::toml_file::TomlFileDetector;
 pub use crate::utils::toml_language;
+use ring_core_file::QualifyPath;
 use ring_core_language::DetectLanguage;
 use ring_core_modules::Module;
 use std::rc::Rc;
@@ -38,6 +39,11 @@ impl TomlModule {
 impl Module for TomlModule {
     #[inline]
     fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
+        vec![self.toml_file_detector()]
+    }
+
+    #[inline]
+    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![self.toml_file_detector()]
     }
 }
