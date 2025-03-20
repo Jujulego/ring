@@ -20,9 +20,9 @@ impl Core {
     /// ```
     pub fn new() -> Self {
         let modules: Vec<Box<dyn Module>> = vec![
-            #[cfg(feature = "module-rust")]
+            #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
-            #[cfg(feature = "module-toml")]
+            #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
         ];
 

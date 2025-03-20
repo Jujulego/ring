@@ -4,7 +4,7 @@ version = "0.4.0"
 edition = "2021"
 
 [features]
-default = []
+default = ["ring-core/rust", "ring-core/toml"]
 
 [dependencies]
 anyhow = "1.0.97"
@@ -17,4 +17,4 @@ tracing-subscriber = "0.3.19"
 
 ring-cli-list = { path = "../ring-cli-list" }
 ring-cli-fs = { path = "../ring-cli-fs" }
-ring-core = { path = "../ring-core", features = ["crossterm", "rust"] }
+ring-core = { path = "../ring-core", features = ["crossterm"] }

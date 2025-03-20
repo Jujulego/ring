@@ -1,6 +1,8 @@
+mod cargo_project;
 mod rust_file;
 mod utils;
 
+pub use crate::cargo_project::CargoProjectDetector;
 pub use crate::rust_file::RustFileDetector;
 pub use crate::utils::rust_language;
 use ring_core_file::QualifyPath;
@@ -10,6 +12,7 @@ use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub struct RustModule {
+    cargo_project_detector: Rc<CargoProjectDetector>,
     rust_file_detector: Rc<RustFileDetector>,
 }
 
@@ -20,13 +23,28 @@ impl RustModule {
         Default::default()
     }
 
-    /// Returns a pointer on RustFileDetector
+    /// Returns a pointer on CargoManifestDetector
     /// 
     /// # Examples
     /// 
     /// ```
     /// use ring_module_rust::RustModule;
     /// 
+    /// let module = RustModule::new();
+    /// let detector = module.rust_file_detector();
+    /// ```
+    #[inline]
+    pub fn cargo_project_detector(&self) -> Rc<CargoProjectDetector> {
+        self.cargo_project_detector.clone()
+    }
+
+    /// Returns a pointer on RustFileDetector
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_rust::RustModule;
+    ///
     /// let module = RustModule::new();
     /// let detector = module.rust_file_detector();
     /// ```
@@ -39,11 +57,17 @@ impl RustModule {
 impl Module for RustModule {
     #[inline]
     fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
-        vec![self.rust_file_detector()]
+        vec![
+            self.cargo_project_detector(),
+            self.rust_file_detector()
+        ]
     }
 
     #[inline]
     fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
-        vec![self.rust_file_detector()]
+        vec![
+            self.cargo_project_detector(),
+            self.rust_file_detector()
+        ]
     }
 }

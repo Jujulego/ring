@@ -1,9 +1,9 @@
-use std::ffi::OsStr;
-use std::path::Path;
-use tracing::{instrument, trace};
+use crate::rust_language;
 use ring_core_file::{FileContent, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
-use crate::rust_language;
+use std::ffi::OsStr;
+use std::path::Path;
+use tracing::instrument;
 
 #[derive(Clone, Debug, Default)]
 pub struct RustFileDetector {}
@@ -32,7 +32,6 @@ impl RustFileDetector {
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
-        trace!("touch path {}", path.display());
         path.is_file() && path.extension().and_then(OsStr::to_str) == Some("rs")
     }
 }

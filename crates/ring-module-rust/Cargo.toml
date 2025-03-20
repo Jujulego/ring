@@ -9,3 +9,4 @@ tracing = "0.1.41"
 ring-core-file = { path = "../ring-core-file" }
 ring-core-language = { path = "../ring-core-language" }
 ring-core-modules = { path = "../ring-core-modules" }
+ring-module-toml = { path = "../ring-module-toml" }
