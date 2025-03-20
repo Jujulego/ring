@@ -79,3 +79,25 @@ impl QualifyPath for CargoProjectDetector {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_detect_toml_language() {
+        let detector = CargoProjectDetector::new();
+
+        assert_eq!(detector.detect_language(Path::new("Cargo.toml")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("../../Cargo.lock")), Some(toml_language()));
+    }
+
+    #[test]
+    fn it_should_qualify_path_content() {
+        let detector = CargoProjectDetector::new();
+
+        assert_eq!(detector.qualify_content(Path::new("Cargo.toml")), Some(FileContent::Manifest));
+        assert_eq!(detector.qualify_content(Path::new("../../Cargo.lock")), Some(FileContent::Lockfile));
+        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
+    }
+}
