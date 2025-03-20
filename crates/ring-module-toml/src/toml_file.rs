@@ -3,7 +3,7 @@ use ring_core_file::{FileContent, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 #[derive(Clone, Debug, Default)]
 pub struct TomlFileDetector {}
@@ -32,25 +32,13 @@ impl TomlFileDetector {
     }
 
     fn _is_toml_file(&self, path: &Path) -> bool {
-        trace!("touch path {}", path.display());
-        if !path.is_file() {
-            return false;
-        }
-
-        path.extension().and_then(OsStr::to_str) == Some("toml")
-            || path.file_name().and_then(OsStr::to_str) == Some("Cargo.lock")
+        path.is_file() && path.extension().and_then(OsStr::to_str) == Some("toml")
     }
     
     fn _qualify_toml_file(&self, path: &Path) -> Option<FileContent> {
-        match path.file_name().and_then(OsStr::to_str) {
-            Some("Cargo.lock") => Some(FileContent::Lockfile),
-            Some("Cargo.toml") => Some(FileContent::Manifest),
-            _ => {
-                match path.parent().and_then(Path::file_name).and_then(OsStr::to_str) {
-                    Some(".cargo") | Some(".config") | Some(".github") => Some(FileContent::Configuration),
-                    _ => None
-                }
-            },
+        match path.parent().and_then(Path::file_name).and_then(OsStr::to_str) {
+            Some(".cargo") | Some(".config") | Some(".github") => Some(FileContent::Configuration),
+            _ => None
         }
     }
 }
@@ -85,14 +73,7 @@ mod tests {
     fn it_should_detect_toml_language() {
         let detector = TomlFileDetector::new();
 
-        assert_eq!(detector.detect_language(Path::new("Cargo.toml")), Some(toml_language()));
-    }
-
-    #[test]
-    fn it_should_detect_cargo_lockfile_as_toml() {
-        let detector = TomlFileDetector::new();
-
-        assert_eq!(detector.detect_language(Path::new("../../Cargo.lock")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/test.toml")), Some(toml_language()));
     }
 
     #[test]
@@ -107,12 +88,10 @@ mod tests {
     fn it_should_qualify_path_content() {
         let detector = TomlFileDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
-        assert_eq!(detector.qualify_content(Path::new("Cargo.toml")), Some(FileContent::Manifest));
-        assert_eq!(detector.qualify_content(Path::new("../../Cargo.lock")), Some(FileContent::Lockfile));
         assert_eq!(detector.qualify_content(Path::new("assets/.cargo/config.toml")), Some(FileContent::Configuration));
         assert_eq!(detector.qualify_content(Path::new("assets/.config/config.toml")), Some(FileContent::Configuration));
         assert_eq!(detector.qualify_content(Path::new("assets/.github/config.toml")), Some(FileContent::Configuration));
         assert_eq!(detector.qualify_content(Path::new("assets/test.toml")), None);
+        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
     }
 }

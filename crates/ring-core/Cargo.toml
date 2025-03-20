@@ -5,10 +5,9 @@ edition = "2024"
 
 [features]
 crossterm = ["ring-core-file/crossterm", "ring-core-language/crossterm"]
-rust = ["module-rust", "module-toml"]
 
-module-rust = ["dep:ring-module-rust"]
-module-toml = ["dep:ring-module-toml"]
+rust = ["dep:ring-module-rust"]
+toml = ["dep:ring-module-toml"]
 
 [dependencies]
 ring-core-file = { path = "../ring-core-file" }
