@@ -1,6 +1,6 @@
 use ring_core_language::Language;
 
-/// Creates a rust language object, with a rusty color
+/// Creates a toml language object
 ///
 /// # Example
 ///
