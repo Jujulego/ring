@@ -9,7 +9,7 @@ use tracing::{instrument, trace};
 pub struct CargoProjectDetector {}
 
 impl CargoProjectDetector {
-    /// Creates a new instance of CargoManifestDetector
+    /// Creates a new instance of CargoProjectDetector
     #[inline]
     pub fn new() -> Self {
         Default::default()
@@ -104,9 +104,10 @@ impl CargoProjectDetector {
 }
 
 impl DetectLanguage for CargoProjectDetector {
-    #[instrument(name = "cargo-manifest.detect-language", skip_all)]
+    #[instrument(name = "cargo-project.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path) {
+        trace!("stat {}", path.display());
+        if path.is_file() && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
         } else {
             None
@@ -115,7 +116,7 @@ impl DetectLanguage for CargoProjectDetector {
 }
 
 impl QualifyPath for CargoProjectDetector {
-    #[instrument(name = "cargo-manifest.qualify-path", skip_all)]
+    #[instrument(name = "cargo-project.qualify-path", skip_all)]
     fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());

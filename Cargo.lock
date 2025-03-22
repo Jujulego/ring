@@ -991,8 +991,10 @@ dependencies = [
 name = "ring-module-javascript"
 version = "0.1.0"
 dependencies = [
+ "ring-core-file",
  "ring-core-language",
  "ring-core-modules",
+ "ring-module-json",
  "tracing",
 ]
 
