@@ -7,7 +7,7 @@ pub enum FileContent {
     Lockfile,
     Manifest,
     Source,
-    Test,
+    Tests,
     Other(String),
 }
 
@@ -18,8 +18,9 @@ impl FileContent {
             foreground_color: match self {
                 FileContent::Lockfile
                 | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
-                FileContent::Source => Some(crossterm::style::Color::Blue),
-                FileContent::Test => Some(crossterm::style::Color::Green),
+                FileContent::Configuration
+                | FileContent::Source => Some(crossterm::style::Color::Blue),
+                FileContent::Tests => Some(crossterm::style::Color::DarkGreen),
                 _ => None
             },
             attributes: match self {
@@ -39,7 +40,7 @@ impl Display for FileContent {
             FileContent::Lockfile => write!(f, "lockfile"),
             FileContent::Manifest => write!(f, "manifest"),
             FileContent::Source => write!(f, "source"),
-            FileContent::Test => write!(f, "test"),
+            FileContent::Tests => write!(f, "tests"),
             FileContent::Other(name) => name.fmt(f),
         }
     }
@@ -55,7 +56,7 @@ mod tests {
         assert_eq!(FileContent::Lockfile.to_string(), "lockfile");
         assert_eq!(FileContent::Manifest.to_string(), "manifest");
         assert_eq!(FileContent::Source.to_string(), "source");
-        assert_eq!(FileContent::Test.to_string(), "test");
+        assert_eq!(FileContent::Tests.to_string(), "tests");
         assert_eq!(FileContent::Other("toto".into()).to_string(), "toto");
     }
 
@@ -98,9 +99,9 @@ mod tests {
     #[test]
     #[cfg(feature = "crossterm")]
     fn it_should_return_test_style() {
-        let style = FileContent::Test.style();
+        let style = FileContent::Tests.style();
 
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Green));
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
         assert!(style.attributes.is_empty());
     }
 

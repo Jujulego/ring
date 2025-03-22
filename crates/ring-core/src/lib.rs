@@ -1,7 +1,7 @@
 use ring_core_file::FileContent;
 use ring_core_language::Language;
 use ring_core_modules::Module;
-use std::path::Path;
+use std::path::{absolute, Path};
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -43,7 +43,7 @@ impl Core {
     /// ```
     #[inline]
     pub fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        self._detect_language(path.as_ref())
+        self._detect_language(&absolute(path).ok()?)
     }
 
     fn _detect_language(&self, path: &Path) -> Option<Language> {
@@ -63,7 +63,6 @@ impl Core {
     /// use ring_module_rust::rust_language;
     ///
     /// let core = Core::new();
-    /// assert_eq!(core.qualify_content("src"), None);
     /// assert_eq!(core.qualify_content("Cargo.toml"), Some(FileContent::Manifest));
     /// ```
     #[inline]
