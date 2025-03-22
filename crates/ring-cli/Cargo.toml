@@ -4,7 +4,7 @@ version = "0.4.0"
 edition = "2021"
 
 [features]
-default = ["ring-core/rust", "ring-core/toml"]
+default = ["ring-core/rust", "ring-core/toml", "ring-core/yaml"]
 
 [dependencies]
 anyhow = "1.0.97"

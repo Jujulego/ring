@@ -24,6 +24,8 @@ impl Core {
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
+            #[cfg(feature = "yaml")]
+            Box::new(ring_module_yaml::YamlModule::new()),
         ];
 
         Core { modules }

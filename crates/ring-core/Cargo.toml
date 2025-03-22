@@ -8,6 +8,7 @@ crossterm = ["ring-core-file/crossterm", "ring-core-language/crossterm"]
 
 rust = ["dep:ring-module-rust"]
 toml = ["dep:ring-module-toml"]
+yaml = ["dep:ring-module-yaml"]
 
 [dependencies]
 ring-core-file = { path = "../ring-core-file" }
@@ -15,3 +16,4 @@ ring-core-language = { path = "../ring-core-language" }
 ring-core-modules = { path = "../ring-core-modules" }
 ring-module-rust = { path = "../ring-module-rust", optional = true }
 ring-module-toml = { path = "../ring-module-toml", optional = true }
+ring-module-yaml = { path = "../ring-module-yaml", optional = true }
