@@ -6,6 +6,7 @@ edition = "2024"
 [features]
 crossterm = ["ring-core-file/crossterm", "ring-core-language/crossterm"]
 
+json = ["dep:ring-module-json"]
 rust = ["dep:ring-module-rust"]
 toml = ["dep:ring-module-toml"]
 yaml = ["dep:ring-module-yaml"]
@@ -14,6 +15,8 @@ yaml = ["dep:ring-module-yaml"]
 ring-core-file = { path = "../ring-core-file" }
 ring-core-language = { path = "../ring-core-language" }
 ring-core-modules = { path = "../ring-core-modules" }
+
+ring-module-json = { path = "../ring-module-json", optional = true }
 ring-module-rust = { path = "../ring-module-rust", optional = true }
 ring-module-toml = { path = "../ring-module-toml", optional = true }
 ring-module-yaml = { path = "../ring-module-yaml", optional = true }
