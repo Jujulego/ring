@@ -1,5 +1,4 @@
 use crate::toml_language;
-use ring_core_file::{FileContent, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
@@ -34,13 +33,6 @@ impl TomlFileDetector {
     fn _is_toml_file(&self, path: &Path) -> bool {
         path.is_file() && path.extension().and_then(OsStr::to_str) == Some("toml")
     }
-    
-    fn _qualify_toml_file(&self, path: &Path) -> Option<FileContent> {
-        match path.parent().and_then(Path::file_name).and_then(OsStr::to_str) {
-            Some(".cargo") | Some(".config") | Some(".github") => Some(FileContent::Configuration),
-            _ => None
-        }
-    }
 }
 
 impl DetectLanguage for TomlFileDetector {
@@ -50,17 +42,6 @@ impl DetectLanguage for TomlFileDetector {
             Some(toml_language())
         } else {
             None
-        }
-    }
-}
-
-impl QualifyPath for TomlFileDetector {
-    #[instrument(name = "toml-file.qualify-content", skip_all)]
-    fn qualify_content(&self, path: &Path) -> Option<FileContent> {
-        if !self._is_toml_file(path) {
-            None
-        } else {
-            self._qualify_toml_file(path)
         }
     }
 }
@@ -82,16 +63,5 @@ mod tests {
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
-    }
-
-    #[test]
-    fn it_should_qualify_path_content() {
-        let detector = TomlFileDetector::new();
-
-        assert_eq!(detector.qualify_content(Path::new("assets/.cargo/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new("assets/.config/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new("assets/.github/config.toml")), Some(FileContent::Configuration));
-        assert_eq!(detector.qualify_content(Path::new("assets/test.toml")), None);
-        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
     }
 }

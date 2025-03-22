@@ -999,7 +999,6 @@ dependencies = [
 name = "ring-module-toml"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
  "ring-core-language",
  "ring-core-modules",
  "tracing",

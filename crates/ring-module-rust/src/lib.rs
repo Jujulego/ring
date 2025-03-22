@@ -66,8 +66,7 @@ impl Module for RustModule {
     #[inline]
     fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![
-            self.cargo_project_detector(),
-            self.rust_file_detector()
+            self.cargo_project_detector(), 
         ]
     }
 }

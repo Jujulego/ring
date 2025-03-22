@@ -5,5 +5,11 @@ use std::path::Path;
 
 /// Object able to qualify a given path
 pub trait QualifyPath {
-    fn qualify_content(&self, path: &Path) -> Option<FileContent>;
+    fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, QualifiedPart<'a>)>;
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum QualifiedPart<'a> {
+    FileName,
+    Ancestor(&'a Path),
 }

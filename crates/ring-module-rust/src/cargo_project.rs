@@ -1,4 +1,4 @@
-use ring_core_file::{FileContent, QualifyPath};
+use ring_core_file::{FileContent, QualifiedPart, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
@@ -69,11 +69,11 @@ impl DetectLanguage for CargoProjectDetector {
 
 impl QualifyPath for CargoProjectDetector {
     #[instrument(name = "cargo-manifest.qualify-path", skip_all)]
-    fn qualify_content(&self, path: &Path) -> Option<FileContent> {
+    fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, QualifiedPart<'a>)> {
         if self._is_manifest(path) {
-            Some(FileContent::Manifest)
+            Some((FileContent::Manifest, QualifiedPart::FileName))
         } else if self._is_lockfile(path) {
-            Some(FileContent::Lockfile)
+            Some((FileContent::Lockfile, QualifiedPart::FileName))
         } else {
             None
         }
@@ -96,8 +96,8 @@ mod tests {
     fn it_should_qualify_path_content() {
         let detector = CargoProjectDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("Cargo.toml")), Some(FileContent::Manifest));
-        assert_eq!(detector.qualify_content(Path::new("../../Cargo.lock")), Some(FileContent::Lockfile));
+        assert_eq!(detector.qualify_content(Path::new("Cargo.toml")), Some((FileContent::Manifest, QualifiedPart::FileName)));
+        assert_eq!(detector.qualify_content(Path::new("../../Cargo.lock")), Some((FileContent::Lockfile, QualifiedPart::FileName)));
         assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
     }
 }
