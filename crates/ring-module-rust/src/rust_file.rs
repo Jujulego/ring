@@ -2,7 +2,7 @@ use crate::rust_language;
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::instrument;
+use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct RustFileDetector {}
@@ -31,6 +31,7 @@ impl RustFileDetector {
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
+        trace!("stat {}", path.display());
         path.is_file() && path.extension().and_then(OsStr::to_str) == Some("rs")
     }
 }

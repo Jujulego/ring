@@ -3,7 +3,7 @@ use ring_core_language::{DetectLanguage, Language};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::instrument;
+use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct CargoProjectDetector {}
@@ -26,13 +26,15 @@ impl CargoProjectDetector {
     /// assert!(detector.is_manifest("Cargo.toml"));
     /// assert!(!detector.is_manifest("src"));
     /// ```
-    #[inline]
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
-        self._is_manifest(path.as_ref())
+        let path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        path.is_file() && self._is_manifest(path.as_ref())
     }
 
     fn _is_manifest(&self, path: &Path) -> bool {
-        path.is_file() && path.file_name().and_then(OsStr::to_str) == Some("Cargo.toml")
+        path.file_name().and_then(OsStr::to_str) == Some("Cargo.toml")
     }
 
     /// Checks if given path is a Cargo lockfile
@@ -46,13 +48,15 @@ impl CargoProjectDetector {
     /// assert!(detector.is_lockfile("../../Cargo.lock"));
     /// assert!(!detector.is_lockfile("src"));
     /// ```
-    #[inline]
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
-        self._is_lockfile(path.as_ref())
+        let path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        path.is_file() && self._is_lockfile(path.as_ref())
     }
 
     fn _is_lockfile(&self, path: &Path) -> bool {
-        path.is_file() && path.file_name().and_then(OsStr::to_str) == Some("Cargo.lock")
+        path.file_name().and_then(OsStr::to_str) == Some("Cargo.lock")
     }
 }
 
@@ -70,13 +74,16 @@ impl DetectLanguage for CargoProjectDetector {
 impl QualifyPath for CargoProjectDetector {
     #[instrument(name = "cargo-manifest.qualify-path", skip_all)]
     fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, QualifiedPart<'a>)> {
-        if self._is_manifest(path) {
-            Some((FileContent::Manifest, QualifiedPart::FileName))
-        } else if self._is_lockfile(path) {
-            Some((FileContent::Lockfile, QualifiedPart::FileName))
-        } else {
-            None
+        trace!("stat {}", path.display());
+        if path.is_file() {
+            if self._is_manifest(path) {
+                return Some((FileContent::Manifest, QualifiedPart::FileName));
+            } else if self._is_lockfile(path) {
+                return Some((FileContent::Lockfile, QualifiedPart::FileName));
+            }
         }
+        
+        None
     }
 }
 

@@ -2,7 +2,7 @@ use crate::toml_language;
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::instrument;
+use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct TomlFileDetector {}
@@ -31,6 +31,7 @@ impl TomlFileDetector {
     }
 
     fn _is_toml_file(&self, path: &Path) -> bool {
+        trace!("stat {}", path.display());
         path.is_file() && path.extension().and_then(OsStr::to_str) == Some("toml")
     }
 }
