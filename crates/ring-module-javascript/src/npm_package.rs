@@ -154,7 +154,7 @@ impl NpmPackageDetector {
         let path = path.as_ref();
 
         trace!("stat {}", path.display());
-        path.is_file() && self._is_yarn_lockfile(path)
+        path.is_file() && self._is_yarn_configuration(path)
     }
 
     fn _is_yarn_configuration(&self, path: &Path) -> bool {
