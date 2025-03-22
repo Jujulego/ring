@@ -59,6 +59,30 @@ impl CargoProjectDetector {
         path.file_name().and_then(OsStr::to_str) == Some("Cargo.lock")
     }
 
+    /// Checks if given path is a Cargo config file
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_rust::CargoProjectDetector;
+    ///
+    /// let detector = CargoProjectDetector::new();
+    /// assert!(detector.is_lockfile("../../Cargo.lock"));
+    /// assert!(!detector.is_lockfile("src"));
+    /// ```
+    pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
+        let path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        path.is_file() && self._is_lockfile(path)
+    }
+
+    fn _is_cargo_config(&self, path: &Path) -> bool {
+        path.parent().and_then(|p| p.file_name()).and_then(OsStr::to_str) == Some(".cargo")
+            && path.file_stem().and_then(OsStr::to_str) == Some("config")
+            && path.extension().and_then(OsStr::to_str).is_none_or(|ext| ext == "toml")
+    }
+
     /// Checks if given path is a Cargo crate
     ///
     /// # Examples
@@ -85,7 +109,7 @@ impl CargoProjectDetector {
 impl DetectLanguage for CargoProjectDetector {
     #[instrument(name = "cargo-manifest.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self._is_manifest(path) || self._is_lockfile(path) {
+        if self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path) {
             Some(toml_language())
         } else {
             None
@@ -96,9 +120,19 @@ impl DetectLanguage for CargoProjectDetector {
 impl QualifyPath for CargoProjectDetector {
     #[instrument(name = "cargo-manifest.qualify-path", skip_all)]
     fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+        // Out of crate cases
         trace!("stat {}", path.display());
-        let path_is_file = path.is_file();
-        
+        if path.is_file() {
+            if self._is_manifest(path) { // manifest defines the folder as a crate
+                return Some((FileContent::Manifest, path));
+            } else if self._is_cargo_config(path) {
+                return Some((FileContent::Configuration, path));
+            }
+        } else {
+            return None;
+        }
+
+        // In crate cases
         for ancestor in path.ancestors() {
             if let Some(parent) = ancestor.parent() {
                 if !self._is_crate(parent) {
@@ -109,13 +143,11 @@ impl QualifyPath for CargoProjectDetector {
             }
 
             trace!("stat {}", ancestor.display());
-            match (ancestor.file_name().and_then(OsStr::to_str), path_is_file, ancestor.is_file()) {
-                (Some(".cargo"), true, false) => return Some((FileContent::Configuration, ancestor)),
-                (Some("build.rs"), true, true) => return Some((FileContent::Other("build".into()), ancestor)),
-                (Some("Cargo.toml"), true, true) => return Some((FileContent::Manifest, ancestor)),
-                (Some("Cargo.lock"), true, true) => return Some((FileContent::Lockfile, ancestor)),
-                (Some("src"), true, false) => return Some((FileContent::Source, ancestor)),
-                (Some("tests"), true, false) => return Some((FileContent::Tests, ancestor)),
+            match (ancestor.file_name().and_then(OsStr::to_str), ancestor.is_file()) {
+                (Some("build.rs"), true) => return Some((FileContent::Other("build".into()), ancestor)),
+                (Some("Cargo.lock"), true) => return Some((FileContent::Lockfile, ancestor)),
+                (Some("src"), false) => return Some((FileContent::Source, ancestor)),
+                (Some("tests"), false) => return Some((FileContent::Tests, ancestor)),
                 _ => continue,
             }
         }
@@ -132,8 +164,10 @@ mod tests {
     fn it_should_detect_toml_language() {
         let detector = CargoProjectDetector::new();
 
-        assert_eq!(detector.detect_language(Path::new("Cargo.toml")), Some(toml_language()));
-        assert_eq!(detector.detect_language(Path::new("../../Cargo.lock")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/.cargo/config")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/.cargo/config.toml")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/Cargo.toml")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/Cargo.lock")), Some(toml_language()));
     }
 
     #[test]
@@ -142,6 +176,10 @@ mod tests {
 
         assert_eq!(
             detector.qualify_content(Path::new("assets/.cargo/config")),
+            Some((FileContent::Configuration, Path::new("assets/.cargo")))
+        );
+        assert_eq!(
+            detector.qualify_content(Path::new("assets/.cargo/config.toml")),
             Some((FileContent::Configuration, Path::new("assets/.cargo")))
         );
         assert_eq!(
