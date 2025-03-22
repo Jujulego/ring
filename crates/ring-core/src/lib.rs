@@ -20,6 +20,8 @@ impl Core {
     /// ```
     pub fn new() -> Self {
         let modules: Vec<Box<dyn Module>> = vec![
+            #[cfg(feature = "javascript")]
+            Box::new(ring_module_javascript::JavascriptModule::new()),
             #[cfg(feature = "json")]
             Box::new(ring_module_json::JsonModule::new()),
             #[cfg(feature = "rust")]
