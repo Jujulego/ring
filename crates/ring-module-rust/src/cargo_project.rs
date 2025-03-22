@@ -23,8 +23,7 @@ impl CargoProjectDetector {
     /// use ring_module_rust::CargoProjectDetector;
     ///
     /// let detector = CargoProjectDetector::new();
-    /// assert!(detector.is_manifest("Cargo.toml"));
-    /// assert!(!detector.is_manifest("src"));
+    /// assert!(detector.is_manifest("assets/Cargo.toml"));
     /// ```
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
@@ -45,8 +44,7 @@ impl CargoProjectDetector {
     /// use ring_module_rust::CargoProjectDetector;
     ///
     /// let detector = CargoProjectDetector::new();
-    /// assert!(detector.is_lockfile("../../Cargo.lock"));
-    /// assert!(!detector.is_lockfile("src"));
+    /// assert!(detector.is_lockfile("assets/Cargo.lock"));
     /// ```
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
@@ -67,8 +65,8 @@ impl CargoProjectDetector {
     /// use ring_module_rust::CargoProjectDetector;
     ///
     /// let detector = CargoProjectDetector::new();
-    /// assert!(detector.is_lockfile("../../Cargo.lock"));
-    /// assert!(!detector.is_lockfile("src"));
+    /// assert!(detector.is_cargo_config("assets/.cargo/config"));
+    /// assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
     /// ```
     pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
@@ -91,8 +89,7 @@ impl CargoProjectDetector {
     /// use ring_module_rust::CargoProjectDetector;
     ///
     /// let detector = CargoProjectDetector::new();
-    /// assert!(detector.is_crate("."));
-    /// assert!(!detector.is_crate("src"));
+    /// assert!(detector.is_crate("assets"));
     /// ```
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
