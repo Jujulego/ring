@@ -1,6 +1,8 @@
 use crate::javascript_language;
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use tracing::{instrument, trace};
 
@@ -31,7 +33,28 @@ impl JavascriptFileDetector {
 
     fn _is_javascript_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
-        path.is_file() && matches!(path.extension().and_then(OsStr::to_str), Some("js") | Some("jsx") | Some("cjs") | Some("mjs"))
+        if !path.is_file() {
+            return false;
+        }
+
+        if matches!(path.extension().and_then(OsStr::to_str), Some("js") | Some("jsx") | Some("cjs") | Some("mjs")) {
+            return true;
+        }
+
+        trace!("read {}", path.display());
+        if let Ok(file) = File::open(path) {
+            let reader = BufReader::new(file);
+            let shebang = reader.lines()
+                .map_while(Result::ok)
+                .find(|line| line.starts_with("#!"));
+
+            if shebang.is_some_and(|l| l == "#!/usr/bin/env node") {
+                return true;
+            }
+        }
+
+
+        false
     }
 }
 
