@@ -22,8 +22,8 @@ impl YamlFileDetector {
     /// use ring_module_yaml::YamlFileDetector;
     ///
     /// let detector = YamlFileDetector::new();
-    /// assert!(detector.is_yaml_file("Cargo.toml"));
-    /// assert!(!detector.is_yaml_file("src"));
+    /// assert!(detector.is_yaml_file("assets/test.yaml"));
+    /// assert!(detector.is_yaml_file("assets/test.yml"));
     /// ```
     #[inline]
     pub fn is_yaml_file<P: AsRef<Path>>(&self, path: P) -> bool {

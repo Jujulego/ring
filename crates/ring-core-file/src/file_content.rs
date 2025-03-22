@@ -16,15 +16,15 @@ impl FileContent {
     pub fn style(&self) -> crossterm::style::ContentStyle {
         crossterm::style::ContentStyle {
             foreground_color: match self {
+                FileContent::Configuration => Some(crossterm::style::Color::DarkCyan),
                 FileContent::Lockfile
                 | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
-                FileContent::Configuration
+                FileContent::Other(_)
                 | FileContent::Source => Some(crossterm::style::Color::Blue),
                 FileContent::Tests => Some(crossterm::style::Color::DarkGreen),
-                _ => None
             },
             attributes: match self {
-                FileContent::Configuration
+                FileContent::Other(_)
                 | FileContent::Lockfile => crossterm::style::Attribute::Dim.into(),
                 _ => Default::default()
             },
@@ -65,8 +65,8 @@ mod tests {
     fn it_should_return_config_style() {
         let style = FileContent::Configuration.style();
 
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
-        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkCyan));
+        assert!(style.attributes.is_empty());
     }
 
     #[test]
@@ -110,7 +110,7 @@ mod tests {
     fn it_should_return_other_style() {
         let style = FileContent::Other("toto".into()).style();
 
-        assert_eq!(style.foreground_color, None);
-        assert!(style.attributes.is_empty());
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
+        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
     }
 }

@@ -959,6 +959,7 @@ dependencies = [
  "ring-core-modules",
  "ring-module-rust",
  "ring-module-toml",
+ "ring-module-yaml",
 ]
 
 [[package]]
