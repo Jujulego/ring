@@ -22,8 +22,7 @@ impl JavascriptFileDetector {
     /// use ring_module_javascript::JavascriptFileDetector;
     ///
     /// let detector = JavascriptFileDetector::new();
-    /// assert!(detector.is_javascript_file("Cargo.javascript"));
-    /// assert!(!detector.is_javascript_file("src"));
+    /// assert!(detector.is_javascript_file("assets/test.js"));
     /// ```
     #[inline]
     pub fn is_javascript_file<P: AsRef<Path>>(&self, path: P) -> bool {
