@@ -22,7 +22,7 @@ impl YamlFileDetector {
     /// use ring_module_yaml::YamlFileDetector;
     ///
     /// let detector = YamlFileDetector::new();
-    /// assert!(detector.is_yaml_file("assets/test.yaml"));
+    /// assert!(detector.is_yaml_file("assets/test.json"));
     /// assert!(detector.is_yaml_file("assets/test.yml"));
     /// ```
     #[inline]
@@ -55,7 +55,7 @@ mod tests {
     fn it_should_detect_yaml_language() {
         let detector = YamlFileDetector::new();
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.yaml")), Some(yaml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/test.json")), Some(yaml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.yml")), Some(yaml_language()));
     }
 

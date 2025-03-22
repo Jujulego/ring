@@ -20,6 +20,8 @@ impl Core {
     /// ```
     pub fn new() -> Self {
         let modules: Vec<Box<dyn Module>> = vec![
+            #[cfg(feature = "json")]
+            Box::new(ring_module_json::JsonModule::new()),
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "toml")]
