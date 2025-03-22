@@ -1,9 +1,8 @@
 use crate::rust_language;
-use ring_core_file::{FileContent, QualifyPath};
 use ring_core_language::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::instrument;
+use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
 pub struct RustFileDetector {}
@@ -32,6 +31,7 @@ impl RustFileDetector {
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
+        trace!("stat {}", path.display());
         path.is_file() && path.extension().and_then(OsStr::to_str) == Some("rs")
     }
 }
@@ -44,17 +44,6 @@ impl DetectLanguage for RustFileDetector {
         } else {
             None
         }
-    }
-}
-
-impl QualifyPath for RustFileDetector {
-    #[instrument(name = "rust-file.qualify-content", skip_all)]
-    fn qualify_content(&self, path: &Path) -> Option<FileContent> {
-        if !self.is_rust_file(path) {
-            return None;
-        }
-        
-        Some(FileContent::Source)
     }
 }
 
@@ -75,13 +64,5 @@ mod tests {
 
         assert_eq!(detector.detect_language(Path::new("Cargo.toml")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
-    }
-    
-    #[test]
-    fn it_should_qualify_path_as_source() {
-        let detector = RustFileDetector {};
-        
-        assert_eq!(detector.qualify_content(Path::new("do-not-exists.rs")), None);
-        assert_eq!(detector.qualify_content(Path::new("src/lib.rs")), Some(FileContent::Source));
     }
 }
