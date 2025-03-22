@@ -72,7 +72,7 @@ impl CargoProjectDetector {
         let path = path.as_ref();
 
         trace!("stat {}", path.display());
-        path.is_file() && self._is_lockfile(path)
+        path.is_file() && self._is_cargo_config(path)
     }
 
     fn _is_cargo_config(&self, path: &Path) -> bool {
@@ -173,15 +173,15 @@ mod tests {
 
         assert_eq!(
             detector.qualify_content(Path::new("assets/.cargo/config")),
-            Some((FileContent::Configuration, Path::new("assets/.cargo")))
+            Some((FileContent::Configuration, Path::new("assets/.cargo/config")))
         );
         assert_eq!(
             detector.qualify_content(Path::new("assets/.cargo/config.toml")),
-            Some((FileContent::Configuration, Path::new("assets/.cargo")))
+            Some((FileContent::Configuration, Path::new("assets/.cargo/config.toml")))
         );
         assert_eq!(
             detector.qualify_content(Path::new("assets/build.rs")),
-            Some((FileContent::Source, Path::new("assets/build.rs")))
+            Some((FileContent::Other("build".into()), Path::new("assets/build.rs")))
         );
         assert_eq!(
             detector.qualify_content(Path::new("assets/Cargo.toml")),

@@ -1,7 +1,7 @@
 use ring_core_file::FileContent;
 use ring_core_language::Language;
 use ring_core_modules::Module;
-use std::path::{absolute, Path};
+use std::path::Path;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -38,12 +38,11 @@ impl Core {
     /// use ring_module_rust::rust_language;
     ///
     /// let core = Core::new();
-    /// assert_eq!(core.detect_language("src"), None);
     /// assert_eq!(core.detect_language("src/lib.rs"), Some(rust_language()));
     /// ```
     #[inline]
     pub fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        self._detect_language(&absolute(path).ok()?)
+        self._detect_language(path.as_ref())
     }
 
     fn _detect_language(&self, path: &Path) -> Option<Language> {

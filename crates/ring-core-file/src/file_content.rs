@@ -65,7 +65,7 @@ mod tests {
     fn it_should_return_config_style() {
         let style = FileContent::Configuration.style();
 
-        assert_eq!(style.foreground_color, None);
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
         assert!(style.attributes.has(crossterm::style::Attribute::Dim));
     }
 
