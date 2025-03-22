@@ -77,6 +77,27 @@ impl NpmPackageDetector {
         path.file_name().and_then(OsStr::to_str) == Some("package-lock.json")
     }
 
+    /// Checks if given path is a npm package
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_javascript::NpmPackageDetector;
+    ///
+    /// let detector = NpmPackageDetector::new();
+    /// assert!(detector.is_package("assets"));
+    /// ```
+    pub fn is_package<P: AsRef<Path>>(&self, path: P) -> bool {
+        let path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        path.is_dir() && self._is_package(path)
+    }
+
+    fn _is_package(&self, path: &Path) -> bool {
+        self.is_manifest(path.join("package.json"))
+    }
+
     /// Checks if given path is a pnpm package lockfile
     ///
     /// # Examples
@@ -118,6 +139,27 @@ impl NpmPackageDetector {
     fn _is_yarn_lockfile(&self, path: &Path) -> bool {
         path.file_name().and_then(OsStr::to_str) == Some("yarn.lock")
     }
+
+    /// Checks if given path is a yarn configuration file
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_javascript::NpmPackageDetector;
+    ///
+    /// let detector = NpmPackageDetector::new();
+    /// assert!(detector.is_yarn_configuration("assets/.yarnrc.yml"));
+    /// ```
+    pub fn is_yarn_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
+        let path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        path.is_file() && self._is_yarn_lockfile(path)
+    }
+
+    fn _is_yarn_configuration(&self, path: &Path) -> bool {
+        path.file_name().and_then(OsStr::to_str) == Some(".yarnrc.yml")
+    }
 }
 
 impl DetectLanguage for NpmPackageDetector {
@@ -141,14 +183,41 @@ impl DetectLanguage for NpmPackageDetector {
 impl QualifyPath for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+        // Out of package cases
         trace!("stat {}", path.display());
         if path.is_file() {
             if self._is_manifest(path) {
                 return Some((FileContent::Manifest, path));
             }
+        } else {
+            return None;
+        }
 
-            if self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path) {
-                return Some((FileContent::Lockfile, path));
+        // In package cases
+        for ancestor in path.ancestors() {
+            if let Some(parent) = ancestor.parent() {
+                if !self._is_package(parent) {
+                    continue;
+                }
+            } else {
+                break;
+            }
+
+            trace!("stat {}", ancestor.display());
+            if ancestor.is_file() {
+                if self._is_yarn_configuration(ancestor) {
+                    return Some((FileContent::Configuration, ancestor));
+                }
+
+                if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
+                    return Some((FileContent::Lockfile, ancestor));
+                }
+
+                match ancestor.file_name().and_then(OsStr::to_str) {
+                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp commonjs".into()), ancestor)),
+                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp esm".into()), ancestor)),
+                    _ => {}
+                }
             }
         }
 

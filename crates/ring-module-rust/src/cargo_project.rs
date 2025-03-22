@@ -141,12 +141,20 @@ impl QualifyPath for CargoProjectDetector {
             }
 
             trace!("stat {}", ancestor.display());
-            match (ancestor.file_name().and_then(OsStr::to_str), ancestor.is_file()) {
-                (Some("build.rs"), true) => return Some((FileContent::Other("build".into()), ancestor)),
-                (Some("Cargo.lock"), true) => return Some((FileContent::Lockfile, ancestor)),
-                (Some("src"), false) => return Some((FileContent::Source, ancestor)),
-                (Some("tests"), false) => return Some((FileContent::Tests, ancestor)),
-                _ => continue,
+            if ancestor.is_file() {
+                if self._is_lockfile(ancestor) {
+                    return Some((FileContent::Lockfile, ancestor));
+                }
+
+                if ancestor.file_name().and_then(OsStr::to_str) == Some("build.rs") {
+                    return Some((FileContent::Other("build".into()), ancestor))
+                }
+            } else {
+                match ancestor.file_name().and_then(OsStr::to_str) {
+                    Some("src") => return Some((FileContent::Source, ancestor)),
+                    Some("tests") => return Some((FileContent::Tests, ancestor)),
+                    _ => {},
+                }
             }
         }
 
