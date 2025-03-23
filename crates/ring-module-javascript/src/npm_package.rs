@@ -224,3 +224,49 @@ impl QualifyPath for NpmPackageDetector {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_detect_manifest_language() {
+        let detector = NpmPackageDetector::new();
+
+        assert_eq!(detector.detect_language(Path::new("assets/package.json")), Some(json_language()));
+    }
+
+    #[test]
+    fn it_should_detect_lockfile_language() {
+        let detector = NpmPackageDetector::new();
+
+        assert_eq!(detector.detect_language(Path::new("assets/package-lock.json")), Some(json_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/pnpm-lock.yaml")), Some(yaml_language()));
+        assert_eq!(detector.detect_language(Path::new("assets/yarn.lock")), Some(yaml_language()));
+    }
+
+    #[test]
+    fn it_should_qualify_npm_files() {
+        let detector = NpmPackageDetector::new();
+
+        assert_eq!(detector.qualify_content(Path::new("assets/package.json")), Some((FileContent::Manifest, Path::new("assets/package.json"))));
+        assert_eq!(detector.qualify_content(Path::new("assets/package-lock.json")), Some((FileContent::Lockfile, Path::new("assets/package-lock.json"))));
+    }
+
+    #[test]
+    fn it_should_qualify_pnpm_files() {
+        let detector = NpmPackageDetector::new();
+
+        assert_eq!(detector.qualify_content(Path::new("assets/pnpm-lock.yaml")), Some((FileContent::Lockfile, Path::new("assets/pnpm-lock.yaml"))));
+    }
+
+    #[test]
+    fn it_should_qualify_yarn_files() {
+        let detector = NpmPackageDetector::new();
+
+        assert_eq!(detector.qualify_content(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp commonjs".into()), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_content(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp esm".into()), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_content(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
+        assert_eq!(detector.qualify_content(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
+    }
+}
