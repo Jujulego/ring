@@ -145,7 +145,7 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Test docs
-        run: cargo --locked llvm-cov --lcov --output-path codecov-docs.json test --doc --all-features
+        run: cargo --locked llvm-cov --lcov --output-path codecov-docs.json --doctests --all-features
 
       - name: Upload coverage to Codecov
         if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
