@@ -77,6 +77,7 @@ mod tests {
     fn it_should_detect_javascript_language() {
         let detector = JavascriptFileDetector::new();
 
+        assert_eq!(detector.detect_language(Path::new("assets/test")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.js")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.jsx")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.cjs")), Some(javascript_language()));
