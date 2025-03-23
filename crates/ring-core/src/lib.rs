@@ -1,7 +1,7 @@
 use ring_core_file::FileContent;
 use ring_core_language::Language;
 use ring_core_modules::Module;
-use std::path::Path;
+use std::path::{absolute, Path};
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -20,6 +20,8 @@ impl Core {
     /// ```
     pub fn new() -> Self {
         let modules: Vec<Box<dyn Module>> = vec![
+            #[cfg(feature = "javascript")]
+            Box::new(ring_module_javascript::JavascriptModule::new()),
             #[cfg(feature = "json")]
             Box::new(ring_module_json::JsonModule::new()),
             #[cfg(feature = "rust")]
@@ -46,7 +48,7 @@ impl Core {
     /// ```
     #[inline]
     pub fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        self._detect_language(path.as_ref())
+        self._detect_language(&absolute(path).ok()?)
     }
 
     fn _detect_language(&self, path: &Path) -> Option<Language> {
@@ -70,7 +72,7 @@ impl Core {
     /// ```
     #[inline]
     pub fn qualify_content<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
-        self._qualify_content(path.as_ref())
+        self._qualify_content(&absolute(path).ok()?)
     }
 
     fn _qualify_content(&self, path: &Path) -> Option<FileContent> {

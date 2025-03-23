@@ -9,7 +9,7 @@ use tracing::{instrument, trace};
 pub struct CargoProjectDetector {}
 
 impl CargoProjectDetector {
-    /// Creates a new instance of CargoManifestDetector
+    /// Creates a new instance of CargoProjectDetector
     #[inline]
     pub fn new() -> Self {
         Default::default()
@@ -104,9 +104,10 @@ impl CargoProjectDetector {
 }
 
 impl DetectLanguage for CargoProjectDetector {
-    #[instrument(name = "cargo-manifest.detect-language", skip_all)]
+    #[instrument(name = "cargo-project.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path) {
+        trace!("stat {}", path.display());
+        if path.is_file() && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
         } else {
             None
@@ -115,7 +116,7 @@ impl DetectLanguage for CargoProjectDetector {
 }
 
 impl QualifyPath for CargoProjectDetector {
-    #[instrument(name = "cargo-manifest.qualify-path", skip_all)]
+    #[instrument(name = "cargo-project.qualify-path", skip_all)]
     fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());
@@ -140,12 +141,20 @@ impl QualifyPath for CargoProjectDetector {
             }
 
             trace!("stat {}", ancestor.display());
-            match (ancestor.file_name().and_then(OsStr::to_str), ancestor.is_file()) {
-                (Some("build.rs"), true) => return Some((FileContent::Other("build".into()), ancestor)),
-                (Some("Cargo.lock"), true) => return Some((FileContent::Lockfile, ancestor)),
-                (Some("src"), false) => return Some((FileContent::Source, ancestor)),
-                (Some("tests"), false) => return Some((FileContent::Tests, ancestor)),
-                _ => continue,
+            if ancestor.is_file() {
+                if self._is_lockfile(ancestor) {
+                    return Some((FileContent::Lockfile, ancestor));
+                }
+
+                if ancestor.file_name().and_then(OsStr::to_str) == Some("build.rs") {
+                    return Some((FileContent::Other("build".into()), ancestor))
+                }
+            } else {
+                match ancestor.file_name().and_then(OsStr::to_str) {
+                    Some("src") => return Some((FileContent::Source, ancestor)),
+                    Some("tests") => return Some((FileContent::Tests, ancestor)),
+                    _ => {},
+                }
             }
         }
 

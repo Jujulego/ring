@@ -5,10 +5,11 @@ edition = "2021"
 
 [features]
 default = [
+    "ring-core/javascript",
     "ring-core/json",
     "ring-core/rust",
     "ring-core/toml",
-    "ring-core/yaml"
+    "ring-core/yaml",
 ]
 
 [dependencies]

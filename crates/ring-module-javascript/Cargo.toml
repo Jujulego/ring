@@ -1,0 +1,13 @@
+[package]
+name = "ring-module-javascript"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracing = "0.1.41"
+
+ring-core-file = { path = "../ring-core-file" }
+ring-core-language = { path = "../ring-core-language" }
+ring-core-modules = { path = "../ring-core-modules" }
+ring-module-json = { path = "../ring-module-json" }
+ring-module-yaml = { path = "../ring-module-yaml" }
