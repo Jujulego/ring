@@ -167,11 +167,11 @@ impl DetectLanguage for NpmPackageDetector {
     fn detect_language(&self, path: &Path) -> Option<Language> {
         trace!("stat {}", path.display());
         if path.is_file() {
-            if self._is_manifest(path) || self.is_npm_lockfile(path) {
+            if self._is_manifest(path) || self._is_npm_lockfile(path) {
                 return Some(json_language());
             }
 
-            if self._is_pnpm_lockfile(path) || self.is_yarn_lockfile(path) {
+            if self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path) {
                 return Some(yaml_language());
             }
         }
