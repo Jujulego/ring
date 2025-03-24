@@ -961,6 +961,7 @@ dependencies = [
  "ring-module-json",
  "ring-module-rust",
  "ring-module-toml",
+ "ring-module-typescript",
  "ring-module-yaml",
 ]
 

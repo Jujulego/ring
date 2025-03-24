@@ -10,6 +10,7 @@ javascript = ["dep:ring-module-javascript"]
 json = ["dep:ring-module-json"]
 rust = ["dep:ring-module-rust"]
 toml = ["dep:ring-module-toml"]
+typescript = ["dep:ring-module-typescript"]
 yaml = ["dep:ring-module-yaml"]
 
 [dependencies]
@@ -21,4 +22,5 @@ ring-module-javascript = { path = "../ring-module-javascript", optional = true }
 ring-module-json = { path = "../ring-module-json", optional = true }
 ring-module-rust = { path = "../ring-module-rust", optional = true }
 ring-module-toml = { path = "../ring-module-toml", optional = true }
+ring-module-typescript = { path = "../ring-module-typescript", optional = true }
 ring-module-yaml = { path = "../ring-module-yaml", optional = true }
