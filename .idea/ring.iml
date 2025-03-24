@@ -27,6 +27,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-json/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-yaml/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-javascript/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-typescript/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
