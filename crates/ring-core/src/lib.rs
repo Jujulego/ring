@@ -28,6 +28,8 @@ impl Core {
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
+            #[cfg(feature = "typescript")]
+            Box::new(ring_module_typescript::TypescriptModule::new()),
             #[cfg(feature = "yaml")]
             Box::new(ring_module_yaml::YamlModule::new()),
         ];
