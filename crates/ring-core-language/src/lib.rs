@@ -3,12 +3,14 @@ use std::path::Path;
 use rgb::Rgb;
 
 /// Object able to detect language of a given path
+#[deprecated(note = "Use ring-core-language instead")]
 pub trait DetectLanguage {
     fn detect_language(&self, path: &Path) -> Option<Language>;
 }
 
 /// Represents a language
 #[derive(Clone, Debug)]
+#[deprecated(note = "Use ring-core-language instead")]
 pub struct Language {
     name: String,
     color: Option<Rgb<u8>>,
