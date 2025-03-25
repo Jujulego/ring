@@ -9,7 +9,7 @@ use ring_core_language::Language;
 ///
 /// let language = typescript_language();
 /// assert_eq!(language.name(), "typescript");
-/// assert_eq!(language.color(), None);
+/// assert_eq!(language.color(), Some(&(0x00, 0x7a, 0xcc).into()));
 /// ```
 #[inline]
 pub fn typescript_language() -> Language {
