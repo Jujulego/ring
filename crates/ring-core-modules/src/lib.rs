@@ -1,5 +1,4 @@
-use ring_core_file::QualifyPath;
-use ring_core_language::DetectLanguage;
+use ring_core_file::{DetectLanguage, QualifyPath};
 use std::rc::Rc;
 
 pub trait Module {
