@@ -970,6 +970,7 @@ name = "ring-core-file"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "rgb",
 ]
 
 [[package]]
