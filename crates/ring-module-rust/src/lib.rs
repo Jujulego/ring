@@ -5,8 +5,7 @@ mod utils;
 pub use crate::cargo_project::CargoProjectDetector;
 pub use crate::rust_file::RustFileDetector;
 pub use crate::utils::rust_language;
-use ring_core_file::QualifyPath;
-use ring_core_language::DetectLanguage;
+use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
 use std::rc::Rc;
 

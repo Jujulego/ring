@@ -1,5 +1,4 @@
-use ring_core_file::FileContent;
-use ring_core_language::Language;
+use ring_core_file::{FileContent, Language};
 use ring_core_modules::Module;
 use std::path::{absolute, Path};
 

@@ -7,4 +7,6 @@ edition = "2024"
 crossterm = ["dep:crossterm"]
 
 [dependencies]
+rgb = "0.8.50"
+
 crossterm = { version = "0.28.1", optional = true }

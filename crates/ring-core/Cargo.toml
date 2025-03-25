@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-crossterm = ["ring-core-file/crossterm", "ring-core-language/crossterm"]
+crossterm = ["ring-core-file/crossterm"]
 
 javascript = ["dep:ring-module-javascript"]
 json = ["dep:ring-module-json"]
@@ -15,7 +15,6 @@ yaml = ["dep:ring-module-yaml"]
 
 [dependencies]
 ring-core-file = { path = "../ring-core-file" }
-ring-core-language = { path = "../ring-core-language" }
 ring-core-modules = { path = "../ring-core-modules" }
 
 ring-module-javascript = { path = "../ring-module-javascript", optional = true }

@@ -1,11 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::path::Path;
 use rgb::Rgb;
-
-/// Object able to detect language of a given path
-pub trait DetectLanguage {
-    fn detect_language(&self, path: &Path) -> Option<Language>;
-}
 
 /// Represents a language
 #[derive(Clone, Debug)]
@@ -16,12 +10,12 @@ pub struct Language {
 
 impl Language {
     /// Creates a new language
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
-    /// use ring_core_language::Language;
-    /// 
+    /// use ring_core_file::Language;
+    ///
     /// let language = Language::new("example".to_string());
     /// ```
     #[inline]
@@ -34,7 +28,7 @@ impl Language {
     /// # Example
     ///
     /// ```
-    /// use ring_core_language::Language;
+    /// use ring_core_file::Language;
     ///
     /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
     /// ```
@@ -43,13 +37,13 @@ impl Language {
         self.color = Some(color);
         self
     }
-    
+
     /// Returns language's name
     ///
     /// # Example
     ///
     /// ```
-    /// use ring_core_language::Language;
+    /// use ring_core_file::Language;
     ///
     /// let language = Language::new("example".to_string());
     /// assert_eq!(language.name(), "example");
@@ -65,7 +59,7 @@ impl Language {
     ///
     /// ```
     /// use rgb::Rgb;
-    /// use ring_core_language::Language;
+    /// use ring_core_file::Language;
     ///
     /// let language = Language::new("example".to_string());
     /// assert_eq!(language.color(), None);
@@ -85,7 +79,7 @@ impl Language {
     /// # Examples
     ///
     /// ```
-    /// use ring_core_language::Language;
+    /// use ring_core_file::Language;
     /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
     ///
     /// println!("{}", language.style().apply(language.name()));
@@ -124,7 +118,7 @@ mod tests {
     fn it_should_put_language_color_as_foreground_color() {
         let language = Language::new("example".to_string());
         assert_eq!(language.style().foreground_color, None);
-        
+
         let language = language.with_color((0x00, 0xff, 0x00).into());
         assert_eq!(language.style().foreground_color, Some(crossterm::style::Color::Rgb { r: 0x00, g: 0xff, b: 0x00 }));
     }

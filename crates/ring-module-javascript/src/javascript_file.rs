@@ -1,5 +1,5 @@
 use crate::javascript_language;
-use ring_core_language::{DetectLanguage, Language};
+use ring_core_file::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
