@@ -1,5 +1,4 @@
-use ring_core_file::{FileContent, QualifyPath};
-use ring_core_language::{DetectLanguage, Language};
+use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
 use std::path::Path;
