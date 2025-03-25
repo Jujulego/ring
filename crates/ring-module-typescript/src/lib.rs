@@ -5,8 +5,7 @@ mod tsconfig_file;
 pub use crate::tsconfig_file::TsconfigFileDetector;
 pub use crate::typescript_file::TypescriptFileDetector;
 pub use crate::utils::typescript_language;
-use ring_core_file::QualifyPath;
-use ring_core_language::DetectLanguage;
+use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
 use std::rc::Rc;
 
