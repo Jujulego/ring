@@ -973,14 +973,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-core-language"
-version = "0.1.0"
-dependencies = [
- "crossterm",
- "rgb",
-]
-
-[[package]]
 name = "ring-core-modules"
 version = "0.1.0"
 dependencies = [
