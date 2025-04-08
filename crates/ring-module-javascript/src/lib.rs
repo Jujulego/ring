@@ -8,6 +8,7 @@ pub use crate::utils::javascript_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
 use std::rc::Rc;
+use ring_core_units::DetectUnit;
 
 #[derive(Debug, Default, Clone)]
 pub struct JavascriptModule {
@@ -60,6 +61,11 @@ impl Module for JavascriptModule {
             self.npm_package_detector(),
             self.javascript_file_detector(),
         ]
+    }
+
+    #[inline]
+    fn unit_detectors(&self) -> Vec<Rc<dyn DetectUnit>> {
+        vec![self.npm_package_detector()]
     }
 
     #[inline]

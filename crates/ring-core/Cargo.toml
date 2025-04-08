@@ -16,6 +16,7 @@ yaml = ["dep:ring-module-yaml"]
 [dependencies]
 ring-core-file = { path = "../ring-core-file" }
 ring-core-modules = { path = "../ring-core-modules" }
+ring-core-units = { path = "../ring-core-units" }
 
 ring-module-javascript = { path = "../ring-module-javascript", optional = true }
 ring-module-json = { path = "../ring-module-json", optional = true }

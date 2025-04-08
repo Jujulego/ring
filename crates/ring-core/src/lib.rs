@@ -1,6 +1,8 @@
 use ring_core_file::{FileContent, Language};
 use ring_core_modules::Module;
+use ring_core_units::Unit;
 use std::path::{absolute, Path};
+use std::rc::Rc;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -57,6 +59,23 @@ impl Core {
             .flat_map(|module| module.language_detectors())
             .filter_map(|detector| detector.detect_language(path))
             .next()
+    }
+
+    /// Uses all modules to detect units at given path
+    #[inline]
+    pub fn detect_units<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
+        if let Ok(path) = absolute(path.as_ref()) {
+            self._detect_units(&path)
+        } else {
+            vec![]
+        }
+    }
+
+    fn _detect_units(&self, path: &Path) -> Vec<Rc<dyn Unit>> {
+        self.modules.iter()
+            .flat_map(|module| module.unit_detectors())
+            .filter_map(|detector| detector.detect_unit(path))
+            .collect()
     }
 
     /// Uses all modules to qualify given path's content
