@@ -18,4 +18,11 @@ pub trait Unit {
     fn name(&self) -> Option<&str> {
         None
     }
+
+    #[cfg(feature = "crossterm")]
+    fn style(&self) -> crossterm::style::ContentStyle {
+        self.language()
+            .map(|language| language.style())
+            .unwrap_or_default()
+    }
 }

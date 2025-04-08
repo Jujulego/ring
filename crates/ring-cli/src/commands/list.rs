@@ -7,6 +7,7 @@ use ring_core::Core;
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
+use itertools::Itertools;
 use tracing::instrument;
 
 /// Prepare list command parsing
@@ -68,9 +69,21 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             language
                 .map(|language| language_style.apply(language).to_string())
                 .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
-            core.qualify_content(file.path())
-                .map(|content| content.style().apply(content).to_string())
-                .unwrap_or_else(|| "unknown".dark_grey().to_string()),
+            if is_dir {
+                let units = core.detect_units(file.path()).iter()
+                    .map(|unit| unit.style().apply(unit.kind()).to_string())
+                    .join(",");
+                
+                if units.is_empty() {
+                    "unknown".dark_grey().to_string()
+                } else {
+                    units
+                }
+            } else {
+                core.qualify_content(file.path())
+                    .map(|content| content.style().apply(content).to_string())
+                    .unwrap_or_else(|| "unknown".dark_grey().to_string())
+            },
         ]
     } else {
         // for machines
@@ -79,9 +92,22 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             language
                 .map(|language| language.to_string())
                 .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
-            core.qualify_content(file.path())
-                .map(|content| content.to_string())
-                .unwrap_or_else(|| "unknown".to_string()),
+
+            if is_dir {
+                let units = core.detect_units(file.path()).iter()
+                    .map(|unit| unit.kind().to_string())
+                    .join(",");
+
+                if units.is_empty() {
+                    "unknown".to_string()
+                } else {
+                    units
+                }
+            } else {
+                core.qualify_content(file.path())
+                    .map(|content| content.to_string())
+                    .unwrap_or_else(|| "unknown".to_string())
+            },
         ]
     }
 }
