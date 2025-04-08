@@ -982,6 +982,9 @@ dependencies = [
 [[package]]
 name = "ring-core-units"
 version = "0.1.0"
+dependencies = [
+ "ring-core-file",
+]
 
 [[package]]
 name = "ring-module-javascript"
