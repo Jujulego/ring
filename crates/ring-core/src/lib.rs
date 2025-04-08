@@ -79,7 +79,7 @@ impl Core {
     fn _qualify_content(&self, path: &Path) -> Option<FileContent> {
         self.modules.iter()
             .flat_map(|module| module.path_qualifiers())
-            .filter_map(|detector| detector.qualify_content(path))
+            .filter_map(|detector| detector.qualify_file(path))
             .max_by_key(|(_, qualified_path)| qualified_path.components().count())
             .map(|(content, _)| content)
     }

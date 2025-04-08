@@ -116,7 +116,7 @@ impl DetectLanguage for CargoProjectDetector {
 
 impl QualifyPath for CargoProjectDetector {
     #[instrument(name = "cargo-project.qualify-path", skip_all)]
-    fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());
         if path.is_file() {
@@ -180,33 +180,33 @@ mod tests {
         let detector = CargoProjectDetector::new();
 
         assert_eq!(
-            detector.qualify_content(Path::new("assets/.cargo/config")),
+            detector.qualify_file(Path::new("assets/.cargo/config")),
             Some((FileContent::Configuration, Path::new("assets/.cargo/config")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/.cargo/config.toml")),
+            detector.qualify_file(Path::new("assets/.cargo/config.toml")),
             Some((FileContent::Configuration, Path::new("assets/.cargo/config.toml")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/build.rs")),
+            detector.qualify_file(Path::new("assets/build.rs")),
             Some((FileContent::Other("build".into()), Path::new("assets/build.rs")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/Cargo.toml")),
+            detector.qualify_file(Path::new("assets/Cargo.toml")),
             Some((FileContent::Manifest, Path::new("assets/Cargo.toml")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/Cargo.lock")),
+            detector.qualify_file(Path::new("assets/Cargo.lock")),
             Some((FileContent::Lockfile, Path::new("assets/Cargo.lock")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/src/lib.rs")),
+            detector.qualify_file(Path::new("assets/src/lib.rs")),
             Some((FileContent::Source, Path::new("assets/src")))
         );
         assert_eq!(
-            detector.qualify_content(Path::new("assets/tests/test.rs")),
+            detector.qualify_file(Path::new("assets/tests/test.rs")),
             Some((FileContent::Tests, Path::new("assets/tests")))
         );
-        assert_eq!(detector.qualify_content(Path::new("do-not-exists.toml")), None);
+        assert_eq!(detector.qualify_file(Path::new("do-not-exists.toml")), None);
     }
 }

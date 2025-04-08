@@ -181,7 +181,7 @@ impl DetectLanguage for NpmPackageDetector {
 
 impl QualifyPath for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
-    fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of package cases
         trace!("stat {}", path.display());
         if path.is_file() {
@@ -248,24 +248,24 @@ mod tests {
     fn it_should_qualify_npm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("assets/package.json")), Some((FileContent::Manifest, Path::new("assets/package.json"))));
-        assert_eq!(detector.qualify_content(Path::new("assets/package-lock.json")), Some((FileContent::Lockfile, Path::new("assets/package-lock.json"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/package.json")), Some((FileContent::Manifest, Path::new("assets/package.json"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/package-lock.json")), Some((FileContent::Lockfile, Path::new("assets/package-lock.json"))));
     }
 
     #[test]
     fn it_should_qualify_pnpm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("assets/pnpm-lock.yaml")), Some((FileContent::Lockfile, Path::new("assets/pnpm-lock.yaml"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/pnpm-lock.yaml")), Some((FileContent::Lockfile, Path::new("assets/pnpm-lock.yaml"))));
     }
 
     #[test]
     fn it_should_qualify_yarn_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp commonjs".into()), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_content(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp esm".into()), Path::new("assets/.pnp.loader.mjs"))));
-        assert_eq!(detector.qualify_content(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
-        assert_eq!(detector.qualify_content(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp commonjs".into()), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp esm".into()), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
     }
 }
