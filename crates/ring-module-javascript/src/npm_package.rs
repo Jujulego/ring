@@ -2,8 +2,50 @@ use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
 use std::ffi::OsStr;
-use std::path::Path;
-use tracing::{instrument, trace};
+use std::fs::File;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
+use serde::Deserialize;
+use tracing::{instrument, trace, warn};
+use ring_core_units::{DetectUnit, Unit};
+use crate::javascript_language;
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct PackageManifest {
+    pub name: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct NpmPackage {
+    manifest: PackageManifest,
+    root: PathBuf,
+}
+
+
+impl NpmPackage {
+    pub fn manifest(&self) -> &PackageManifest {
+        &self.manifest
+    }
+}
+
+impl Unit for NpmPackage {
+    fn kind(&self) -> &str {
+        "npm-package"
+    }
+
+    fn root(&self) -> &Path {
+        &self.root
+    }
+
+    fn language(&self) -> Option<Language> {
+        Some(javascript_language())
+    }
+
+    fn name(&self) -> Option<&str> {
+        self.manifest.name.as_deref()
+    }
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct NpmPackageDetector {}
@@ -176,6 +218,33 @@ impl DetectLanguage for NpmPackageDetector {
         }
 
         None
+    }
+}
+
+impl DetectUnit for NpmPackageDetector {
+    #[instrument(name = "npm-package.detect-unit", skip_all)]
+    fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
+        let manifest_path = path.join("package.json");
+        
+        trace!("read file {}", manifest_path.display());
+        match File::open(&manifest_path) {
+            Ok(ref mut file) => {
+                match serde_json::from_reader(&mut *file) {
+                    Ok(manifest) => {
+                        Some(Rc::new(NpmPackage { manifest, root: path.to_path_buf() }))
+                    }
+                    Err(err) => {
+                        warn!("Failed to parse {}: {}", manifest_path.display(), err);
+                        None
+                    }
+                }
+            },
+            Err(err) if err.kind() == io::ErrorKind::NotFound => None,
+            Err(err) => {
+                warn!("Unable to access {}: {err}", manifest_path.display());
+                None
+            }
+        }
     }
 }
 

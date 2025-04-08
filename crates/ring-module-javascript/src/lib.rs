@@ -3,7 +3,7 @@ mod utils;
 mod npm_package;
 
 pub use crate::javascript_file::JavascriptFileDetector;
-pub use crate::npm_package::NpmPackageDetector;
+pub use crate::npm_package::{PackageManifest, NpmPackage, NpmPackageDetector};
 pub use crate::utils::javascript_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;

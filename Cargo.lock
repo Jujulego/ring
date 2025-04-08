@@ -992,8 +992,11 @@ version = "0.1.0"
 dependencies = [
  "ring-core-file",
  "ring-core-modules",
+ "ring-core-units",
  "ring-module-json",
  "ring-module-yaml",
+ "serde",
+ "serde_json",
  "tracing",
 ]
 
