@@ -1009,6 +1009,7 @@ dependencies = [
 name = "ring-module-javascript"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ring-core-file",
  "ring-core-modules",
  "ring-core-units",

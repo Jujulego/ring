@@ -29,12 +29,22 @@ impl NpmPackage {
     pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
     }
+
+    /// Returns package name read from the manifest, if any.
+    pub fn name(&self) -> Option<&str> {
+        self.manifest.name.as_deref()
+    }
+
+    /// Returns true if the loaded package is a workspace
+    pub fn is_workspace(&self) -> bool {
+        self.manifest.workspaces.is_empty()
+    }
 }
 
 impl Unit for NpmPackage {
     /// Returns the detected kind of unit, either `"npm:package"` or `"npm:workspace"`
     fn kind(&self) -> &str {
-        if self.manifest.workspaces.is_empty() {
+        if self.is_workspace() {
             "npm:package"
         } else {
             "npm:workspace"

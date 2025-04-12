@@ -8,7 +8,8 @@ use std::fs::File;
 use std::io;
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace, warn};
+use anyhow::anyhow;
+use tracing::{debug, instrument, trace, warn};
 
 /// Detector of npm packages, and related files (manifest and lockfiles)
 #[derive(Clone, Debug, Default)]
@@ -165,6 +166,44 @@ impl NpmPackageDetector {
     fn _is_yarn_configuration(&self, path: &Path) -> bool {
         path.file_name().and_then(OsStr::to_str) == Some(".yarnrc.yml")
     }
+
+    /// Load npm package at given path, if any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_javascript::NpmPackageDetector;
+    ///
+    /// let detector = NpmPackageDetector::new();
+    /// let package = detector.load_package_at("assets");
+    ///
+    /// assert_eq!(package.unwrap().unwrap().name(), Some("test-asset"));
+    /// ```
+    pub fn load_package_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
+        self._load_package_at(path.as_ref())
+    }
+
+    fn _load_package_at(&self, path: &Path) -> anyhow::Result<Option<Rc<NpmPackage>>> {
+        let manifest_path = path.join("package.json");
+
+        trace!("read file {}", manifest_path.display());
+        match File::open(&manifest_path) {
+            Ok(ref mut file) => {
+                match serde_json::from_reader(&mut *file) {
+                    Ok(manifest) => {
+                        Ok(Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf()))))
+                    }
+                    Err(err) => {
+                        Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
+                    }
+                }
+            },
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(err) => {
+                Err(anyhow!(err).context(format!("Unable to access {}", manifest_path.display())))
+            }
+        }
+    }
 }
 
 impl DetectLanguage for NpmPackageDetector {
@@ -188,24 +227,14 @@ impl DetectLanguage for NpmPackageDetector {
 impl DetectUnit for NpmPackageDetector {
     #[instrument(name = "npm-package.detect-unit", skip_all)]
     fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
-        let manifest_path = path.join("package.json");
-
-        trace!("read file {}", manifest_path.display());
-        match File::open(&manifest_path) {
-            Ok(ref mut file) => {
-                match serde_json::from_reader(&mut *file) {
-                    Ok(manifest) => {
-                        Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())))
-                    }
-                    Err(err) => {
-                        warn!("Failed to parse {}: {}", manifest_path.display(), err);
-                        None
-                    }
-                }
-            },
-            Err(err) if err.kind() == io::ErrorKind::NotFound => None,
+        match self._load_package_at(path) {
+            Ok(result) => result.map(|unit| unit as Rc<dyn Unit>),
             Err(err) => {
-                warn!("Unable to access {}: {err}", manifest_path.display());
+                warn!("{}", err);
+                if let Some(source) = err.source() {
+                    debug!("Error caused by: {}", source);
+                }
+
                 None
             }
         }

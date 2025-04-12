@@ -13,3 +13,4 @@ ring-core-modules = { path = "../ring-core-modules" }
 ring-core-units = { path = "../ring-core-units" }
 ring-module-json = { path = "../ring-module-json" }
 ring-module-yaml = { path = "../ring-module-yaml" }
+anyhow = "1.0.97"
