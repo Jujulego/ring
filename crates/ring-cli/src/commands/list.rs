@@ -72,7 +72,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             if is_dir {
                 let units = core.detect_units(file.path()).iter()
                     .map(|unit| unit.style().apply(unit.kind()).to_string())
-                    .join(",");
+                    .join("/");
                 
                 if units.is_empty() {
                     "unknown".dark_grey().to_string()
@@ -96,7 +96,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             if is_dir {
                 let units = core.detect_units(file.path()).iter()
                     .map(|unit| unit.kind().to_string())
-                    .join(",");
+                    .join("/");
 
                 if units.is_empty() {
                     "unknown".to_string()

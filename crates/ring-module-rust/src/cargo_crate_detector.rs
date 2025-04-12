@@ -1,8 +1,13 @@
+use crate::cargo_crate::CargoCrate;
+use anyhow::anyhow;
+use cargo_toml::Manifest;
 use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
+use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::{debug, instrument, trace, warn};
 
 #[derive(Clone, Debug, Default)]
 pub struct CargoCrateDetector {}
@@ -100,6 +105,22 @@ impl CargoCrateDetector {
     fn _is_crate(&self, path: &Path) -> bool {
         self.is_manifest(path.join("Cargo.toml"))
     }
+
+    pub fn load_crate_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        self._load_crate_at(path.as_ref())
+    }
+
+    fn _load_crate_at(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        let manifest_path = path.join("Cargo.toml");
+
+        trace!("read file {}", manifest_path.display());
+        match Manifest::from_path(&manifest_path) {
+            Ok(manifest) => Ok(Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())))),
+            Err(err) => {
+                Err(anyhow!(err).context(format!("Failed to load {}", manifest_path.display())))
+            }
+        }
+    }
 }
 
 impl DetectLanguage for CargoCrateDetector {
@@ -110,6 +131,23 @@ impl DetectLanguage for CargoCrateDetector {
             Some(toml_language())
         } else {
             None
+        }
+    }
+}
+
+impl DetectUnit for CargoCrateDetector {
+    #[instrument(name = "cargo-project.detect-unit", skip_all)]
+    fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
+        match self._load_crate_at(path) {
+            Ok(result) => result.map(|unit| unit as Rc<dyn Unit>),
+            Err(err) => {
+                warn!("{}", err);
+                if let Some(source) = err.source() {
+                    debug!("Error caused by: {}", source);
+                }
+
+                None
+            }
         }
     }
 }

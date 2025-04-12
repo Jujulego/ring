@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.97"
 cargo_toml = "0.22.1"
 tracing = "0.1.41"
 

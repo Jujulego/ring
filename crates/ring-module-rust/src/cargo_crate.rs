@@ -37,7 +37,7 @@ impl Unit for CargoCrate {
     /// Returns the detected kind of unit, either `"cargo:crate"` or `"cargo:workspace"`
     fn kind(&self) -> &str {
         if self.is_workspace() {
-            "cargo:package"
+            "cargo:workspace"
         } else {
             "cargo:crate"
         }
