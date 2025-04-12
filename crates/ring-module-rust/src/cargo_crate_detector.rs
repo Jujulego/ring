@@ -5,6 +5,7 @@ use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
+use std::io;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
@@ -116,6 +117,7 @@ impl CargoCrateDetector {
         trace!("read file {}", manifest_path.display());
         match Manifest::from_path(&manifest_path) {
             Ok(manifest) => Ok(Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())))),
+            Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => Ok(None),
             Err(err) => {
                 Err(anyhow!(err).context(format!("Failed to load {}", manifest_path.display())))
             }
