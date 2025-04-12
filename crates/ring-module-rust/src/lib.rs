@@ -1,6 +1,7 @@
 mod cargo_crate_detector;
 mod rust_file;
 mod utils;
+mod cargo_crate;
 
 pub use crate::cargo_crate_detector::CargoCrateDetector;
 pub use crate::rust_file::RustFileDetector;

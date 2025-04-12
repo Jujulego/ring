@@ -30,7 +30,7 @@ impl NpmPackage {
         &self.manifest
     }
 
-    /// Returns package name read from the manifest, if any.
+    /// Returns package's name read from the manifest, if any.
     pub fn name(&self) -> Option<&str> {
         self.manifest.name.as_deref()
     }
