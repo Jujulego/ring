@@ -177,7 +177,7 @@ impl NpmPackageDetector {
     /// let detector = NpmPackageDetector::new();
     /// let package = detector.load_package_at("assets");
     ///
-    /// assert_eq!(package.unwrap().unwrap().name(), Some("test-asset"));
+    /// assert_eq!(package.unwrap().unwrap().name(), Some("test-assets"));
     /// ```
     pub fn load_package_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         self._load_package_at(path.as_ref())
@@ -304,6 +304,14 @@ mod tests {
         assert_eq!(detector.detect_language(Path::new("assets/package-lock.json")), Some(json_language()));
         assert_eq!(detector.detect_language(Path::new("assets/pnpm-lock.yaml")), Some(yaml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/yarn.lock")), Some(yaml_language()));
+    }
+
+    #[test]
+    fn it_should_detect_package_unit() {
+        let detector = NpmPackageDetector::new();
+        let package = detector.detect_unit(Path::new("assets"));
+
+        assert_eq!(package.unwrap().name(), Some("test-assets"));
     }
 
     #[test]
