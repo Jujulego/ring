@@ -32,8 +32,7 @@ impl NpmPackage {
 }
 
 impl Unit for NpmPackage {
-    /// Returns the detected kind of unit.
-    /// Either `"npm:package"` or `"npm:workspace"`
+    /// Returns the detected kind of unit, either `"npm:package"` or `"npm:workspace"`
     fn kind(&self) -> &str {
         if self.manifest.workspaces.is_empty() {
             "npm:package"
@@ -42,15 +41,63 @@ impl Unit for NpmPackage {
         }
     }
 
+    /// Returns the given root path
     fn root(&self) -> &Path {
         &self.root
     }
 
+    /// Returns javascript language object
     fn language(&self) -> Option<Language> {
         Some(javascript_language())
     }
 
+    /// Returns package name read from the manifest, if any.
     fn name(&self) -> Option<&str> {
         self.manifest.name.as_deref()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_return_package_kind() {
+        let package = NpmPackage::new(
+            PackageManifest { name: Some("test".into()), workspaces: vec![] },
+            "/test".into()
+        );
+
+        assert_eq!(package.kind(), "npm:package");
+    }
+
+    #[test]
+    fn it_should_return_workspace_kind() {
+        let package = NpmPackage::new(
+            PackageManifest { name: Some("test".into()), workspaces: vec!["packages/*".into()] },
+            "/test".into()
+        );
+
+        assert_eq!(package.kind(), "npm:workspace");
+    }
+
+    #[test]
+    fn it_should_return_javascript_language() {
+        let package = NpmPackage::new(
+            PackageManifest { name: Some("test".into()), workspaces: vec!["packages/*".into()] },
+            "/test".into()
+        );
+
+        assert_eq!(package.language(), Some(javascript_language()));
+    }
+
+    #[test]
+    fn it_should_return_manifest_name() {
+        let package = NpmPackage::new(
+            PackageManifest { name: Some("test".into()), workspaces: vec!["packages/*".into()] },
+            "/test".into()
+        );
+
+        assert_eq!(package.name(), Some("test"));
     }
 }
