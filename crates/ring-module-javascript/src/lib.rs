@@ -1,14 +1,16 @@
 mod javascript_file;
 mod utils;
 mod npm_package;
+mod npm_package_detector;
 
 pub use crate::javascript_file::JavascriptFileDetector;
-pub use crate::npm_package::{PackageManifest, NpmPackage, NpmPackageDetector};
+pub use crate::npm_package::{NpmPackage, PackageManifest};
+pub use crate::npm_package_detector::NpmPackageDetector;
 pub use crate::utils::javascript_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
-use std::rc::Rc;
 use ring_core_units::DetectUnit;
+use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub struct JavascriptModule {
