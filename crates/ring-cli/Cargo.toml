@@ -12,7 +12,7 @@ web = ["dep:ring-web"]
 anyhow = "1.0.93"
 bytesize = "2.0.1"
 clap = "4.5.20"
-crossterm = "0.28.1"
+crossterm = "0.29.0"
 itertools = "0.14.0"
 lscolors = { version = "0.20.0", features = ["crossterm"] }
 sentry = { version = "0.37.0", features = ["anyhow", "tracing"] }
