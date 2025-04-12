@@ -80,7 +80,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                     units
                 }
             } else {
-                core.qualify_content(file.path())
+                core.qualify_file(file.path())
                     .map(|content| content.style().apply(content).to_string())
                     .unwrap_or_else(|| "unknown".dark_grey().to_string())
             },
@@ -104,7 +104,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                     units
                 }
             } else {
-                core.qualify_content(file.path())
+                core.qualify_file(file.path())
                     .map(|content| content.to_string())
                     .unwrap_or_else(|| "unknown".to_string())
             },
