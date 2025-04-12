@@ -5,9 +5,9 @@ use std::path::Path;
 use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
-pub struct CargoProjectDetector {}
+pub struct CargoCrateDetector {}
 
-impl CargoProjectDetector {
+impl CargoCrateDetector {
     /// Creates a new instance of CargoProjectDetector
     #[inline]
     pub fn new() -> Self {
@@ -19,9 +19,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_manifest("assets/Cargo.toml"));
     /// ```
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -40,9 +40,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_lockfile("assets/Cargo.lock"));
     /// ```
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -61,9 +61,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_cargo_config("assets/.cargo/config"));
     /// assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
     /// ```
@@ -85,9 +85,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_crate("assets"));
     /// ```
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -102,7 +102,7 @@ impl CargoProjectDetector {
     }
 }
 
-impl DetectLanguage for CargoProjectDetector {
+impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-project.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
         trace!("stat {}", path.display());
@@ -114,7 +114,7 @@ impl DetectLanguage for CargoProjectDetector {
     }
 }
 
-impl QualifyPath for CargoProjectDetector {
+impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-project.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn it_should_detect_toml_language() {
-        let detector = CargoProjectDetector::new();
+        let detector = CargoCrateDetector::new();
 
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config")), Some(toml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config.toml")), Some(toml_language()));
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn it_should_qualify_path_content() {
-        let detector = CargoProjectDetector::new();
+        let detector = CargoCrateDetector::new();
 
         assert_eq!(
             detector.qualify_file(Path::new("assets/.cargo/config")),

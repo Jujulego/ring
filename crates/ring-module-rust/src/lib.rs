@@ -1,8 +1,8 @@
-mod cargo_project;
+mod cargo_crate_detector;
 mod rust_file;
 mod utils;
 
-pub use crate::cargo_project::CargoProjectDetector;
+pub use crate::cargo_crate_detector::CargoCrateDetector;
 pub use crate::rust_file::RustFileDetector;
 pub use crate::utils::rust_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub struct RustModule {
-    cargo_project_detector: Rc<CargoProjectDetector>,
+    cargo_project_detector: Rc<CargoCrateDetector>,
     rust_file_detector: Rc<RustFileDetector>,
 }
 
@@ -33,7 +33,7 @@ impl RustModule {
     /// let detector = module.rust_file_detector();
     /// ```
     #[inline]
-    pub fn cargo_project_detector(&self) -> Rc<CargoProjectDetector> {
+    pub fn cargo_project_detector(&self) -> Rc<CargoCrateDetector> {
         self.cargo_project_detector.clone()
     }
 
