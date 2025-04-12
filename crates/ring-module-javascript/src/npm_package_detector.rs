@@ -309,9 +309,9 @@ mod tests {
     #[test]
     fn it_should_detect_package_unit() {
         let detector = NpmPackageDetector::new();
-        let package = detector.detect_unit(Path::new("assets"));
 
-        assert_eq!(package.unwrap().name(), Some("test-assets"));
+        assert_eq!(detector.detect_unit(Path::new("assets")).unwrap().name(), Some("test-assets"));
+        assert!(detector.detect_unit(Path::new("do-not-exists")).is_none());
     }
 
     #[test]
