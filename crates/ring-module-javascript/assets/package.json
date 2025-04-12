@@ -1,1 +1,4 @@
-{ "comment":  "Used for testing purposes" }
+{
+  "name": "test-assets",
+  "comment":  "Used for testing purposes"
+}

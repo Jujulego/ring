@@ -56,7 +56,7 @@ impl DetectLanguage for TsconfigFileDetector {
 
 impl QualifyPath for TsconfigFileDetector {
     #[instrument(name = "tsconfig-file.qualify-path", skip_all)]
-    fn qualify_content<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         if self._is_tsconfig(path) {
             Some((FileContent::Configuration, path))
         } else {
@@ -81,7 +81,7 @@ mod tests {
     fn it_should_qualify_as_config_file() {
         let detector = TsconfigFileDetector::new();
 
-        assert_eq!(detector.qualify_content(Path::new("assets/tsconfig.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.json"))));
-        assert_eq!(detector.qualify_content(Path::new("assets/tsconfig.test.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.test.json"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/tsconfig.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.json"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/tsconfig.test.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.test.json"))));
     }
 }

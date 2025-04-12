@@ -7,7 +7,7 @@ use std::path::Path;
 use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
-pub struct JavascriptFileDetector {}
+pub struct JavascriptFileDetector;
 
 impl JavascriptFileDetector {
     /// Creates a new instance of JavascriptFileDetector
