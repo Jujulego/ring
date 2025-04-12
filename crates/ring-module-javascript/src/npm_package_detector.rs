@@ -13,7 +13,7 @@ use tracing::{debug, instrument, trace, warn};
 
 /// Detector of npm packages, and related files (manifest and lockfiles)
 #[derive(Clone, Debug, Default)]
-pub struct NpmPackageDetector {}
+pub struct NpmPackageDetector;
 
 impl NpmPackageDetector {
     /// Creates a new instance of NpmPackageDetector

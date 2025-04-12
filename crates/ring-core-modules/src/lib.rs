@@ -8,13 +8,30 @@ pub trait Module {
         vec![]
     }
 
+    /// Returns all path qualifiers implemented by this module.
+    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
+        vec![]
+    }
+
     /// Returns all unit detectors implemented by this module.
     fn unit_detectors(&self) -> Vec<Rc<dyn DetectUnit>> {
         vec![]
     }
+}
 
-    /// Returns all path qualifiers implemented by this module.
-    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
-        vec![]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    struct TestModule;
+    impl Module for TestModule {}
+    
+    #[test]
+    fn it_should_return_empty_vec_by_default() {
+        let module = TestModule;
+        
+        assert!(module.language_detectors().is_empty());
+        assert!(module.unit_detectors().is_empty());
+        assert!(module.path_qualifiers().is_empty());
     }
 }
