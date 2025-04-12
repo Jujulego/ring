@@ -11,27 +11,37 @@ use tracing::{instrument, trace, warn};
 use ring_core_units::{DetectUnit, Unit};
 use crate::javascript_language;
 
+/// Parsed content of package.json files
 #[derive(Clone, Debug, Deserialize)]
 pub struct PackageManifest {
     pub name: Option<String>,
+    #[serde(default)]
+    pub workspaces: Vec<String>,
 }
 
+/// Represents a npm package unit
 #[derive(Clone, Debug)]
 pub struct NpmPackage {
     manifest: PackageManifest,
     root: PathBuf,
 }
 
-
 impl NpmPackage {
+    /// Returns loaded package.json manifest
     pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
     }
 }
 
 impl Unit for NpmPackage {
+    /// Returns the detected kind of unit.
+    /// Either `"npm:package"` or `"npm:workspace"`
     fn kind(&self) -> &str {
-        "npm-package"
+        if self.manifest.workspaces.is_empty() {
+            "npm:package"
+        } else {
+            "npm:workspace"
+        }
     }
 
     fn root(&self) -> &Path {
@@ -47,6 +57,7 @@ impl Unit for NpmPackage {
     }
 }
 
+/// Detector of npm packages, and related files (manifest and lockfiles)
 #[derive(Clone, Debug, Default)]
 pub struct NpmPackageDetector {}
 
