@@ -1,13 +1,19 @@
+use crate::cargo_crate::CargoCrate;
+use anyhow::anyhow;
+use cargo_toml::Manifest;
 use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
+use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
+use std::io;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::{debug, instrument, trace, warn};
 
 #[derive(Clone, Debug, Default)]
-pub struct CargoProjectDetector {}
+pub struct CargoCrateDetector {}
 
-impl CargoProjectDetector {
+impl CargoCrateDetector {
     /// Creates a new instance of CargoProjectDetector
     #[inline]
     pub fn new() -> Self {
@@ -19,9 +25,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_manifest("assets/Cargo.toml"));
     /// ```
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -40,9 +46,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_lockfile("assets/Cargo.lock"));
     /// ```
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -61,9 +67,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_cargo_config("assets/.cargo/config"));
     /// assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
     /// ```
@@ -85,9 +91,9 @@ impl CargoProjectDetector {
     /// # Examples
     ///
     /// ```
-    /// use ring_module_rust::CargoProjectDetector;
+    /// use ring_module_rust::CargoCrateDetector;
     ///
-    /// let detector = CargoProjectDetector::new();
+    /// let detector = CargoCrateDetector::new();
     /// assert!(detector.is_crate("assets"));
     /// ```
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
@@ -100,9 +106,26 @@ impl CargoProjectDetector {
     fn _is_crate(&self, path: &Path) -> bool {
         self.is_manifest(path.join("Cargo.toml"))
     }
+
+    pub fn load_crate_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        self._load_crate_at(path.as_ref())
+    }
+
+    fn _load_crate_at(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        let manifest_path = path.join("Cargo.toml");
+
+        trace!("read file {}", manifest_path.display());
+        match Manifest::from_path(&manifest_path) {
+            Ok(manifest) => Ok(Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())))),
+            Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(err) => {
+                Err(anyhow!(err).context(format!("Failed to load {}", manifest_path.display())))
+            }
+        }
+    }
 }
 
-impl DetectLanguage for CargoProjectDetector {
+impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-project.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
         trace!("stat {}", path.display());
@@ -114,7 +137,24 @@ impl DetectLanguage for CargoProjectDetector {
     }
 }
 
-impl QualifyPath for CargoProjectDetector {
+impl DetectUnit for CargoCrateDetector {
+    #[instrument(name = "cargo-project.detect-unit", skip_all)]
+    fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
+        match self._load_crate_at(path) {
+            Ok(result) => result.map(|unit| unit as Rc<dyn Unit>),
+            Err(err) => {
+                warn!("{}", err);
+                if let Some(source) = err.source() {
+                    debug!("Error caused by: {}", source);
+                }
+
+                None
+            }
+        }
+    }
+}
+
+impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-project.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
@@ -167,7 +207,7 @@ mod tests {
 
     #[test]
     fn it_should_detect_toml_language() {
-        let detector = CargoProjectDetector::new();
+        let detector = CargoCrateDetector::new();
 
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config")), Some(toml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config.toml")), Some(toml_language()));
@@ -177,7 +217,7 @@ mod tests {
 
     #[test]
     fn it_should_qualify_path_content() {
-        let detector = CargoProjectDetector::new();
+        let detector = CargoCrateDetector::new();
 
         assert_eq!(
             detector.qualify_file(Path::new("assets/.cargo/config")),

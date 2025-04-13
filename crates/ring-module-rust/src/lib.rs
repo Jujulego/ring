@@ -1,17 +1,19 @@
-mod cargo_project;
+mod cargo_crate_detector;
 mod rust_file;
 mod utils;
+mod cargo_crate;
 
-pub use crate::cargo_project::CargoProjectDetector;
+pub use crate::cargo_crate_detector::CargoCrateDetector;
 pub use crate::rust_file::RustFileDetector;
 pub use crate::utils::rust_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
+use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub struct RustModule {
-    cargo_project_detector: Rc<CargoProjectDetector>,
+    cargo_crate_detector: Rc<CargoCrateDetector>,
     rust_file_detector: Rc<RustFileDetector>,
 }
 
@@ -22,7 +24,7 @@ impl RustModule {
         Default::default()
     }
 
-    /// Returns a pointer on CargoManifestDetector
+    /// Returns a pointer on CargoCrateDetector
     /// 
     /// # Examples
     /// 
@@ -30,11 +32,11 @@ impl RustModule {
     /// use ring_module_rust::RustModule;
     /// 
     /// let module = RustModule::new();
-    /// let detector = module.rust_file_detector();
+    /// let detector = module.cargo_crate_detector();
     /// ```
     #[inline]
-    pub fn cargo_project_detector(&self) -> Rc<CargoProjectDetector> {
-        self.cargo_project_detector.clone()
+    pub fn cargo_crate_detector(&self) -> Rc<CargoCrateDetector> {
+        self.cargo_crate_detector.clone()
     }
 
     /// Returns a pointer on RustFileDetector
@@ -57,15 +59,22 @@ impl Module for RustModule {
     #[inline]
     fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
         vec![
-            self.cargo_project_detector(),
+            self.cargo_crate_detector(),
             self.rust_file_detector()
+        ]
+    }
+
+    #[inline]
+    fn unit_detectors(&self) -> Vec<Rc<dyn DetectUnit>> {
+        vec![
+            self.cargo_crate_detector(),
         ]
     }
 
     #[inline]
     fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![
-            self.cargo_project_detector(), 
+            self.cargo_crate_detector(),
         ]
     }
 }
