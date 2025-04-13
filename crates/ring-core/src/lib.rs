@@ -69,7 +69,7 @@ impl Core {
     /// use ring_core::Core;
     ///
     /// let core = Core::new();
-    /// assert!(core.detect_units(".").is_empty());
+    /// assert!(!core.detect_units(".").is_empty());
     /// ```
     #[inline]
     pub fn detect_units<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
