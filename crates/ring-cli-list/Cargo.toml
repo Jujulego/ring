@@ -7,4 +7,4 @@ edition = "2024"
 textwrap = "0.16.2"
 
 [dev-dependencies]
-crossterm = "0.28.1"
+crossterm = "0.29.0"
