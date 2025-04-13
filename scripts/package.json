@@ -20,7 +20,7 @@
     "@jujulego/quick-tag": "1.0.3",
     "@kyrielle/injector": "1.0.0",
     "@kyrielle/logger": "2.0.0",
-    "@swc/helpers": "0.5.15",
+    "@swc/helpers": "0.5.17",
     "chalk": "5.4.1",
     "chalk-template": "1.1.0",
     "kyrielle": "2.2.2",
@@ -30,10 +30,10 @@
   "devDependencies": {
     "@jujulego/vite-plugin-swc": "1.2.0",
     "@rollup/plugin-node-resolve": "16.0.1",
-    "@swc/core": "1.11.11",
-    "@types/node": "22.13.10",
+    "@swc/core": "1.11.20",
+    "@types/node": "22.14.1",
     "@types/yargs": "17.0.33",
-    "rollup": "4.36.0",
-    "typescript": "5.8.2"
+    "rollup": "4.40.0",
+    "typescript": "5.8.3"
   }
 }
