@@ -100,7 +100,7 @@ impl<'a, K: Clone + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
 }
 
 pub struct TreeNode<'a, K: Clone + Ord + Eq + Hash> {
-    key: &'a K,
+    pub key: &'a K,
     branches: Vec<bool>,
 }
 

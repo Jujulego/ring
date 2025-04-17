@@ -2,6 +2,7 @@ use clap::Command;
 use ring_cli_tree::Tree;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace};
+use ring_cli_list::List;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {
@@ -30,21 +31,22 @@ pub fn handle() -> anyhow::Result<()> {
         }
     }
 
-    for node in &tree {
-        println!("{}", node);
-    }
+    let list: List = tree.iter()
+        .map(|node| {
+            let process = sys.process(*node.key);
 
-    /*let list = sys.processes().iter()
-        .map(|(pid, process)| vec![
-            pid.to_string(),
-            process.cmd().first()
-                .and_then(|c| c.to_str())
-                .unwrap_or("unknown")
-                .to_string()
-        ])
-        .collect::<List>();
+            vec![
+                node.to_string(),
+                process
+                    .and_then(|p| p.cmd().first())
+                    .and_then(|c| c.to_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+            ]
+        })
+        .collect();
 
-    print!("{}", list);*/
+    print!("{}", list);
 
     Ok(())
 }
