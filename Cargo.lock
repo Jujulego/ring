@@ -1087,6 +1087,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-cli-tree"
+version = "0.1.0"
+
+[[package]]
 name = "ring-core"
 version = "0.1.0"
 dependencies = [
