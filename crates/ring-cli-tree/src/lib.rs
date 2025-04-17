@@ -1,14 +1,15 @@
 use std::collections::{BTreeSet, HashMap};
 use std::fmt::Display;
+use std::hash::Hash;
 
 /// Formats given data as a tree
 #[derive(Clone, Debug)]
-pub struct Tree {
-    roots: BTreeSet<String>,
-    children: HashMap<String, BTreeSet<String>>,
+pub struct Tree<K: Clone + Ord + Eq + Hash> {
+    roots: BTreeSet<K>,
+    children: HashMap<K, BTreeSet<K>>,
 }
 
-impl Tree {
+impl<K: Clone + Ord + Eq + Hash> Tree<K> {
     /// Creates a new empty tree
     #[inline]
     pub fn new() -> Self {
@@ -19,12 +20,12 @@ impl Tree {
     }
 
     /// Add a new root to the tree
-    pub fn add_root(&mut self, key: String) {
+    pub fn add_root(&mut self, key: K) {
         self.roots.insert(key);
     }
 
     /// Add a new node to the tree
-    pub fn add_node(&mut self, key: String, parent: String) {
+    pub fn add_node(&mut self, key: K, parent: K) {
         self.roots.remove(&key);
         self.roots.insert(parent.clone());
 
@@ -34,21 +35,21 @@ impl Tree {
 
     /// Returns an iterator over tree line items
     #[inline]
-    pub fn iter(&self) -> TreeIter<'_> {
+    pub fn iter(&self) -> TreeIter<'_, K> {
         TreeIter::new(self)
     }
 }
 
-impl Default for Tree {
+impl<K: Clone + Ord + Eq + Hash> Default for Tree<K> {
     #[inline]
     fn default() -> Self {
         Tree::new()
     }
 }
 
-impl<'a> IntoIterator for &'a Tree {
-    type Item = TreeNode<'a>;
-    type IntoIter = TreeIter<'a>;
+impl<'a, K: Clone + Ord + Eq + Hash> IntoIterator for &'a Tree<K> {
+    type Item = TreeNode<'a, K>;
+    type IntoIter = TreeIter<'a, K>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -57,13 +58,13 @@ impl<'a> IntoIterator for &'a Tree {
 }
 
 #[derive(Clone, Debug)]
-pub struct TreeIter<'a> {
-    tree: &'a Tree,
-    stack: Vec<(&'a String, Vec<bool>)>,
+pub struct TreeIter<'a, K: Clone + Ord + Eq + Hash> {
+    tree: &'a Tree<K>,
+    stack: Vec<(&'a K, Vec<bool>)>,
 }
 
-impl<'a> TreeIter<'a> {
-    fn new(tree: &'a Tree) -> Self {
+impl<'a, K: Clone + Ord + Eq + Hash> TreeIter<'a, K> {
+    fn new(tree: &'a Tree<K>) -> Self {
         TreeIter {
             tree,
             stack: Vec::from_iter(tree.roots.iter()
@@ -74,8 +75,8 @@ impl<'a> TreeIter<'a> {
     }
 }
 
-impl<'a> Iterator for TreeIter<'a> {
-    type Item = TreeNode<'a>;
+impl<'a, K: Clone + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
+    type Item = TreeNode<'a, K>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let (key, branches) = self.stack.pop()?;
@@ -98,12 +99,12 @@ impl<'a> Iterator for TreeIter<'a> {
     }
 }
 
-pub struct TreeNode<'a> {
-    key: &'a String,
+pub struct TreeNode<'a, K: Clone + Ord + Eq + Hash> {
+    key: &'a K,
     branches: Vec<bool>,
 }
 
-impl Display for TreeNode<'_> {
+impl<K: Clone + Ord + Eq + Hash + Display> Display for TreeNode<'_, K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.branches.is_empty() {
             return write!(f, "\u{25CF} {}", self.key);

@@ -22,18 +22,18 @@ pub fn handle() -> anyhow::Result<()> {
 
     let mut tree = Tree::new();
 
-    for (pid, process) in sys.processes() {
-        if let Some(parent) = &process.parent() {
-            tree.add_node(pid.to_string(), parent.to_string());
+    for (&pid, process) in sys.processes() {
+        if let Some(parent) = process.parent() {
+            tree.add_node(pid, parent);
         } else {
-            tree.add_root(pid.to_string());
+            tree.add_root(pid);
         }
     }
 
     for node in &tree {
         println!("{}", node);
     }
-    
+
     /*let list = sys.processes().iter()
         .map(|(pid, process)| vec![
             pid.to_string(),
