@@ -1,7 +1,7 @@
 use clap::Command;
+use ring_cli_tree::Tree;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace};
-use ring_cli_list::List;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {
@@ -20,7 +20,21 @@ pub fn handle() -> anyhow::Result<()> {
             .with_processes(ProcessRefreshKind::everything()),
     );
 
-    let list = sys.processes().iter()
+    let mut tree = Tree::new();
+
+    for (pid, process) in sys.processes() {
+        if let Some(parent) = &process.parent() {
+            tree.add_node(pid.to_string(), parent.to_string());
+        } else {
+            tree.add_root(pid.to_string());
+        }
+    }
+
+    for node in &tree {
+        println!("{}", node);
+    }
+    
+    /*let list = sys.processes().iter()
         .map(|(pid, process)| vec![
             pid.to_string(),
             process.cmd().first()
@@ -30,7 +44,7 @@ pub fn handle() -> anyhow::Result<()> {
         ])
         .collect::<List>();
 
-    print!("{}", list);
+    print!("{}", list);*/
 
     Ok(())
 }
