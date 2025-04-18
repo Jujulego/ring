@@ -1063,6 +1063,7 @@ dependencies = [
  "lscolors",
  "ring-cli-fs",
  "ring-cli-list",
+ "ring-cli-tree",
  "ring-core",
  "sentry",
  "sysinfo",
@@ -1085,6 +1086,10 @@ dependencies = [
  "crossterm 0.29.0",
  "textwrap",
 ]
+
+[[package]]
+name = "ring-cli-tree"
+version = "0.1.0"
 
 [[package]]
 name = "ring-core"

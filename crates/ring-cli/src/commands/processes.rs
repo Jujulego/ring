@@ -1,4 +1,5 @@
 use clap::Command;
+use ring_cli_tree::Tree;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace};
 use ring_cli_list::List;
@@ -20,15 +21,32 @@ pub fn handle() -> anyhow::Result<()> {
             .with_processes(ProcessRefreshKind::everything()),
     );
 
-    let list = sys.processes().iter()
-        .map(|(pid, process)| vec![
-            pid.to_string(),
-            process.cmd().first()
-                .and_then(|c| c.to_str())
-                .unwrap_or("unknown")
-                .to_string()
-        ])
-        .collect::<List>();
+    // Build tree
+    let mut tree = Tree::new();
+
+    for (&pid, process) in sys.processes() {
+        if let Some(parent) = process.parent() {
+            tree.add_node(pid, parent);
+        } else {
+            tree.add_root(pid);
+        }
+    }
+
+    // Print processes
+    let list: List = tree.iter()
+        .map(|node| {
+            let process = sys.process(*node.key);
+
+            vec![
+                node.to_string(),
+                process
+                    .and_then(|p| p.cmd().first())
+                    .and_then(|c| c.to_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+            ]
+        })
+        .collect();
 
     print!("{}", list);
 
