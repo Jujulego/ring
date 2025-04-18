@@ -45,6 +45,8 @@ impl<K: Copy + Ord + Eq + Hash> Tree<K> {
     ///
     /// let mut tree = Tree::new();
     /// tree.add_root("a");
+    ///
+    /// assert_eq!(tree.len(), 1);
     /// ```
     pub fn add_root(&mut self, key: K) {
         if let Some(parent) = self.parents.get(&key) {
@@ -88,11 +90,39 @@ impl<K: Copy + Ord + Eq + Hash> Tree<K> {
         TreeIter::new(self)
     }
 
+    /// Returns `true` when the tree is empty
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli_tree::Tree;
+    ///
+    /// let mut tree = Tree::new();
+    /// assert!(tree.is_empty());
+    ///
+    /// tree.add_node("aa", "a");
+    /// assert!(!tree.is_empty());
+    /// ```
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.roots.is_empty()
     }
 
+    /// Returns the number of nodes in the table
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli_tree::Tree;
+    ///
+    /// let mut tree = Tree::new();
+    /// tree.add_root("a");
+    /// tree.add_node("aa", "a");
+    /// tree.add_node("aaa", "aa");
+    /// tree.add_root("b");
+    ///
+    /// assert_eq!(tree.len(), 4);
+    /// ```
     #[inline]
     pub fn len(&self) -> usize {
         self.roots.len() + self.parents.len()
@@ -165,7 +195,7 @@ impl<'a, K: Copy + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.stack.len(), Some(self.tree.len()))
+        (self.tree.len(), Some(self.tree.len()))
     }
 }
 

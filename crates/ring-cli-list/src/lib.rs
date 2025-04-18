@@ -57,7 +57,7 @@ impl List {
         }
     }
 
-    /// Returns `true` when the table is empty
+    /// Returns `true` when the list is empty
     ///
     /// # Examples
     ///
