@@ -1,6 +1,6 @@
 use clap::Command;
 use ring_cli_tree::Tree;
-use sysinfo::{ProcessRefreshKind, RefreshKind, System};
+use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 use ring_cli_list::List;
 
@@ -20,6 +20,7 @@ pub fn handle() -> anyhow::Result<()> {
         RefreshKind::nothing()
             .with_processes(ProcessRefreshKind::everything()),
     );
+    let users = Users::new_with_refreshed_list();
 
     // Build tree
     let mut tree = Tree::new();
@@ -40,8 +41,14 @@ pub fn handle() -> anyhow::Result<()> {
             vec![
                 node.to_string(),
                 process
-                    .and_then(|p| p.cmd().first())
+                    .map(|p| p.name())
                     .and_then(|c| c.to_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+                process
+                    .and_then(|p| p.user_id())
+                    .and_then(|uid| users.get_user_by_id(uid))
+                    .map(|u| u.name())
                     .unwrap_or("unknown")
                     .to_string(),
             ]
