@@ -21,6 +21,7 @@ pub fn handle() -> anyhow::Result<()> {
             .with_processes(ProcessRefreshKind::everything()),
     );
 
+    // Build tree
     let mut tree = Tree::new();
 
     for (&pid, process) in sys.processes() {
@@ -31,6 +32,7 @@ pub fn handle() -> anyhow::Result<()> {
         }
     }
 
+    // Print processes
     let list: List = tree.iter()
         .map(|node| {
             let process = sys.process(*node.key);

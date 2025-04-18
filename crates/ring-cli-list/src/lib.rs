@@ -13,6 +13,8 @@ use textwrap::core::display_width;
 /// let mut list = List::new();
 /// list.push(vec!["Test".into(), "successful".into()]);
 /// list.push(vec!["Test with a long name".into(), "successful".into()]);
+/// 
+/// print!("{list}");
 /// ```
 #[derive(Clone, Debug)]
 pub struct List {
@@ -27,7 +29,7 @@ impl List {
         List { items: Vec::new(), widths: Vec::new() }
     }
     
-    /// Creates a new empty list
+    /// Creates a new empty list, with given capacity
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         List { items: Vec::with_capacity(capacity), widths: Vec::new() }
@@ -68,6 +70,7 @@ impl List {
     /// list.push(vec!["Test".into(), "successful".into()]);
     /// assert!(!list.is_empty());
     /// ```
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -85,6 +88,7 @@ impl List {
     ///
     /// assert_eq!(list.len(), 2);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.items.len()
     }

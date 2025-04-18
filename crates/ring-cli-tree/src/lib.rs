@@ -1,34 +1,83 @@
 use std::collections::{BTreeSet, HashMap};
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::hash::Hash;
+use std::iter::FusedIterator;
 
 /// Formats given data as a tree
+///
+/// # Examples
+///
+/// ```
+/// use ring_cli_tree::Tree;
+///
+/// let mut tree = Tree::new();
+/// tree.add_root("a");
+/// tree.add_node("aa", "a");
+/// tree.add_node("aaa", "aa");
+/// tree.add_root("b");
+///
+/// print!("{tree}");
+/// ```
 #[derive(Clone, Debug)]
-pub struct Tree<K: Clone + Ord + Eq + Hash> {
+pub struct Tree<K: Copy + Ord + Eq + Hash> {
     roots: BTreeSet<K>,
+    parents: HashMap<K, K>,
     children: HashMap<K, BTreeSet<K>>,
 }
 
-impl<K: Clone + Ord + Eq + Hash> Tree<K> {
+impl<K: Copy + Ord + Eq + Hash> Tree<K> {
     /// Creates a new empty tree
     #[inline]
     pub fn new() -> Self {
         Tree {
             roots: BTreeSet::new(),
+            parents: HashMap::new(),
             children: HashMap::new(),
         }
     }
 
-    /// Add a new root to the tree
+    /// Add a new root to the tree.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli_tree::Tree;
+    ///
+    /// let mut tree = Tree::new();
+    /// tree.add_root("a");
+    /// ```
     pub fn add_root(&mut self, key: K) {
+        if let Some(parent) = self.parents.get(&key) {
+            if let Some(children) = self.children.get_mut(parent) {
+                children.remove(&key);
+            }
+
+            self.parents.remove(&key);
+        }
+
         self.roots.insert(key);
     }
 
-    /// Add a new node to the tree
+    /// Add a new node to the tree.
+    /// If the parent is not yet in the tree, it will be added a root.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_cli_tree::Tree;
+    ///
+    /// let mut tree = Tree::new();
+    /// tree.add_node("aa", "a");
+    ///
+    /// assert_eq!(tree.len(), 2);
+    /// ```
     pub fn add_node(&mut self, key: K, parent: K) {
-        self.roots.remove(&key);
-        self.roots.insert(parent.clone());
+        if !self.parents.contains_key(&parent) {
+            self.roots.insert(parent);
+        }
 
+        self.roots.remove(&key);
+        self.parents.insert(key, parent);
         self.children.entry(parent)
             .or_default().insert(key);
     }
@@ -38,16 +87,33 @@ impl<K: Clone + Ord + Eq + Hash> Tree<K> {
     pub fn iter(&self) -> TreeIter<'_, K> {
         TreeIter::new(self)
     }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.roots.is_empty()
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.roots.len() + self.parents.len()
+    }
 }
 
-impl<K: Clone + Ord + Eq + Hash> Default for Tree<K> {
+impl<K: Copy + Ord + Eq + Hash> Default for Tree<K> {
     #[inline]
     fn default() -> Self {
         Tree::new()
     }
 }
 
-impl<'a, K: Clone + Ord + Eq + Hash> IntoIterator for &'a Tree<K> {
+impl<K: Copy + Display + Ord + Eq + Hash> Display for Tree<K> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.iter()
+            .try_for_each(|node| writeln!(f, "{node}"))
+    }
+}
+
+impl<'a, K: Copy + Ord + Eq + Hash> IntoIterator for &'a Tree<K> {
     type Item = TreeNode<'a, K>;
     type IntoIter = TreeIter<'a, K>;
 
@@ -58,12 +124,12 @@ impl<'a, K: Clone + Ord + Eq + Hash> IntoIterator for &'a Tree<K> {
 }
 
 #[derive(Clone, Debug)]
-pub struct TreeIter<'a, K: Clone + Ord + Eq + Hash> {
+pub struct TreeIter<'a, K: Copy + Ord + Eq + Hash> {
     tree: &'a Tree<K>,
     stack: Vec<(&'a K, Vec<bool>)>,
 }
 
-impl<'a, K: Clone + Ord + Eq + Hash> TreeIter<'a, K> {
+impl<'a, K: Copy + Ord + Eq + Hash> TreeIter<'a, K> {
     fn new(tree: &'a Tree<K>) -> Self {
         TreeIter {
             tree,
@@ -75,7 +141,7 @@ impl<'a, K: Clone + Ord + Eq + Hash> TreeIter<'a, K> {
     }
 }
 
-impl<'a, K: Clone + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
+impl<'a, K: Copy + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
     type Item = TreeNode<'a, K>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -97,15 +163,21 @@ impl<'a, K: Clone + Ord + Eq + Hash> Iterator for TreeIter<'a, K> {
 
         Some(TreeNode { key, branches })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.stack.len(), Some(self.tree.len()))
+    }
 }
+
+impl<K: Copy + Ord + Eq + Hash> FusedIterator for TreeIter<'_, K> {}
 
 pub struct TreeNode<'a, K: Clone + Ord + Eq + Hash> {
     pub key: &'a K,
     branches: Vec<bool>,
 }
 
-impl<K: Clone + Ord + Eq + Hash + Display> Display for TreeNode<'_, K> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<K: Copy + Display + Ord + Eq + Hash> Display for TreeNode<'_, K> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.branches.is_empty() {
             return write!(f, "\u{25CF} {}", self.key);
         }
