@@ -227,3 +227,28 @@ impl<K: Copy + Display + Ord + Eq + Hash> Display for TreeNode<'_, K> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_print_a_complex_tree() {
+        let mut tree = Tree::new();
+        tree.add_root("a");
+        tree.add_node("aa", "a");
+        tree.add_node("aaa", "aa");
+        tree.add_node("aba", "ab");
+        tree.add_node("ab", "a");
+        tree.add_root("b");
+
+        assert_eq!(tree.to_string(), concat!(
+            "\u{25CF} a\n",
+            "\u{251C}\u{2574}aa\n",
+            "\u{2502} \u{2514}\u{2574}aaa\n",
+            "\u{2514}\u{2574}ab\n",
+            "  \u{2514}\u{2574}aba\n",
+            "\u{25CF} b\n"
+        ));
+    }
+}
