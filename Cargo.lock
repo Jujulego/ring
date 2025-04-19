@@ -1172,8 +1172,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cargo_toml",
+ "crossterm 0.29.0",
  "ring-core-file",
  "ring-core-modules",
+ "ring-core-tasks",
  "ring-core-units",
  "ring-module-toml",
  "tracing",
