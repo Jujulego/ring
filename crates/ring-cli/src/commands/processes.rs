@@ -1,4 +1,5 @@
 use clap::Command;
+use crossterm::style::Stylize;
 use ring_cli_tree::Tree;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
@@ -45,21 +46,20 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
                 process
                     .and_then(|p| p.user_id())
                     .and_then(|uid| users.get_user_by_id(uid))
-                    .map(|u| u.name())
-                    .unwrap_or("unknown")
-                    .to_string(),
+                    .map(|u| u.name().to_string())
+                    .unwrap_or("unknown".dark_grey().to_string()),
                 task.as_ref()
                     .map(|t| t.style().apply(t.kind()).to_string())
-                    .unwrap_or("unknown".to_string()),
+                    .unwrap_or("unknown".dark_grey().to_string()),
                 task.as_ref()
                     .and_then(|t| t.working_unit())
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
-                    .unwrap_or("unknown".to_string()),
+                    .unwrap_or("unknown".dark_grey().to_string()),
                 process
                     .map(|p| p.name())
                     .and_then(|c| c.to_str())
-                    .unwrap_or("unknown")
-                    .to_string(),
+                    .map(|str| str.to_string())
+                    .unwrap_or("unknown".dark_grey().to_string()),
             ]
         })
         .collect();
