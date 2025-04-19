@@ -1123,6 +1123,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-core-tasks"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.29.0",
+ "ring-core-units",
+ "sysinfo",
+]
+
+[[package]]
 name = "ring-core-units"
 version = "0.1.0"
 dependencies = [
