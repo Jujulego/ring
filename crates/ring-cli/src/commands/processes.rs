@@ -1,3 +1,4 @@
+use bytesize::ByteSize;
 use clap::Command;
 use crossterm::style::Stylize;
 use ring_cli_tree::Tree;
@@ -29,7 +30,11 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
 
     for (&pid, process) in sys.processes() {
         if let Some(parent) = process.parent() {
-            tree.add_node(pid, parent);
+            if sys.process(parent).is_some() {
+                tree.add_node(pid, parent);
+            } else {
+                tree.add_root(pid);
+            }
         } else {
             tree.add_root(pid);
         }
@@ -38,13 +43,12 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
     // Print processes
     let list: List = tree.iter()
         .map(|node| {
-            let process = sys.process(*node.key);
-            let task = process.and_then(|p| core.detect_tasks(p));
+            let process = sys.process(*node.key).unwrap();
+            let task = core.detect_tasks(process);
 
             vec![
                 node.to_string(),
-                process
-                    .and_then(|p| p.user_id())
+                process.user_id()
                     .and_then(|uid| users.get_user_by_id(uid))
                     .map(|u| u.name().to_string())
                     .unwrap_or("unknown".dark_grey().to_string()),
@@ -55,9 +59,8 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
                     .and_then(|t| t.working_unit())
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
-                process
-                    .map(|p| p.name())
-                    .and_then(|c| c.to_str())
+                format!("{:>10}", ByteSize::b(process.virtual_memory())),
+                process.name().to_str()
                     .map(|str| str.to_string())
                     .unwrap_or("unknown".dark_grey().to_string()),
             ]
