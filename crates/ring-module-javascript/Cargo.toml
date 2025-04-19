@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.97"
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
+anyhow = "1.0.98"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 tracing = "0.1.41"
 
 ring-core-file = { path = "../ring-core-file" }

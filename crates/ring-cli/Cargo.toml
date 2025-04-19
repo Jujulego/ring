@@ -14,8 +14,8 @@ default = [
 ]
 
 [dependencies]
-anyhow = "1.0.97"
-clap = "4.5.32"
+anyhow = "1.0.98"
+clap = "4.5.37"
 crossterm = "0.29.0"
 itertools = "0.14.0"
 lscolors = { version = "0.20.0", default-features = false, features = ["crossterm"] }
