@@ -1178,6 +1178,7 @@ dependencies = [
  "ring-core-tasks",
  "ring-core-units",
  "ring-module-toml",
+ "sysinfo",
  "tracing",
 ]
 

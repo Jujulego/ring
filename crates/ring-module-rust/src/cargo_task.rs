@@ -4,8 +4,15 @@ use ring_core_units::Unit;
 use crate::cargo_crate::CargoCrate;
 
 /// A cargo process
+#[derive(Clone, Debug)]
 pub struct CargoTask {
     cargo_crate: Option<Rc<CargoCrate>>,
+}
+
+impl CargoTask {
+    pub fn new(cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
+        CargoTask { cargo_crate }
+    }
 }
 
 impl Task for CargoTask {

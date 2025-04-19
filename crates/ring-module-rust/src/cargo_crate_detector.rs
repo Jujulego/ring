@@ -126,7 +126,7 @@ impl CargoCrateDetector {
 }
 
 impl DetectLanguage for CargoCrateDetector {
-    #[instrument(name = "cargo-project.detect-language", skip_all)]
+    #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
         trace!("stat {}", path.display());
         if path.is_file() && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
@@ -138,7 +138,7 @@ impl DetectLanguage for CargoCrateDetector {
 }
 
 impl DetectUnit for CargoCrateDetector {
-    #[instrument(name = "cargo-project.detect-unit", skip_all)]
+    #[instrument(name = "cargo-crate.detect-unit", skip_all)]
     fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
         match self._load_crate_at(path) {
             Ok(result) => result.map(|unit| unit as Rc<dyn Unit>),
@@ -155,7 +155,7 @@ impl DetectUnit for CargoCrateDetector {
 }
 
 impl QualifyPath for CargoCrateDetector {
-    #[instrument(name = "cargo-project.qualify-path", skip_all)]
+    #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());
