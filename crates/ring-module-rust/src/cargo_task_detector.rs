@@ -24,7 +24,7 @@ impl CargoTaskDetector {
     pub fn load_cargo_task(&self, process: &Process) -> anyhow::Result<Option<Rc<CargoTask>>> {
         if self.is_cargo_task(process) {
             if let Some(cwd) = process.cwd() {
-                let unit = self.crate_detector.load_crate_at(cwd)?;
+                let unit = self.crate_detector.load_crate_containing(cwd)?;
 
                 return Ok(Some(Rc::new(CargoTask::new(unit))))
             }

@@ -107,8 +107,18 @@ impl CargoCrateDetector {
         self.is_manifest(path.join("Cargo.toml"))
     }
 
+    /// Load crate data at given path
     pub fn load_crate_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
         self._load_crate_at(path.as_ref())
+    }
+
+    /// Load crate data containing given path
+    pub fn load_crate_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        let path = path.as_ref();
+        
+        path.ancestors()
+            .find_map(|ancestor| self._load_crate_at(ancestor).transpose())
+            .transpose()
     }
 
     fn _load_crate_at(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
