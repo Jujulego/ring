@@ -14,8 +14,11 @@ typescript = ["dep:ring-module-typescript"]
 yaml = ["dep:ring-module-yaml"]
 
 [dependencies]
+sysinfo = "0.34.2"
+
 ring-core-file = { path = "../ring-core-file" }
 ring-core-modules = { path = "../ring-core-modules" }
+ring-core-tasks = { path = "../ring-core-tasks" }
 ring-core-units = { path = "../ring-core-units" }
 
 ring-module-javascript = { path = "../ring-module-javascript", optional = true }
