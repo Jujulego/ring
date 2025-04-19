@@ -1119,6 +1119,7 @@ name = "ring-core-modules"
 version = "0.1.0"
 dependencies = [
  "ring-core-file",
+ "ring-core-tasks",
  "ring-core-units",
 ]
 

@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 ring-core-file = { path = "../ring-core-file" }
+ring-core-tasks = { path = "../ring-core-tasks" }
 ring-core-units = { path = "../ring-core-units" }
