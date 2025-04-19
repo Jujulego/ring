@@ -3,6 +3,7 @@ use ring_cli_tree::Tree;
 use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 use ring_cli_list::List;
+use ring_core::Core;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {
@@ -13,7 +14,7 @@ pub fn setup() -> Command {
 
 /// Handle processes command execution
 #[instrument(name = "cli.processes", skip_all)]
-pub fn handle() -> anyhow::Result<()> {
+pub fn handle(core: &Core) -> anyhow::Result<()> {
     // List processes
     trace!("load running processes");
     let sys = System::new_with_specifics(
@@ -37,18 +38,26 @@ pub fn handle() -> anyhow::Result<()> {
     let list: List = tree.iter()
         .map(|node| {
             let process = sys.process(*node.key);
+            let task = process.and_then(|p| core.detect_tasks(p));
 
             vec![
                 node.to_string(),
                 process
-                    .map(|p| p.name())
-                    .and_then(|c| c.to_str())
-                    .unwrap_or("unknown")
-                    .to_string(),
-                process
                     .and_then(|p| p.user_id())
                     .and_then(|uid| users.get_user_by_id(uid))
                     .map(|u| u.name())
+                    .unwrap_or("unknown")
+                    .to_string(),
+                task.as_ref()
+                    .map(|t| t.style().apply(t.kind()).to_string())
+                    .unwrap_or("unknown".to_string()),
+                task.as_ref()
+                    .and_then(|t| t.working_unit())
+                    .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
+                    .unwrap_or("unknown".to_string()),
+                process
+                    .map(|p| p.name())
+                    .and_then(|c| c.to_str())
                     .unwrap_or("unknown")
                     .to_string(),
             ]

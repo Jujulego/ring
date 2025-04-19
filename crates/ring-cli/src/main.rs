@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
     
     match args.subcommand() {
         Some(("list", args)) => commands::list::handle(&core, args),
-        Some(("processes", _)) => commands::processes::handle(),
+        Some(("processes", _)) => commands::processes::handle(&core),
         _ => unreachable!(),
     }
 }

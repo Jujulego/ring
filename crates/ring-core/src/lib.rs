@@ -64,11 +64,11 @@ impl Core {
     }
 
     /// Uses all modules to detect task of given process
-    pub fn detect_tasks(&self, process: &Process) -> Vec<Rc<dyn Task>> {
+    pub fn detect_tasks(&self, process: &Process) -> Option<Rc<dyn Task>> {
         self.modules.iter()
             .flat_map(|module| module.task_detectors())
             .filter_map(|detector| detector.detect_task(process))
-            .collect()
+            .next()
     }
 
     /// Uses all modules to detect units at given path
