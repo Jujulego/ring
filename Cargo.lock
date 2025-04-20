@@ -1163,6 +1163,7 @@ dependencies = [
  "ring-module-yaml",
  "serde",
  "serde_json",
+ "sysinfo",
  "tracing",
 ]
 
