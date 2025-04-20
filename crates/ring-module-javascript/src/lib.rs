@@ -16,18 +16,39 @@ use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct JavascriptModule {
+    javascript_file_detector: Rc<JavascriptFileDetector>,
     node_task_detector: Rc<NodeTaskDetector>,
     npm_package_detector: Rc<NpmPackageDetector>,
-    javascript_file_detector: Rc<JavascriptFileDetector>,
 }
 
 impl JavascriptModule {
     /// Creates a new instance of JavascriptModule
     #[inline]
     pub fn new() -> Self {
-        Default::default()
+        let npm_package_detector = Rc::new(NpmPackageDetector::new());
+        
+        JavascriptModule {
+            javascript_file_detector: Rc::new(JavascriptFileDetector::new()),
+            node_task_detector: Rc::new(NodeTaskDetector::new(npm_package_detector.clone())),
+            npm_package_detector,
+        }
+    }
+
+    /// Returns a pointer on JavascriptFileDetector
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_javascript::JavascriptModule;
+    ///
+    /// let module = JavascriptModule::new();
+    /// let detector = module.javascript_file_detector();
+    /// ```
+    #[inline]
+    pub fn javascript_file_detector(&self) -> Rc<JavascriptFileDetector> {
+        self.javascript_file_detector.clone()
     }
 
     /// Returns a pointer on NodeTaskDetector
@@ -59,20 +80,11 @@ impl JavascriptModule {
     pub fn npm_package_detector(&self) -> Rc<NpmPackageDetector> {
         self.npm_package_detector.clone()
     }
+}
 
-    /// Returns a pointer on JavascriptFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_javascript::JavascriptModule;
-    ///
-    /// let module = JavascriptModule::new();
-    /// let detector = module.javascript_file_detector();
-    /// ```
-    #[inline]
-    pub fn javascript_file_detector(&self) -> Rc<JavascriptFileDetector> {
-        self.javascript_file_detector.clone()
+impl Default for JavascriptModule {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

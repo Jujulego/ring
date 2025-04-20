@@ -1,19 +1,25 @@
 use std::ffi::OsStr;
+use std::path::PathBuf;
 use std::rc::Rc;
 use sysinfo::Process;
 use tracing::{debug, instrument, warn};
 use ring_core_tasks::{DetectTask, Task};
 use crate::node_task::NodeTask;
+use crate::NpmPackageDetector;
 
-#[derive(Clone, Debug, Default)]
-pub struct NodeTaskDetector;
+#[derive(Clone, Debug)]
+pub struct NodeTaskDetector {
+    npm_package_detector: Rc<NpmPackageDetector>,
+}
 
 impl NodeTaskDetector {
     /// Creates a new `NodeTaskDetector` instance
-    pub fn new() -> NodeTaskDetector {
-        NodeTaskDetector
+    pub fn new(npm_package_detector: Rc<NpmPackageDetector>) -> NodeTaskDetector {
+        NodeTaskDetector {
+            npm_package_detector,
+        }
     }
-    
+
     /// Checks if given process is a node task
     pub fn is_node_task(&self, process: &Process) -> bool {
         process.exe()
@@ -23,12 +29,18 @@ impl NodeTaskDetector {
     /// Builds a `NodeTask` object from given process.
     pub fn load_node_task(&self, process: &Process) -> anyhow::Result<Option<Rc<NodeTask>>> {
         if self.is_node_task(process) {
-            let task = NodeTask::new(
-                process.exe().unwrap().to_path_buf(),
-                None
-            );
+            if let Some(cwd) = process.cwd() {
+                let script = process.cmd().get(1)
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| process.exe().unwrap().to_path_buf());
 
-            return Ok(Some(Rc::new(task)))
+                let script = cwd.join(script);
+                let package = self.npm_package_detector.load_package_containing(&script)?;
+
+                let task = NodeTask::new(script, package);
+
+                return Ok(Some(Rc::new(task)))
+            }
         }
 
         Ok(None)

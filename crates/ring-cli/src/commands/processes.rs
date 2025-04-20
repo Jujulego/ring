@@ -60,9 +60,9 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
-                process.name().to_str()
-                    .map(|str| str.to_string())
-                    .unwrap_or("unknown".dark_grey().to_string()),
+            task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                .or_else(|| process.name().to_str().map(|s| s.to_string()))
+                .unwrap_or("unknown".dark_grey().to_string()),
             ]
         })
         .collect();

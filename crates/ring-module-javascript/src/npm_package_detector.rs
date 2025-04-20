@@ -183,6 +183,15 @@ impl NpmPackageDetector {
         self._load_package_at(path.as_ref())
     }
 
+    /// Load npm package containing given path
+    pub fn load_package_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
+        let path = path.as_ref();
+
+        path.ancestors()
+            .find_map(|ancestor| self._load_package_at(ancestor).transpose())
+            .transpose()
+    }
+
     fn _load_package_at(&self, path: &Path) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         let manifest_path = path.join("package.json");
 
