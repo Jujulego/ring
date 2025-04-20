@@ -2,6 +2,7 @@ mod javascript_file;
 mod utils;
 mod npm_package;
 mod npm_package_detector;
+mod node_task;
 
 pub use crate::javascript_file::JavascriptFileDetector;
 pub use crate::npm_package::{NpmPackage, PackageManifest};

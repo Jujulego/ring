@@ -8,6 +8,7 @@ crossterm = [
     "ring-core-file/crossterm",
     "ring-core-tasks/crossterm",
     "ring-core-units/crossterm",
+    "ring-module-javascript?/crossterm",
     "ring-module-rust?/crossterm",
 ]
 
