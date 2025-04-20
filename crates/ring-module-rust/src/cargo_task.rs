@@ -1,3 +1,4 @@
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use ring_core_tasks::Task;
 use ring_core_units::Unit;
@@ -6,20 +7,34 @@ use crate::cargo_crate::CargoCrate;
 /// A cargo process
 #[derive(Clone, Debug)]
 pub struct CargoTask {
+    exe: PathBuf,
     cargo_crate: Option<Rc<CargoCrate>>,
 }
 
 impl CargoTask {
-    pub fn new(cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
-        CargoTask { cargo_crate }
+    /// Create a new cargo task
+    pub fn new(exe: PathBuf, cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
+        CargoTask { exe, cargo_crate }
+    }
+
+    /// Returns the crate this task is working in
+    pub fn cargo_crate(&self) -> Option<&Rc<CargoCrate>> {
+        self.cargo_crate.as_ref()
     }
 }
 
 impl Task for CargoTask {
+    /// Returns path to the cargo executable
+    fn exe(&self) -> &Path {
+        &self.exe
+    }
+
+    /// Returns `"cargo"`
     fn kind(&self) -> &str {
         "cargo"
     }
 
+    /// Returns the crate this task is working in
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.cargo_crate.as_ref()
             .map(|pt| pt.clone() as Rc<dyn Unit>)

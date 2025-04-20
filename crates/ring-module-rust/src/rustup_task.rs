@@ -1,28 +1,33 @@
+use std::path::{Path, PathBuf};
 use ring_core_tasks::Task;
 use ring_core_units::Unit;
 use std::rc::Rc;
 
 /// A rustup process
-#[derive(Clone, Copy, Debug)]
-pub struct RustupTask;
-
-impl RustupTask {
-    pub fn new() -> RustupTask {
-        RustupTask
-    }
+#[derive(Clone, Debug)]
+pub struct RustupTask {
+    exe: PathBuf,
 }
 
-impl Default for RustupTask {
-    fn default() -> Self {
-        Self::new()
+impl RustupTask {
+    /// Creates a new rustup task
+    pub fn new(exe: PathBuf) -> RustupTask {
+        RustupTask { exe }
     }
 }
 
 impl Task for RustupTask {
+    /// Returns path to the rustup executable
+    fn exe(&self) -> &Path {
+        &self.exe
+    }
+
+    /// Returns `"rustup"`
     fn kind(&self) -> &str {
         "rustup"
     }
 
+    /// Returns none, there is no meaning full unit for rustup task. 
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         None
     }

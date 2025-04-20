@@ -20,7 +20,8 @@ impl RustupTaskDetector {
 
     pub fn load_rustup_task(&self, process: &Process) -> Option<Rc<RustupTask>> {
         if self.is_rustup_task(process) {
-            Some(Rc::new(RustupTask::new()))
+            let task = RustupTask::new(process.exe().unwrap().to_path_buf());
+            Some(Rc::new(task))
         } else {
             None
         }
