@@ -3,6 +3,8 @@ use ring_core_modules::Module;
 use ring_core_units::Unit;
 use std::path::{absolute, Path};
 use std::rc::Rc;
+use sysinfo::Process;
+use ring_core_tasks::Task;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -58,6 +60,14 @@ impl Core {
         self.modules.iter()
             .flat_map(|module| module.language_detectors())
             .filter_map(|detector| detector.detect_language(path))
+            .next()
+    }
+
+    /// Uses all modules to detect task of given process
+    pub fn detect_tasks(&self, process: &Process) -> Option<Rc<dyn Task>> {
+        self.modules.iter()
+            .flat_map(|module| module.task_detectors())
+            .filter_map(|detector| detector.detect_task(process))
             .next()
     }
 

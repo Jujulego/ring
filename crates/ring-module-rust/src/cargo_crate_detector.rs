@@ -14,7 +14,7 @@ use tracing::{debug, instrument, trace, warn};
 pub struct CargoCrateDetector {}
 
 impl CargoCrateDetector {
-    /// Creates a new instance of CargoProjectDetector
+    /// Creates a new instance of CargoCrateDetector
     #[inline]
     pub fn new() -> Self {
         Default::default()
@@ -107,8 +107,18 @@ impl CargoCrateDetector {
         self.is_manifest(path.join("Cargo.toml"))
     }
 
+    /// Load crate data at given path
     pub fn load_crate_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
         self._load_crate_at(path.as_ref())
+    }
+
+    /// Load crate data containing given path
+    pub fn load_crate_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<CargoCrate>>> {
+        let path = path.as_ref();
+        
+        path.ancestors()
+            .find_map(|ancestor| self._load_crate_at(ancestor).transpose())
+            .transpose()
     }
 
     fn _load_crate_at(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
@@ -126,7 +136,7 @@ impl CargoCrateDetector {
 }
 
 impl DetectLanguage for CargoCrateDetector {
-    #[instrument(name = "cargo-project.detect-language", skip_all)]
+    #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
         trace!("stat {}", path.display());
         if path.is_file() && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
@@ -138,7 +148,7 @@ impl DetectLanguage for CargoCrateDetector {
 }
 
 impl DetectUnit for CargoCrateDetector {
-    #[instrument(name = "cargo-project.detect-unit", skip_all)]
+    #[instrument(name = "cargo-crate.detect-unit", skip_all)]
     fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
         match self._load_crate_at(path) {
             Ok(result) => result.map(|unit| unit as Rc<dyn Unit>),
@@ -155,7 +165,7 @@ impl DetectUnit for CargoCrateDetector {
 }
 
 impl QualifyPath for CargoCrateDetector {
-    #[instrument(name = "cargo-project.qualify-path", skip_all)]
+    #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());

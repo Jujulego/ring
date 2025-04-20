@@ -55,6 +55,8 @@ impl Unit for CargoCrate {
 
     /// Returns package name read from the manifest, if any.
     fn name(&self) -> Option<&str> {
-        self.manifest.package.as_ref().map(|pkg| pkg.name())
+        self.manifest.package.as_ref()
+            .map(|pkg| pkg.name())
+            .or_else(|| self.root.file_name().and_then(|s| s.to_str()))
     }
 }

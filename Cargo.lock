@@ -142,6 +142,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ac0150caa2ae65ca5bd83f25c7de183dea78d4d366469f148435e2acfbad0da"
 
 [[package]]
+name = "bytesize"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3c8f83209414aacf0eeae3cf730b18d6981697fba62f200fcfb92b9f082acba"
+
+[[package]]
 name = "cargo_toml"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1057,6 +1063,7 @@ name = "ring-cli"
 version = "0.4.0"
 dependencies = [
  "anyhow",
+ "bytesize",
  "clap",
  "crossterm 0.29.0",
  "itertools",
@@ -1097,6 +1104,7 @@ version = "0.1.0"
 dependencies = [
  "ring-core-file",
  "ring-core-modules",
+ "ring-core-tasks",
  "ring-core-units",
  "ring-module-javascript",
  "ring-module-json",
@@ -1104,6 +1112,7 @@ dependencies = [
  "ring-module-toml",
  "ring-module-typescript",
  "ring-module-yaml",
+ "sysinfo",
 ]
 
 [[package]]
@@ -1119,7 +1128,17 @@ name = "ring-core-modules"
 version = "0.1.0"
 dependencies = [
  "ring-core-file",
+ "ring-core-tasks",
  "ring-core-units",
+]
+
+[[package]]
+name = "ring-core-tasks"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.29.0",
+ "ring-core-units",
+ "sysinfo",
 ]
 
 [[package]]
@@ -1160,10 +1179,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cargo_toml",
+ "crossterm 0.29.0",
  "ring-core-file",
  "ring-core-modules",
+ "ring-core-tasks",
  "ring-core-units",
  "ring-module-toml",
+ "sysinfo",
  "tracing",
 ]
 
