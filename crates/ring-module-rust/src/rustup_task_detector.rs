@@ -9,15 +9,18 @@ use tracing::instrument;
 pub struct RustupTaskDetector;
 
 impl RustupTaskDetector {
+    /// Create a new instance of RustupTaskDetector
     pub fn new() -> Self {
         RustupTaskDetector
     }
 
+    /// Test if given process is a rustup task
     pub fn is_rustup_task(&self, process: &Process) -> bool {
         process.exe()
             .is_some_and(|exe| exe.file_stem().and_then(OsStr::to_str) == Some("rustup"))
     }
 
+    /// Builds a `RustupTask` object from given process.
     pub fn load_rustup_task(&self, process: &Process) -> Option<Rc<RustupTask>> {
         if self.is_rustup_task(process) {
             let task = RustupTask::new(process.exe().unwrap().to_path_buf());

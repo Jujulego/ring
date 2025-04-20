@@ -12,15 +12,18 @@ pub struct CargoTaskDetector {
 }
 
 impl CargoTaskDetector {
+    /// Creates a new instance of CargoTaskDetector
     pub fn new(crate_detector: Rc<CargoCrateDetector>) -> Self {
         CargoTaskDetector { crate_detector }
     }
 
+    /// Checks if given process is a cargo task
     pub fn is_cargo_task(&self, process: &Process) -> bool {
         process.exe()
             .is_some_and(|exe| exe.file_stem().and_then(OsStr::to_str) == Some("cargo"))
     }
 
+    /// Builds a `CargoTask` object from given process.
     pub fn load_cargo_task(&self, process: &Process) -> anyhow::Result<Option<Rc<CargoTask>>> {
         if self.is_cargo_task(process) {
             if let Some(cwd) = process.cwd() {

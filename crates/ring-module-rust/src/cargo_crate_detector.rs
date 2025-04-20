@@ -14,7 +14,7 @@ use tracing::{debug, instrument, trace, warn};
 pub struct CargoCrateDetector {}
 
 impl CargoCrateDetector {
-    /// Creates a new instance of CargoProjectDetector
+    /// Creates a new instance of CargoCrateDetector
     #[inline]
     pub fn new() -> Self {
         Default::default()
