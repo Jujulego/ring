@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use cargo_toml::Manifest;
@@ -6,18 +8,23 @@ use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::ffi::OsStr;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 
-#[derive(Clone, Debug, Default)]
-pub struct CargoCrateDetector {}
+/// Detector for cargo crates
+#[derive(Clone, Debug)]
+pub struct CargoCrateDetector {
+    cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,
+}
 
 impl CargoCrateDetector {
     /// Creates a new instance of CargoCrateDetector
     #[inline]
     pub fn new() -> Self {
-        Default::default()
+        CargoCrateDetector {
+            cache: RefCell::new(HashMap::new()),
+        }
     }
 
     /// Checks if given path is a Cargo manifest
@@ -124,14 +131,37 @@ impl CargoCrateDetector {
     fn _load_crate_at(&self, path: &Path) -> anyhow::Result<Option<Rc<CargoCrate>>> {
         let manifest_path = path.join("Cargo.toml");
 
+        if let Some(crt) = self.cache.borrow().get(&manifest_path) {
+            debug!("cargo crate cache hit: {}", manifest_path.display());
+            return Ok(crt.clone());
+        }
+
         trace!("read file {}", manifest_path.display());
         match Manifest::from_path(&manifest_path) {
-            Ok(manifest) => Ok(Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())))),
-            Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+            Ok(manifest) => {
+                let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
+
+                debug!("cargo crate found added to cache: {}", manifest_path.display());
+                self.cache.borrow_mut().insert(manifest_path, crt.clone());
+
+                Ok(crt)
+            },
+            Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => {
+                debug!("cargo crate miss added to cache: {}", manifest_path.display());
+                self.cache.borrow_mut().insert(manifest_path, None);
+
+                Ok(None)
+            },
             Err(err) => {
                 Err(anyhow!(err).context(format!("Failed to load {}", manifest_path.display())))
             }
         }
+    }
+}
+
+impl Default for CargoCrateDetector {
+    fn default() -> Self {
+        CargoCrateDetector::new()
     }
 }
 
