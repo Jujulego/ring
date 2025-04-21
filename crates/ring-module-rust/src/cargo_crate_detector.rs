@@ -132,7 +132,7 @@ impl CargoCrateDetector {
         let manifest_path = path.join("Cargo.toml");
 
         if let Some(crt) = self.cache.borrow().get(&manifest_path) {
-            debug!("cargo crate cache hit: {}", manifest_path.display());
+            debug!(key = %manifest_path.display(), "cargo crate cache hit");
             return Ok(crt.clone());
         }
 
@@ -141,13 +141,13 @@ impl CargoCrateDetector {
             Ok(manifest) => {
                 let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
 
-                debug!("cargo crate found added to cache: {}", manifest_path.display());
+                debug!(key = %manifest_path.display(), "cargo crate cached");
                 self.cache.borrow_mut().insert(manifest_path, crt.clone());
 
                 Ok(crt)
             },
             Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => {
-                debug!("cargo crate miss added to cache: {}", manifest_path.display());
+                debug!(key = %manifest_path.display(), "cargo crate miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
                 Ok(None)

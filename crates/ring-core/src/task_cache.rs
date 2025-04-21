@@ -20,12 +20,12 @@ impl<'c> TaskCache<'c> {
     /// Uses core & cache to detect task based on given process
     pub fn detect_task(&mut self, process: &Process) -> Option<Rc<dyn Task>> {
         if let Some(task) = self.cache.get(&process.pid()) {
-            debug!("task {} cache hit", process.pid());
+            debug!(key = %process.pid(), "task cache hit");
             task.clone()
         } else {
             let task = self.core.detect_task(process);
             self.cache.insert(process.pid(), task.clone());
-            debug!("task {} cached", process.pid());
+            debug!(key = %process.pid(), "task cached");
 
             task
         }

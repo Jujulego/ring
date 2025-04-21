@@ -218,7 +218,7 @@ impl NpmPackageDetector {
         let manifest_path = path.join("package.json");
 
         if let Some(crt) = self.cache.borrow().get(&manifest_path) {
-            debug!("npm package cache hit: {}", manifest_path.display());
+            debug!(key = %manifest_path.display(), "npm package cache hit");
             return Ok(crt.clone());
         }
 
@@ -229,7 +229,7 @@ impl NpmPackageDetector {
                     Ok(manifest) => {
                         let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
 
-                        debug!("npm package found added to cache: {}", manifest_path.display());
+                        debug!(key = %manifest_path.display(), "npm package cached");
                         self.cache.borrow_mut().insert(manifest_path, pkg.clone());
 
                         Ok(pkg)
@@ -240,7 +240,7 @@ impl NpmPackageDetector {
                 }
             },
             Err(err) if err.kind() == io::ErrorKind::NotFound => {
-                debug!("npm package miss added to cache: {}", manifest_path.display());
+                debug!(key = ?manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
                 Ok(None)
