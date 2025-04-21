@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 
-/// Detector for cargo crates
+/// Detector for cargo crates, and related files
 #[derive(Clone, Debug)]
 pub struct CargoCrateDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,

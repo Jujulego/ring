@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use crate::NpmPackage;
 use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
@@ -6,20 +8,24 @@ use ring_module_yaml::yaml_language;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use anyhow::anyhow;
 use tracing::{debug, instrument, trace, warn};
 
-/// Detector of npm packages, and related files (manifest and lockfiles)
-#[derive(Clone, Debug, Default)]
-pub struct NpmPackageDetector;
+/// Detector for npm packages, and related files
+#[derive(Clone, Debug)]
+pub struct NpmPackageDetector {
+    cache: RefCell<HashMap<PathBuf, Option<Rc<NpmPackage>>>>,
+}
 
 impl NpmPackageDetector {
     /// Creates a new instance of NpmPackageDetector
     #[inline]
     pub fn new() -> Self {
-        Default::default()
+        NpmPackageDetector {
+            cache: RefCell::new(HashMap::new()),
+        }
     }
 
     /// Checks if given path is a npm package manifest
@@ -211,23 +217,44 @@ impl NpmPackageDetector {
     fn _load_package_at(&self, path: &Path) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         let manifest_path = path.join("package.json");
 
+        if let Some(crt) = self.cache.borrow().get(&manifest_path) {
+            debug!("npm package cache hit: {}", manifest_path.display());
+            return Ok(crt.clone());
+        }
+
         trace!("read file {}", manifest_path.display());
         match File::open(&manifest_path) {
             Ok(ref mut file) => {
                 match serde_json::from_reader(&mut *file) {
                     Ok(manifest) => {
-                        Ok(Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf()))))
+                        let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
+
+                        debug!("npm package found added to cache: {}", manifest_path.display());
+                        self.cache.borrow_mut().insert(manifest_path, pkg.clone());
+
+                        Ok(pkg)
                     }
                     Err(err) => {
                         Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
                     }
                 }
             },
-            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => {
+                debug!("npm package miss added to cache: {}", manifest_path.display());
+                self.cache.borrow_mut().insert(manifest_path, None);
+
+                Ok(None)
+            },
             Err(err) => {
                 Err(anyhow!(err).context(format!("Unable to access {}", manifest_path.display())))
             }
         }
+    }
+}
+
+impl Default for NpmPackageDetector {
+    fn default() -> Self {
+        NpmPackageDetector::new()
     }
 }
 
