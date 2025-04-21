@@ -83,6 +83,10 @@ impl<K: Copy + Ord + Eq + Hash> Tree<K> {
         self.children.entry(parent)
             .or_default().insert(key);
     }
+    
+    pub fn contains_node(&self, key: K) -> bool {
+        self.roots.contains(&key) || self.parents.contains_key(&key)
+    }
 
     /// Returns an iterator over tree line items
     #[inline]

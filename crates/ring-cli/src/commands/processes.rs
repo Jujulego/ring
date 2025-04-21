@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+use std::iter::FusedIterator;
 use bytesize::ByteSize;
-use clap::Command;
+use clap::{arg, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_tree::Tree;
-use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
+use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 use ring_cli_list::List;
 use ring_core::Core;
@@ -12,11 +14,16 @@ pub fn setup() -> Command {
     Command::new("processes")
         .visible_alias("ps")
         .about("List running processes")
+        .arg(arg!(-a --all "Display all processes")
+            .action(ArgAction::SetTrue))
 }
 
 /// Handle processes command execution
-#[instrument(name = "cli.processes", skip_all)]
-pub fn handle(core: &Core) -> anyhow::Result<()> {
+#[instrument(name = "cli.processes", skip_all, fields(options.all = args.get_flag("all")))]
+pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
+    // Parse arguments
+    let show_all = args.get_flag("all");
+
     // List processes
     trace!("load running processes");
     let sys = System::new_with_specifics(
@@ -27,16 +34,26 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
 
     // Build tree
     let mut tree = Tree::new();
+    let mut tasks = HashMap::new();
 
     for (&pid, process) in sys.processes() {
-        if let Some(parent) = process.parent() {
-            if sys.process(parent).is_some() {
-                tree.add_node(pid, parent);
+        let task = core.detect_tasks(process);
+
+        if task.is_some() || show_all {
+            let ancestors = ProcessAncestors::new(&sys, process);
+
+            let parent = ancestors.skip(1)
+                .find(|proc| show_all || core.detect_tasks(proc).is_some());
+
+            if let Some(parent) = parent {
+                tree.add_node(pid, parent.pid());
             } else {
                 tree.add_root(pid);
             }
-        } else {
-            tree.add_root(pid);
+        }
+
+        if let Some(task) = task {
+            tasks.insert(pid, task);
         }
     }
 
@@ -44,7 +61,7 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
     let list: List = tree.iter()
         .map(|node| {
             let process = sys.process(*node.key).unwrap();
-            let task = core.detect_tasks(process);
+            let task = tasks.get(node.key);
 
             vec![
                 node.to_string(),
@@ -71,3 +88,30 @@ pub fn handle(core: &Core) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+struct ProcessAncestors<'a> {
+    sys: &'a System,
+    process: Option<&'a Process>,
+}
+
+impl<'a> ProcessAncestors<'a> {
+    fn new(sys: &'a System, process: &'a Process) -> Self {
+        Self {
+            sys,
+            process: Some(process),
+        }
+    }
+}
+
+impl<'a> Iterator for ProcessAncestors<'a> {
+    type Item = &'a Process;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let process = self.process?;
+        self.process = process.parent().and_then(|pid| self.sys.process(pid));
+
+        Some(process)
+    }
+}
+
+impl FusedIterator for ProcessAncestors<'_> {}
