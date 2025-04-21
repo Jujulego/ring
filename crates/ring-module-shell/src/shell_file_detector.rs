@@ -36,23 +36,41 @@ impl ShellFileDetector {
         if !path.is_file() {
             return false;
         }
-        
-        if path.extension().and_then(OsStr::to_str) == Some("sh") {
+
+        let filename = path.file_name().and_then(OsStr::to_str);
+
+        // Bash specific files
+        if matches!(filename, Some(".bashrc") | Some(".bash_aliases") | Some(".bash_profile")) {
             return true;
         }
-        
+
+        // Zsh specific files
+        if matches!(filename, Some(".zshrc")) {
+            return true;
+        }
+
+        // Extensions
+        if matches!(path.extension().and_then(OsStr::to_str), Some("bash") | Some("bsh") | Some("csh") | Some("sh")) {
+            return true;
+        }
+
+        // Shebangs
         trace!("read {}", path.display());
         if let Ok(file) = File::open(path) {
             let reader = BufReader::new(file);
             let shebang = reader.lines()
                 .map_while(Result::ok)
                 .find(|line| line.starts_with("#!"));
-            
-            if shebang.is_some_and(|l| l == "#!/bin/sh") {
+
+            if shebang.as_ref().is_some_and(|l| l == "#!/bin/sh") {
+                return true;
+            }
+
+            if shebang.as_ref().is_some_and(|l| l == "#!/bin/bash") {
                 return true;
             }
         }
-        
+
         false
     }
 }
