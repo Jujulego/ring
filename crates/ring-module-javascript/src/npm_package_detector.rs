@@ -196,7 +196,12 @@ impl NpmPackageDetector {
     /// assert_eq!(package.unwrap().unwrap().name(), Some("test-assets"));
     /// ```
     pub fn load_package_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
-        let path = path.as_ref();
+        let mut path = path.as_ref();
+
+        trace!("stat {}", path.display());
+        if path.is_file() {
+            path = path.parent().unwrap();
+        }
 
         path.ancestors()
             .find_map(|ancestor| self._load_package_at(ancestor).transpose())
