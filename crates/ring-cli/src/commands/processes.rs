@@ -33,7 +33,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     // Build tree
     let mut tree = Tree::new();
-    let mut tasks = TaskCache::new(&core);
+    let mut tasks = TaskCache::new(core);
 
     for (&pid, process) in sys.processes() {
         let task = tasks.detect_task(process);
