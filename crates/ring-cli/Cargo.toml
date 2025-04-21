@@ -1,28 +1,31 @@
 [package]
 name = "ring-cli"
-version = "0.0.0"
+version = "0.4.0"
 edition = "2021"
 
 [features]
-default = ["rust", "web"]
-rust = ["dep:ring-rust"]
-web = ["dep:ring-web"]
+default = [
+    "ring-core/javascript",
+    "ring-core/json",
+    "ring-core/rust",
+    "ring-core/toml",
+    "ring-core/typescript",
+    "ring-core/yaml",
+]
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.98"
 bytesize = "2.0.1"
-clap = "4.5.20"
-crossterm = "0.28.1"
+clap = "4.5.37"
+crossterm = "0.29.0"
 itertools = "0.14.0"
-lscolors = { version = "0.20.0", features = ["crossterm"] }
+lscolors = { version = "0.20.0", default-features = false, features = ["crossterm"] }
 sentry = { version = "0.37.0", features = ["anyhow", "tracing"] }
-supports-color = "3.0.2"
-sysinfo = "0.34.0"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+sysinfo = "0.34.2"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
 
-ring-cli-table = { path = "../ring-cli-table" }
-ring-core = { path = "../ring-core" }
-ring-rust = { path = "../ring-rust", features = ["crossterm"], optional = true }
-ring-tag = { path = "../ring-tag", features = ["crossterm"] }
-ring-web = { path = "../ring-web", features = ["crossterm"], optional = true }
+ring-cli-fs = { path = "../ring-cli-fs" }
+ring-cli-list = { path = "../ring-cli-list" }
+ring-cli-tree = { path = "../ring-cli-tree" }
+ring-core = { path = "../ring-core", features = ["crossterm"] }

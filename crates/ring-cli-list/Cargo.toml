@@ -1,0 +1,10 @@
+[package]
+name = "ring-cli-list"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+textwrap = "0.16.2"
+
+[dev-dependencies]
+crossterm = "0.29.0"

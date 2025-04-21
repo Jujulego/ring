@@ -1,0 +1,12 @@
+[package]
+name = "ring-core-file"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+crossterm = ["dep:crossterm"]
+
+[dependencies]
+rgb = "0.8.50"
+
+crossterm = { version = "0.29.0", optional = true }

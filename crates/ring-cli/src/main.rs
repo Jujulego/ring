@@ -1,11 +1,10 @@
 mod commands;
-mod core;
 
 use clap::{arg, ArgAction, ArgMatches, Command};
+use ring_core::Core;
 use std::io;
 use tracing::Level;
 use tracing_subscriber::prelude::*;
-use crate::core::RingCore;
 
 fn main() -> anyhow::Result<()> {
     let _guard = setup_sentry();
@@ -16,11 +15,10 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .subcommand_required(true)
         .subcommands([
-            commands::describe::build_command(),
-            commands::list::build_command(),
-            commands::processes::build_command(),
+            commands::list::setup(),
+            commands::processes::setup(),
         ])
-        .arg(arg!(-v --verbose)
+        .arg(arg!(-v --verbose "Prints more logs")
             .global(true)
             .required(false)
             .action(ArgAction::Count))
@@ -28,15 +26,14 @@ fn main() -> anyhow::Result<()> {
 
     // Setup tracing
     setup_tracing(&args);
-
+    
     // Handle subcommands
-    let core = RingCore::new();
+    let core = Core::new();
     
     match args.subcommand() {
-        Some(("describe", args)) => commands::describe::handle_command(&core, args),
-        Some(("list", args)) => commands::list::handle_command(&core, args),
-        Some(("processes", args)) => commands::processes::handle_command(&core, args),
-        _ => unreachable!()
+        Some(("list", args)) => commands::list::handle(&core, args),
+        Some(("processes", args)) => commands::processes::handle(&core, args),
+        _ => unreachable!(),
     }
 }
 

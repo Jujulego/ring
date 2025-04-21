@@ -1,92 +1,113 @@
-use crate::core::RingCore;
-use anyhow::Context;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
-use itertools::Itertools;
 use lscolors::LsColors;
-use ring_cli_table::CliTable;
-use ring_tag::Tag;
-use std::collections::BTreeSet;
-use std::env;
-use std::fs::read_dir;
+use ring_cli_fs::{FilesItem, FilesIterator};
+use ring_cli_list::List;
+use ring_core::Core;
+use std::io::IsTerminal;
 use std::path::PathBuf;
-use tracing::{instrument, trace};
+use std::{env, io};
+use itertools::Itertools;
+use tracing::instrument;
 
-pub fn build_command() -> Command {
+/// Prepare list command parsing
+pub fn setup() -> Command {
     Command::new("list")
         .visible_alias("ls")
+        .aliases(["l", "ll"])
+        .about("List files and directories (in current directory by default)")
         .arg(arg!([path])
             .value_parser(value_parser!(PathBuf)))
-        .arg(arg!(-a --all)
+        .arg(arg!(-a --all "Display all files")
             .action(ArgAction::SetTrue))
 }
 
-#[instrument(name = "cli.list", skip(core, args))]
-pub fn handle_command(core: &RingCore, args: &ArgMatches) -> anyhow::Result<()> {
+/// Handle list command execution
+#[instrument(name = "cli.list", skip_all, fields(options.all = args.get_flag("all")))]
+pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     // Extract arguments
-    let current_dir = env::current_dir()?;
     let path = args.get_one::<PathBuf>("path")
-        .unwrap_or(&current_dir);
+        .cloned()
+        .unwrap_or(env::current_dir()?);
 
-    let show_all = args.get_one::<bool>("all").unwrap_or(&false);
-
-    // Test files
+    // Print files
     let ls_colors = LsColors::from_env().unwrap_or_default();
-    let mut table = CliTable::new();
 
-    for path in list_files(path)? {
-        let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
-        
-        if !show_all && file_name.starts_with(".") {
-            continue;
-        }
-
-        let mut languages = BTreeSet::new();
-        let mut tags = BTreeSet::new();
-
-        for detector in core.code_unit_detectors() {
-            if let Some(unit) = detector.detect(&path)? {
-                languages.insert(Tag::from(unit.language()));
-                tags.extend(unit.tags());
-            }
-        }
-
-        if supports_color::on(supports_color::Stream::Stdout).is_some_and(|s| s.has_basic) {
-            let file_style = ls_colors.style_for_path(&path)
-                .map(lscolors::Style::to_crossterm_style)
-                .unwrap_or_default();
-
-            table.add_row([
-                &file_style.apply(file_name),
-                &languages.iter().map(Tag::stylize).join(" "),
-                &tags.iter().map(Tag::stylize).join(" "),
-            ]);
-        } else {
-            table.add_row([
-                &file_name.stylize(),
-                &languages.iter().map(Tag::stylize).join(" "),
-                &tags.iter().map(Tag::stylize).join(" "),
-            ]);
-        }
-    }
+    let mut files = FilesIterator::new(path)?;
     
-    for row in &table {
-        println!("{row}");
+    if args.get_flag("all") {
+        files.enable_show_all();
     }
+
+    let list = files
+        .map(|file| Ok(format_file(core, file?, &ls_colors)))
+        .collect::<anyhow::Result<List>>()?;
+
+    println!("{list}");
 
     Ok(())
 }
 
-fn list_files(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
-    if path.is_dir() {
-        trace!("read directory {}", path.display());
-        read_dir(path)?
-            .map(|res| res
-                .map(|e| e.path())
-                .with_context(|| format!("Error while reading directory {:?}", path))
-            )
-            .collect()
+fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String> {
+    let file_name = file.file_name().unwrap_or_default().to_string();
+    let language = core.detect_language(file.path());
+
+    let is_dir = file.metadata().map(|mtd| mtd.is_dir()).unwrap_or_default();
+
+    if io::stdout().is_terminal() {
+        // for humans : colored !
+        let file_style = ls_colors.style_for(&file)
+            .map(lscolors::Style::to_crossterm_style)
+            .unwrap_or_default();
+
+        let language_style = language.as_ref()
+            .map(|language| language.style())
+            .unwrap_or_default();
+
+        vec![
+            file_style.apply(file_name).to_string(),
+            language
+                .map(|language| language_style.apply(language).to_string())
+                .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
+            if is_dir {
+                let units = core.detect_units(file.path()).iter()
+                    .map(|unit| unit.style().apply(unit.kind()).to_string())
+                    .join("/");
+                
+                if units.is_empty() {
+                    "unknown".dark_grey().to_string()
+                } else {
+                    units
+                }
+            } else {
+                core.qualify_file(file.path())
+                    .map(|content| content.style().apply(content).to_string())
+                    .unwrap_or_else(|| "unknown".dark_grey().to_string())
+            },
+        ]
     } else {
-        Ok(vec![path.clone()])
+        // for machines
+        vec![
+            file_name,
+            language
+                .map(|language| language.to_string())
+                .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
+
+            if is_dir {
+                let units = core.detect_units(file.path()).iter()
+                    .map(|unit| unit.kind().to_string())
+                    .join("/");
+
+                if units.is_empty() {
+                    "unknown".to_string()
+                } else {
+                    units
+                }
+            } else {
+                core.qualify_file(file.path())
+                    .map(|content| content.to_string())
+                    .unwrap_or_else(|| "unknown".to_string())
+            },
+        ]
     }
 }
