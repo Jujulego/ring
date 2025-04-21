@@ -4,7 +4,7 @@ import ts from 'typescript-eslint';
 
 export default ts.config(
   {
-    ignores: ['.pnp.*', '.yarn', 'dist', 'coverage']
+    ignores: ['.pnp.*', '.yarn', 'crates/*/assets', 'dist', 'coverage', 'target']
   },
   {
     languageOptions: { globals: globals.node },
