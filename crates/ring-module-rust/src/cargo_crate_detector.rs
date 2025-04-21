@@ -1,11 +1,11 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use cargo_toml::Manifest;
 use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io;
 use std::path::{Path, PathBuf};

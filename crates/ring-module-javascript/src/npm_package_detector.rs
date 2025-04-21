@@ -1,16 +1,16 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
 use crate::NpmPackage;
+use anyhow::anyhow;
 use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use anyhow::anyhow;
 use tracing::{debug, instrument, trace, warn};
 
 /// Detector for npm packages, and related files
