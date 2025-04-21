@@ -1113,6 +1113,7 @@ dependencies = [
  "ring-module-typescript",
  "ring-module-yaml",
  "sysinfo",
+ "tracing",
 ]
 
 [[package]]
