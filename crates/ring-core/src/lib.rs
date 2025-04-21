@@ -32,6 +32,8 @@ impl Core {
             Box::new(ring_module_json::JsonModule::new()),
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
+            #[cfg(feature = "shell")]
+            Box::new(ring_module_shell::ShellModule::new()),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
             #[cfg(feature = "typescript")]

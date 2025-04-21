@@ -1109,6 +1109,7 @@ dependencies = [
  "ring-module-javascript",
  "ring-module-json",
  "ring-module-rust",
+ "ring-module-shell",
  "ring-module-toml",
  "ring-module-typescript",
  "ring-module-yaml",
