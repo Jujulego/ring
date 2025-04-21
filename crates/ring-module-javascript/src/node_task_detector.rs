@@ -82,3 +82,16 @@ fn extract_node_script(mut args: &[OsString]) -> Option<&OsStr> {
     args.first()
         .map(|str| str.as_os_str())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_extract_node_script() {
+        let args = ["-r", "toto", "test.js"].map(OsString::from);
+
+        assert_eq!(extract_node_script(&args[2..]).and_then(|str| str.to_str()), Some("test.js"));
+        assert_eq!(extract_node_script(&args).and_then(|str| str.to_str()), Some("test.js"));
+    }
+}

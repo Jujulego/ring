@@ -183,7 +183,18 @@ impl NpmPackageDetector {
         self._load_package_at(path.as_ref())
     }
 
-    /// Load npm package containing given path
+    /// Load npm package containing given path.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ring_module_javascript::NpmPackageDetector;
+    ///
+    /// let detector = NpmPackageDetector::new();
+    /// let package = detector.load_package_containing("assets/test.js");
+    ///
+    /// assert_eq!(package.unwrap().unwrap().name(), Some("test-assets"));
+    /// ```
     pub fn load_package_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         let path = path.as_ref();
 
