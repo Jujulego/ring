@@ -1,13 +1,12 @@
-use std::collections::HashMap;
-use std::iter::FusedIterator;
 use bytesize::ByteSize;
 use clap::{arg, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
+use ring_cli_list::List;
 use ring_cli_tree::Tree;
+use ring_core::{Core, TaskCache};
+use std::iter::FusedIterator;
 use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
-use ring_cli_list::List;
-use ring_core::Core;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {
@@ -34,16 +33,16 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     // Build tree
     let mut tree = Tree::new();
-    let mut tasks = HashMap::new();
+    let mut tasks = TaskCache::new(&core);
 
     for (&pid, process) in sys.processes() {
-        let task = core.detect_tasks(process);
+        let task = tasks.detect_task(process);
 
         if task.is_some() || show_all {
             let ancestors = ProcessAncestors::new(&sys, process);
 
             let parent = ancestors.skip(1)
-                .find(|proc| show_all || core.detect_tasks(proc).is_some());
+                .find(|proc| show_all || tasks.detect_task(proc).is_some());
 
             if let Some(parent) = parent {
                 tree.add_node(pid, parent.pid());
@@ -51,17 +50,13 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                 tree.add_root(pid);
             }
         }
-
-        if let Some(task) = task {
-            tasks.insert(pid, task);
-        }
     }
 
     // Print processes
     let list: List = tree.iter()
         .map(|node| {
             let process = sys.process(*node.key).unwrap();
-            let task = tasks.get(node.key);
+            let task = tasks.detect_task(process);
 
             vec![
                 node.to_string(),
