@@ -11,6 +11,10 @@ jobs:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
 
+    permissions:
+      id-token: write
+      attestations: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -66,11 +70,24 @@ jobs:
           
           echo "binary=$result" >> $GITHUB_OUTPUT
 
-      - name: Upload artifact
+      - name: Attest
+        id: attest
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.rename.outputs.binary }}
+
+      - name: Move attestation
+        shell: bash
+        run:
+          mv ${{ steps.attest.outputs.bundle-path }} attestation.json
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.name }}
-          path: ${{ steps.rename.outputs.binary }}
+          path: |
+            ${{ steps.rename.outputs.binary }}
+            attestation.json
           if-no-files-found: 'error'
 
   npm-publish:
@@ -80,7 +97,8 @@ jobs:
     needs: [build]
 
     permissions:
-      contents: write
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -104,9 +122,13 @@ jobs:
       - name: Add native artifacts
         run: |
           mv build-linux-amd64/ring-linux-amd64 npm/ring-linux-amd64/bin/ring
+          mv build-linux-amd64/attestation.json npm/ring-linux-amd64/bin/attestation.json
           mv build-windows-amd64/ring-windows-amd64.exe npm/ring-windows-amd64/bin/ring.exe
+          mv build-windows-amd64/attestation.json npm/ring-windows-amd64/bin/attestation.json
           mv build-macos-amd64/ring-macos-amd64 npm/ring-macos-amd64/bin/ring
+          mv build-macos-amd64/attestation.json npm/ring-macos-amd64/bin/attestation.json
           mv build-macos-arm64/ring-macos-arm64 npm/ring-macos-arm64/bin/ring
+          mv build-macos-arm64/attestation.json npm/ring-macos-arm64/bin/attestation.json
 
       - name: Install js dependencies
         run: yarn install --immutable
@@ -122,7 +144,7 @@ jobs:
             tag='next'
           fi
           
-          yarn workspaces foreach --all --no-private npm publish --access public --tolerate-republish --tag $tag
+          yarn workspaces foreach --all --no-private npm publish --provenance --access public --tolerate-republish --tag $tag
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
