@@ -1,11 +1,13 @@
 use crate::shell_language;
 use ring_core_file::{DetectLanguage, Language};
 use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use tracing::{instrument, trace};
 
 #[derive(Clone, Debug, Default)]
-pub struct ShellFileDetector {}
+pub struct ShellFileDetector;
 
 impl ShellFileDetector {
     /// Creates a new instance of ShellFileDetector
@@ -31,7 +33,27 @@ impl ShellFileDetector {
 
     fn _is_shell_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
-        path.is_file() && path.extension().and_then(OsStr::to_str) == Some("sh")
+        if !path.is_file() {
+            return false;
+        }
+        
+        if path.extension().and_then(OsStr::to_str) == Some("sh") {
+            return true;
+        }
+        
+        trace!("read {}", path.display());
+        if let Ok(file) = File::open(path) {
+            let reader = BufReader::new(file);
+            let shebang = reader.lines()
+                .map_while(Result::ok)
+                .find(|line| line.starts_with("#!"));
+            
+            if shebang.is_some_and(|l| l == "#!/bin/sh") {
+                return true;
+            }
+        }
+        
+        false
     }
 }
 
@@ -54,6 +76,7 @@ mod tests {
     fn it_should_detect_shell_language() {
         let detector = ShellFileDetector::new();
 
+        assert_eq!(detector.detect_language(Path::new("assets/test")), Some(shell_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.sh")), Some(shell_language()));
     }
 

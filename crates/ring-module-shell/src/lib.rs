@@ -1,10 +1,10 @@
-mod shell_file;
+mod shell_file_detector;
 mod utils;
 
 use std::rc::Rc;
 use ring_core_file::DetectLanguage;
 use ring_core_modules::Module;
-pub use crate::shell_file::ShellFileDetector;
+pub use crate::shell_file_detector::ShellFileDetector;
 pub use crate::utils::shell_language;
 
 #[derive(Debug, Default, Clone)]
