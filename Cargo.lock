@@ -1196,6 +1196,11 @@ dependencies = [
 [[package]]
 name = "ring-module-shell"
 version = "0.1.0"
+dependencies = [
+ "ring-core-file",
+ "ring-core-modules",
+ "tracing",
+]
 
 [[package]]
 name = "ring-module-toml"
