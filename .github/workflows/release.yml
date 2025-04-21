@@ -80,7 +80,8 @@ jobs:
     needs: [build]
 
     permissions:
-      contents: write
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -122,7 +123,7 @@ jobs:
             tag='next'
           fi
           
-          yarn workspaces foreach --all --no-private npm publish --access public --tolerate-republish --tag $tag
+          yarn workspaces foreach --all --no-private npm publish --provenance --access public --tolerate-republish --tag $tag
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
