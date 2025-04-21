@@ -32,6 +32,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/rint-core-units/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-tree/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-tasks/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-shell/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
