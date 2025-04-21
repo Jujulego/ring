@@ -384,7 +384,7 @@ __metadata:
     rollup: "npm:4.40.0"
     typescript: "npm:5.8.3"
     yargs: "npm:17.7.2"
-    yocto-spinner: "npm:0.2.1"
+    yocto-spinner: "npm:0.2.2"
   bin:
     ring-dt: bin/ring-dt.js
   languageName: unknown
@@ -2889,12 +2889,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yocto-spinner@npm:0.2.1":
-  version: 0.2.1
-  resolution: "yocto-spinner@npm:0.2.1"
+"yocto-spinner@npm:0.2.2":
+  version: 0.2.2
+  resolution: "yocto-spinner@npm:0.2.2"
   dependencies:
     yoctocolors: "npm:^2.1.1"
-  checksum: 10c0/c2547108ad052ca9a5f17da705325f97cef95b411d14646c0e70912b566dbf77480eca1ef16e7c530ef0fef5a264790a7ce61e3c6e4f10958e8b000924e83de2
+  checksum: 10c0/a7043c56ba4920b468acd403b3056385b956924cb22ebc139ad4b80408f899c24dc73d3daa54728154e13b28bf29744f2b817face8b33489b153fbb3d9b8ec58
   languageName: node
   linkType: hard
 
