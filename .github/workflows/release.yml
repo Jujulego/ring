@@ -79,7 +79,7 @@ jobs:
       - name: Move attestation
         shell: bash
         run:
-          mv ${{ steps.attest.outputs.bundle-path }} attestation.json
+          mv "${{ steps.attest.outputs.bundle-path }}" attestation.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
