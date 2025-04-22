@@ -10,6 +10,7 @@ crossterm = [
     "ring-core-units/crossterm",
     "ring-module-javascript?/crossterm",
     "ring-module-rust?/crossterm",
+    "ring-module-shell?/crossterm",
 ]
 
 javascript = ["dep:ring-module-javascript"]
