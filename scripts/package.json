@@ -30,7 +30,7 @@
   "devDependencies": {
     "@jujulego/vite-plugin-swc": "1.2.0",
     "@rollup/plugin-node-resolve": "16.0.1",
-    "@swc/core": "1.11.21",
+    "@swc/core": "1.11.22",
     "@types/node": "22.14.1",
     "@types/yargs": "17.0.33",
     "rollup": "4.40.0",
