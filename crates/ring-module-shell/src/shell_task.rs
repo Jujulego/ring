@@ -10,6 +10,7 @@ pub enum ShellKind {
     Cmd,
     Shell,
     PowerShell,
+    Zsh,
 }
 
 /// A shell process
@@ -40,6 +41,7 @@ impl Task for ShellTask {
             ShellKind::Cmd => "cmd",
             ShellKind::Shell => "shell",
             ShellKind::PowerShell => "powershell",
+            ShellKind::Zsh => "zsh",
         }
     }
 
