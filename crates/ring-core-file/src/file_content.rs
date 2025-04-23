@@ -7,6 +7,7 @@ pub enum FileContent {
     Lockfile,
     Manifest,
     Source,
+    Storage,
     Tests,
     Other(String),
 }
@@ -21,6 +22,7 @@ impl FileContent {
                 | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
                 FileContent::Other(_)
                 | FileContent::Source => Some(crossterm::style::Color::Blue),
+                FileContent::Storage => Some(crossterm::style::Color::DarkYellow),
                 FileContent::Tests => Some(crossterm::style::Color::DarkGreen),
             },
             attributes: match self {
@@ -40,6 +42,7 @@ impl Display for FileContent {
             FileContent::Lockfile => write!(f, "lockfile"),
             FileContent::Manifest => write!(f, "manifest"),
             FileContent::Source => write!(f, "source"),
+            FileContent::Storage => write!(f, "storage"),
             FileContent::Tests => write!(f, "tests"),
             FileContent::Other(name) => name.fmt(f),
         }
@@ -56,6 +59,7 @@ mod tests {
         assert_eq!(FileContent::Lockfile.to_string(), "lockfile");
         assert_eq!(FileContent::Manifest.to_string(), "manifest");
         assert_eq!(FileContent::Source.to_string(), "source");
+        assert_eq!(FileContent::Storage.to_string(), "storage");
         assert_eq!(FileContent::Tests.to_string(), "tests");
         assert_eq!(FileContent::Other("toto".into()).to_string(), "toto");
     }

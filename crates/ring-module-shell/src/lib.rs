@@ -6,7 +6,7 @@ mod utils;
 pub use crate::shell_file_detector::ShellFileDetector;
 pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::shell_language;
-use ring_core_file::DetectLanguage;
+use ring_core_file::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
 use std::rc::Rc;
 use ring_core_tasks::DetectTask;
@@ -61,6 +61,12 @@ impl Module for ShellModule {
         vec![self.shell_file_detector()]
     }
 
+    #[inline]
+    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
+        vec![self.shell_file_detector()]
+    }
+
+    #[inline]
     fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
         vec![self.shell_task_detector()]
     }

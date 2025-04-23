@@ -1,5 +1,5 @@
 use crate::shell_language;
-use ring_core_file::{DetectLanguage, Language};
+use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -14,6 +14,37 @@ impl ShellFileDetector {
     #[inline]
     pub fn new() -> Self {
         Default::default()
+    }
+
+    #[inline]
+    fn _is_script_file(&self, path: &Path) -> bool {
+        matches!(
+            path.extension().and_then(OsStr::to_str),
+            Some("bash") | Some("bsh") | Some("csh") | Some("sh")
+        )
+    }
+
+    #[inline]
+    fn _is_bash_config_file(&self, path: &Path) -> bool {
+        matches!(
+            path.file_name().and_then(OsStr::to_str),
+            Some(".bashrc") | Some(".bash_aliases") | Some(".bash_profile")
+        )
+    }
+
+    #[inline]
+    fn _is_bash_history_file(&self, path: &Path) -> bool {
+        path.file_name().and_then(OsStr::to_str).is_some_and(|name| name == ".bash_history")
+    }
+
+    #[inline]
+    fn _is_zsh_config_file(&self, path: &Path) -> bool {
+        path.file_name().and_then(OsStr::to_str).is_some_and(|name| name == ".zshrc")
+    }
+
+    #[inline]
+    fn _is_zsh_history_file(&self, path: &Path) -> bool {
+        path.file_name().and_then(OsStr::to_str).is_some_and(|name| name == ".zsh_history")
     }
 
     /// Checks if given path is a shell file
@@ -37,20 +68,18 @@ impl ShellFileDetector {
             return false;
         }
 
-        let filename = path.file_name().and_then(OsStr::to_str);
-
-        // Bash specific files
-        if matches!(filename, Some(".bashrc") | Some(".bash_aliases") | Some(".bash_profile")) {
+        // Config files
+        if self._is_bash_config_file(path) || self._is_zsh_config_file(path) {
             return true;
         }
 
-        // Zsh specific files
-        if matches!(filename, Some(".zshrc")) {
+        // History files
+        if self._is_bash_history_file(path) {
             return true;
         }
 
         // Extensions
-        if matches!(path.extension().and_then(OsStr::to_str), Some("bash") | Some("bsh") | Some("csh") | Some("sh")) {
+        if self._is_script_file(path) {
             return true;
         }
 
@@ -80,6 +109,18 @@ impl DetectLanguage for ShellFileDetector {
     fn detect_language(&self, path: &Path) -> Option<Language> {
         if self._is_shell_file(path) {
             Some(shell_language())
+        } else {
+            None
+        }
+    }
+}
+
+impl QualifyPath for ShellFileDetector {
+    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+        if self._is_bash_config_file(path) || self._is_zsh_config_file(path) {
+            Some((FileContent::Configuration, path))
+        } else if self._is_bash_history_file(path) || self._is_zsh_history_file(path) {
+            Some((FileContent::Storage, path))
         } else {
             None
         }
