@@ -68,6 +68,10 @@ impl NpmPackageDetector {
         path.is_file() && (self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path))
     }
 
+    fn _is_npm_configuration(&self, path: &Path) -> bool {
+        path.file_name().and_then(OsStr::to_str) == Some(".npmrc")
+    }
+
     /// Checks if given path is a npm package lockfile
     ///
     /// # Examples
@@ -170,7 +174,7 @@ impl NpmPackageDetector {
     }
 
     fn _is_yarn_configuration(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some(".yarnrc.yml")
+        matches!(path.file_name().and_then(OsStr::to_str), Some(".yarnrc") | Some(".yarnrc.yml"))
     }
 
     /// Load npm package at given path, if any.
@@ -302,6 +306,10 @@ impl QualifyPath for NpmPackageDetector {
             if self._is_manifest(path) {
                 return Some((FileContent::Manifest, path));
             }
+
+            if self._is_npm_configuration(path) || self._is_yarn_configuration(path) {
+                return Some((FileContent::Configuration, path));
+            }
         } else {
             return None;
         }
@@ -315,20 +323,16 @@ impl QualifyPath for NpmPackageDetector {
             } else {
                 break;
             }
-
+            
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
-                if self._is_yarn_configuration(ancestor) {
-                    return Some((FileContent::Configuration, ancestor));
-                }
-
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
                     return Some((FileContent::Lockfile, ancestor));
                 }
 
                 match ancestor.file_name().and_then(OsStr::to_str) {
-                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp commonjs".into()), ancestor)),
-                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp esm".into()), ancestor)),
+                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp-commonjs".into()), ancestor)),
+                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp-esm".into()), ancestor)),
                     _ => {}
                 }
             }
@@ -385,8 +389,8 @@ mod tests {
     fn it_should_qualify_yarn_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp commonjs".into()), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp esm".into()), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp-commonjs".into()), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp-esm".into()), Path::new("assets/.pnp.loader.mjs"))));
         assert_eq!(detector.qualify_file(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
         assert_eq!(detector.qualify_file(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
     }
