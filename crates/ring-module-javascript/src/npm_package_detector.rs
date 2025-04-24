@@ -310,16 +310,6 @@ impl QualifyPath for NpmPackageDetector {
             if self._is_npm_configuration(path) || self._is_yarn_configuration(path) {
                 return Some((FileContent::Configuration, path));
             }
-
-            if self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path) {
-                return Some((FileContent::Lockfile, path));
-            }
-
-            match path.file_name().and_then(OsStr::to_str) {
-                Some(".pnp.cjs") => return Some((FileContent::Other("pnp-commonjs".into()), path)),
-                Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp-esm".into()), path)),
-                _ => {}
-            }
         } else {
             return None;
         }
@@ -332,6 +322,19 @@ impl QualifyPath for NpmPackageDetector {
                 }
             } else {
                 break;
+            }
+            
+            trace!("stat {}", ancestor.display());
+            if ancestor.is_file() {
+                if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
+                    return Some((FileContent::Lockfile, ancestor));
+                }
+
+                match ancestor.file_name().and_then(OsStr::to_str) {
+                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp-commonjs".into()), ancestor)),
+                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp-esm".into()), ancestor)),
+                    _ => {}
+                }
             }
         }
 
@@ -386,8 +389,8 @@ mod tests {
     fn it_should_qualify_yarn_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp commonjs".into()), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp esm".into()), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp-commonjs".into()), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp-esm".into()), Path::new("assets/.pnp.loader.mjs"))));
         assert_eq!(detector.qualify_file(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
         assert_eq!(detector.qualify_file(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
     }
