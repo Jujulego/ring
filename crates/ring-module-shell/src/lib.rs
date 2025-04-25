@@ -4,6 +4,7 @@ mod shell_task_detector;
 mod utils;
 
 pub use crate::shell_file_detector::ShellFileDetector;
+pub use crate::shell_task::{ShellKind, ShellTask};
 pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::shell_language;
 use ring_core_file::{DetectLanguage, QualifyPath};
