@@ -10,11 +10,13 @@ crossterm = [
     "ring-core-units/crossterm",
     "ring-module-javascript?/crossterm",
     "ring-module-rust?/crossterm",
+    "ring-module-shell?/crossterm",
 ]
 
 javascript = ["dep:ring-module-javascript"]
 json = ["dep:ring-module-json"]
 rust = ["dep:ring-module-rust"]
+shell = ["dep:ring-module-shell"]
 toml = ["dep:ring-module-toml"]
 typescript = ["dep:ring-module-typescript"]
 yaml = ["dep:ring-module-yaml"]
@@ -31,6 +33,7 @@ ring-core-units = { path = "../ring-core-units" }
 ring-module-javascript = { path = "../ring-module-javascript", optional = true }
 ring-module-json = { path = "../ring-module-json", optional = true }
 ring-module-rust = { path = "../ring-module-rust", optional = true }
+ring-module-shell = { path = "../ring-module-shell", optional = true }
 ring-module-toml = { path = "../ring-module-toml", optional = true }
 ring-module-typescript = { path = "../ring-module-typescript", optional = true }
 ring-module-yaml = { path = "../ring-module-yaml", optional = true }

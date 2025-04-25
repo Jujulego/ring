@@ -8,6 +8,7 @@ default = [
     "ring-core/javascript",
     "ring-core/json",
     "ring-core/rust",
+    "ring-core/shell",
     "ring-core/toml",
     "ring-core/typescript",
     "ring-core/yaml",
