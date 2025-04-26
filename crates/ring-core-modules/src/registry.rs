@@ -1,13 +1,12 @@
-use std::path::{absolute, Path};
-use std::rc::Rc;
-use ring_core_file::Language;
 use crate::Module;
+use ring_core_file::Language;
+use std::path::{absolute, Path};
 
 /// Object managing a set of modules.
-/// Provides call using features declared by those modules.
+/// Provides calls using features declared by those modules.
 pub trait Registry {
     /// Returns list of registered modules
-    fn modules(&self) -> &[Rc<dyn Module>];
+    fn modules(&self) -> &[Box<dyn Module>];
 
     /// Uses all modules to detect path's language
     #[inline]
@@ -17,7 +16,7 @@ pub trait Registry {
 }
 
 /// Uses given modules to detect path's language
-fn detect_language(modules: &[Rc<dyn Module>], path: &Path) -> Option<Language> {
+fn detect_language(modules: &[Box<dyn Module>], path: &Path) -> Option<Language> {
     modules.iter()
         .flat_map(|module| module.language_detectors())
         .filter_map(|detector| detector.detect_language(path))
@@ -26,9 +25,10 @@ fn detect_language(modules: &[Rc<dyn Module>], path: &Path) -> Option<Language> 
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use mockall::mock;
     use ring_core_file::{DetectLanguage, Language};
-    use super::*;
+    use std::rc::Rc;
 
     mock! {
         TestUtil {}
@@ -51,15 +51,15 @@ mod tests {
     }
 
     struct TestRegistry {
-        modules: Vec<Rc<dyn Module>>,
+        modules: Vec<Box<dyn Module>>,
     }
-    
+
     impl Registry for TestRegistry {
-        fn modules(&self) -> &[Rc<dyn Module>] {
+        fn modules(&self) -> &[Box<dyn Module>] {
             &self.modules
         }
     }
-    
+
     #[test]
     fn it_should_use_test_util_to_detect_language() {
         let language = Language::new("test".to_string());
@@ -82,11 +82,11 @@ mod tests {
         let module = TestModule {
             utils: vec![Rc::new(util_a), Rc::new(util_b), Rc::new(util_c)]
         };
-        
+
         let registry = TestRegistry {
-            modules: vec![Rc::new(module)],
+            modules: vec![Box::new(module)],
         };
-        
+
         assert_eq!(registry.detect_language("/test"), Some(language));
     }
 }

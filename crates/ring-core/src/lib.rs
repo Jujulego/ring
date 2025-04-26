@@ -1,8 +1,9 @@
 mod task_cache;
 
 pub use crate::task_cache::TaskCache;
-use ring_core_file::{FileContent, Language};
+use ring_core_file::FileContent;
 use ring_core_modules::Module;
+pub use ring_core_modules::Registry;
 use ring_core_tasks::Task;
 use ring_core_units::Unit;
 use std::path::{absolute, Path};
@@ -43,29 +44,6 @@ impl Core {
         ];
 
         Core { modules }
-    }
-
-    /// Uses all modules to detect given path's language
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    /// use ring_module_rust::rust_language;
-    ///
-    /// let core = Core::new();
-    /// assert_eq!(core.detect_language("src/lib.rs"), Some(rust_language()));
-    /// ```
-    #[inline]
-    pub fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        self._detect_language(&absolute(path).ok()?)
-    }
-
-    fn _detect_language(&self, path: &Path) -> Option<Language> {
-        self.modules.iter()
-            .flat_map(|module| module.language_detectors())
-            .filter_map(|detector| detector.detect_language(path))
-            .next()
     }
 
     /// Uses all modules to detect task based on given process
@@ -125,6 +103,12 @@ impl Core {
             .filter_map(|detector| detector.qualify_file(path))
             .max_by_key(|(_, qualified_path)| qualified_path.components().count())
             .map(|(content, _)| content)
+    }
+}
+
+impl Registry for Core {
+    fn modules(&self) -> &[Box<dyn Module>] {
+        &self.modules
     }
 }
 
