@@ -1,24 +1,20 @@
-use crate::{Module, Registry};
+use crate::Registry;
 use ring_core_file::Language;
-use std::path::{absolute, Path};
+use std::path::Path;
 
 /// Provides calls using language detection module features
-pub trait LanguageRegistry: Registry {
+pub trait LanguageRegistry {
     /// Uses all modules to detect path's language
-    #[inline]
-    fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        detect_language(self.modules(), &absolute(path).ok()?)
-    }
+    fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language>;
 }
 
-impl<T> LanguageRegistry for T where T: Registry {}
-
-/// Uses given modules to detect path's language
-fn detect_language(modules: &[Box<dyn Module>], path: &Path) -> Option<Language> {
-    modules.iter()
-        .flat_map(|module| module.language_detectors())
-        .filter_map(|detector| detector.detect_language(path))
-        .next()
+impl<T> LanguageRegistry for T where T: Registry {
+    fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
+        self.modules().iter()
+            .flat_map(|module| module.language_detectors())
+            .filter_map(|detector| detector.detect_language(path.as_ref()))
+            .next()
+    }
 }
 
 #[cfg(test)]
@@ -26,6 +22,7 @@ mod tests {
     use super::*;
     use ring_core_file::{DetectLanguage, Language};
     use std::rc::Rc;
+    use crate::Module;
 
     struct TestUtil;
 
