@@ -1,5 +1,6 @@
 mod task_cache;
 
+use std::rc::Rc;
 pub use crate::task_cache::TaskCache;
 pub use ring_core_file::*;
 pub use ring_core_modules::*;
@@ -13,7 +14,9 @@ pub struct Core {
 
 impl Core {
     /// Initiate all modules
-    pub fn new() -> Self {
+    pub fn new() -> Rc<Self> {
+        let registry = Rc::new(RegistryRef::new());
+
         let modules: Vec<Box<dyn Module>> = vec![
             #[cfg(feature = "javascript")]
             Box::new(ring_module_javascript::JavascriptModule::new()),
@@ -22,7 +25,7 @@ impl Core {
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "shell")]
-            Box::new(ring_module_shell::ShellModule::new()),
+            Box::new(ring_module_shell::ShellModule::new(registry.clone())),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
             #[cfg(feature = "typescript")]
@@ -31,19 +34,16 @@ impl Core {
             Box::new(ring_module_yaml::YamlModule::new()),
         ];
 
-        Core { modules }
+        let core = Rc::new(Core { modules });
+        registry.store(core.clone());
+
+        core
     }
 }
 
 impl Registry for Core {
     fn modules(&self) -> &[Box<dyn Module>] {
         &self.modules
-    }
-}
-
-impl Default for Core {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

@@ -26,17 +26,18 @@ impl From<ShellKind> for &'static str {
 }
 
 /// A shell process
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ShellTask {
-    shell_kind: ShellKind,
     exe: PathBuf,
+    shell_kind: ShellKind,
+    working_unit: Option<Rc<dyn Unit>>,
 }
 
 impl ShellTask {
     /// Creates a new shell task
     #[inline]
-    pub fn new(shell_kind: ShellKind, exe: PathBuf) -> ShellTask {
-        ShellTask { shell_kind, exe }
+    pub fn new(shell_kind: ShellKind, exe: PathBuf, working_unit: Option<Rc<dyn Unit>>) -> ShellTask {
+        ShellTask { shell_kind, exe, working_unit }
     }
 
     /// Returns the kind of shell running in the task
@@ -62,7 +63,7 @@ impl Task for ShellTask {
     /// Returns none
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        None
+        self.working_unit.clone()
     }
 
     #[cfg(feature = "crossterm")]

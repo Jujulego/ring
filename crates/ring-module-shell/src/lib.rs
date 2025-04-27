@@ -8,11 +8,11 @@ pub use crate::shell_task::{ShellKind, ShellTask};
 pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::shell_language;
 use ring_core_file::{DetectLanguage, QualifyFile};
-use ring_core_modules::Module;
-use std::rc::Rc;
+use ring_core_modules::{Module, RegistryRef};
 use ring_core_tasks::DetectTask;
+use std::rc::Rc;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Clone)]
 pub struct ShellModule {
     shell_file_detector: Rc<ShellFileDetector>,
     shell_task_detector: Rc<ShellTaskDetector>,
@@ -21,35 +21,20 @@ pub struct ShellModule {
 impl ShellModule {
     /// Creates a new instance of ShellModule
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(registry: Rc<RegistryRef>) -> Self {
+        ShellModule {
+            shell_file_detector: Rc::new(ShellFileDetector::new()),
+            shell_task_detector: Rc::new(ShellTaskDetector::new(registry)),
+        }
     }
 
     /// Returns a pointer on ShellFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_shell::ShellModule;
-    ///
-    /// let module = ShellModule::new();
-    /// let detector = module.shell_file_detector();
-    /// ```
     #[inline]
     pub fn shell_file_detector(&self) -> Rc<ShellFileDetector> {
         self.shell_file_detector.clone()
     }
 
     /// Returns a pointer on ShellTaskDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_shell::ShellModule;
-    ///
-    /// let module = ShellModule::new();
-    /// let detector = module.shell_task_detector();
-    /// ```
     #[inline]
     pub fn shell_task_detector(&self) -> Rc<ShellTaskDetector> {
         self.shell_task_detector.clone()
@@ -58,12 +43,12 @@ impl ShellModule {
 
 impl Module for ShellModule {
     #[inline]
-    fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
         vec![self.shell_file_detector()]
     }
 
     #[inline]
-    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+    fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
         vec![self.shell_file_detector()]
     }
 
