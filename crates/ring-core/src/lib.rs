@@ -4,11 +4,9 @@ pub use crate::task_cache::TaskCache;
 use ring_core_file::FileContent;
 use ring_core_modules::Module;
 pub use ring_core_modules::Registry;
-use ring_core_tasks::Task;
 use ring_core_units::Unit;
 use std::path::{absolute, Path};
 use std::rc::Rc;
-use sysinfo::Process;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -44,14 +42,6 @@ impl Core {
         ];
 
         Core { modules }
-    }
-
-    /// Uses all modules to detect task based on given process
-    pub fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
-        self.modules.iter()
-            .flat_map(|module| module.task_detectors())
-            .filter_map(|detector| detector.detect_task(process))
-            .next()
     }
 
     /// Uses all modules to detect units at given path

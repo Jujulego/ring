@@ -1,4 +1,4 @@
-use crate::Core;
+use ring_core_modules::Registry;
 use ring_core_tasks::Task;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -6,15 +6,15 @@ use sysinfo::{Pid, Process};
 use tracing::debug;
 
 /// Wrapper of core, caching detected tasks
-pub struct TaskCache<'c> {
-    core: &'c Core,
+pub struct TaskCache<'r, R: Registry> {
+    registry: &'r R,
     cache: HashMap<Pid, Option<Rc<dyn Task>>>,
 }
 
-impl<'c> TaskCache<'c> {
+impl<'r, R: Registry> TaskCache<'r, R> {
     /// Creates a new task cache
-    pub fn new(core: &'c Core) -> Self {
-        TaskCache { core, cache: HashMap::new() }
+    pub fn new(registry: &'r R) -> Self {
+        TaskCache { registry, cache: HashMap::new() }
     }
 
     /// Uses core & cache to detect task based on given process
@@ -23,7 +23,7 @@ impl<'c> TaskCache<'c> {
             debug!(key = %process.pid(), "task cache hit");
             task.clone()
         } else {
-            let task = self.core.detect_task(process);
+            let task = self.registry.detect_task(process);
             self.cache.insert(process.pid(), task.clone());
             debug!(key = %process.pid(), "task cached");
 
