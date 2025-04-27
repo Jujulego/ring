@@ -1,4 +1,4 @@
-use ring_core_file::{DetectLanguage, QualifyPath};
+use ring_core_file::{DetectLanguage, QualifyFile};
 use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
@@ -10,7 +10,7 @@ pub trait Module {
     }
 
     /// Returns all path qualifiers implemented by this module.
-    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
         vec![]
     }
 
@@ -37,7 +37,7 @@ mod tests {
         let module = TestModule;
         
         assert!(module.language_detectors().is_empty());
-        assert!(module.path_qualifiers().is_empty());
+        assert!(module.file_qualifiers().is_empty());
         assert!(module.task_detectors().is_empty());
         assert!(module.unit_detectors().is_empty());
     }

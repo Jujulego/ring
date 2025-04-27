@@ -69,31 +69,6 @@ impl Core {
             .filter_map(|detector| detector.detect_unit(path))
             .collect()
     }
-
-    /// Uses all modules to qualify given path's content
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    /// use ring_core_file::FileContent;
-    /// use ring_module_rust::rust_language;
-    ///
-    /// let core = Core::new();
-    /// assert_eq!(core.qualify_file("Cargo.toml"), Some(FileContent::Manifest));
-    /// ```
-    #[inline]
-    pub fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
-        self._qualify_file(&absolute(path).ok()?)
-    }
-
-    fn _qualify_file(&self, path: &Path) -> Option<FileContent> {
-        self.modules.iter()
-            .flat_map(|module| module.path_qualifiers())
-            .filter_map(|detector| detector.qualify_file(path))
-            .max_by_key(|(_, qualified_path)| qualified_path.components().count())
-            .map(|(content, _)| content)
-    }
 }
 
 impl Registry for Core {

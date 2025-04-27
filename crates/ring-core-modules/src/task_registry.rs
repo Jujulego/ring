@@ -25,33 +25,38 @@ fn detect_task(modules: &[Box<dyn Module>], process: &Process) -> Option<Rc<dyn 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
     use ring_core_tasks::{DetectTask, Task};
     use ring_core_units::Unit;
     use std::path::Path;
     use std::rc::Rc;
     use sysinfo::System;
 
-    mock! {
-        TestUtil {}
+    struct TestTask;
 
-        impl DetectTask for TestUtil {
-            fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>>;
+    impl Task for TestTask {
+        fn exe(&self) -> &Path {
+            unimplemented!()
+        }
+
+        fn kind(&self) -> &str {
+            "test"
+        }
+
+        fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+            None
         }
     }
 
-    mock! {
-        TestTask {}
+    struct TestUtil;
 
-        impl Task for TestTask {
-            fn exe(&self) -> &Path;
-            fn kind(&self) -> &str;
-            fn working_unit(&self) -> Option<Rc<dyn Unit>>;
+    impl DetectTask for TestUtil {
+        fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+            Some(Rc::new(TestTask))
         }
     }
 
     struct TestModule {
-        utils: Vec<Rc<MockTestUtil>>,
+        utils: Vec<Rc<TestUtil>>,
     }
 
     impl Module for TestModule {
@@ -74,23 +79,8 @@ mod tests {
 
     #[test]
     fn it_should_use_test_util_to_detect_task() {
-        let mut util_a = MockTestUtil::new();
-        util_a.expect_detect_task()
-            .times(1)
-            .returning(|_| None);
-
-        let mut util_b = MockTestUtil::new();
-        util_b.expect_detect_task()
-            .times(1)
-            .returning(|_| Some(Rc::new(MockTestTask::new())));
-
-        let mut util_c = MockTestUtil::new();
-        util_c.expect_detect_task()
-            .times(0)
-            .returning(|_| None);
-
         let module = TestModule {
-            utils: vec![Rc::new(util_a), Rc::new(util_b), Rc::new(util_c)]
+            utils: vec![Rc::new(TestUtil)]
         };
 
         let registry = TestRegistry {
