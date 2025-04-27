@@ -4,13 +4,13 @@ use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
 pub trait Module {
-    /// Returns all language detectors implemented by this module.
-    fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
+    /// Returns all path qualifiers implemented by this module.
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
         vec![]
     }
 
-    /// Returns all path qualifiers implemented by this module.
-    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+    /// Returns all language detectors implemented by this module.
+    fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
         vec![]
     }
 

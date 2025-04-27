@@ -50,7 +50,7 @@ mod tests {
     struct TestUtil;
 
     impl DetectTask for TestUtil {
-        fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+        fn detect_task(&self, _: &Process) -> Option<Rc<dyn Task>> {
             Some(Rc::new(TestTask))
         }
     }
