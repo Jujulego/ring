@@ -7,9 +7,19 @@ use std::rc::Rc;
 pub trait UnitRegistry: Registry {
     /// Uses all modules to detect units at given path
     #[inline]
-    fn detect_units<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
+    fn detect_units_at<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
         absolute(path)
             .map(|path| detect_units(self.modules(), &path))
+            .unwrap_or_default()
+    }
+
+    /// Uses all modules to detect units containing given path
+    #[inline]
+    fn detect_units_containing<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
+        absolute(path).iter()
+            .flat_map(|path| path.ancestors())
+            .map(|path| detect_units(self.modules(), path))
+            .find(|units| !units.is_empty())
             .unwrap_or_default()
     }
 }
@@ -26,12 +36,13 @@ fn detect_units(modules: &[Box<dyn Module>], path: &Path) -> Vec<Rc<dyn Unit>> {
 
 #[cfg(test)]
 mod tests {
+    use std::ffi::OsStr;
     use super::*;
     use ring_core_units::DetectUnit;
     use std::rc::Rc;
 
     struct TestUnit;
-    
+
     impl Unit for TestUnit {
         fn kind(&self) -> &str {
             "test"
@@ -41,12 +52,16 @@ mod tests {
             unimplemented!()
         }
     }
-    
+
     struct TestUtil;
 
     impl DetectUnit for TestUtil {
-        fn detect_unit(&self, _: &Path) -> Option<Rc<dyn Unit>> {
-            Some(Rc::new(TestUnit))
+        fn detect_unit(&self, path: &Path) -> Option<Rc<dyn Unit>> {
+            if path.file_name().and_then(OsStr::to_str) == Some("test") {
+                Some(Rc::new(TestUnit))
+            } else {
+                None
+            }
         }
     }
 
@@ -73,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn it_should_use_test_util_to_detect_language() {
+    fn it_should_use_test_util_to_detect_language_at_path() {
         let module = TestModule {
             utils: vec![Rc::new(TestUtil)]
         };
@@ -82,6 +97,21 @@ mod tests {
             modules: vec![Box::new(module)],
         };
 
-        assert_eq!(registry.detect_units("/test").len(), 1);
+        assert_eq!(registry.detect_units_at("/test").len(), 1);
+        assert_eq!(registry.detect_units_at("/toto").len(), 0);
+    }
+
+    #[test]
+    fn it_should_use_test_util_to_detect_language_containing_path() {
+        let module = TestModule {
+            utils: vec![Rc::new(TestUtil)]
+        };
+
+        let registry = TestRegistry {
+            modules: vec![Box::new(module)],
+        };
+
+        assert_eq!(registry.detect_units_containing("/test/toto").len(), 1);
+        assert_eq!(registry.detect_units_containing("/toto/foo").len(), 0);
     }
 }

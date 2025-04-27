@@ -41,7 +41,7 @@ impl DetectTask for ShellTaskDetector {
             shell_kind,
             exe.to_path_buf(),
             process.cwd()
-                .and_then(|cwd| self.registry.detect_units(cwd).first().cloned())
+                .and_then(|cwd| self.registry.detect_units_containing(cwd).first().cloned())
         ));
 
         Some(task)
