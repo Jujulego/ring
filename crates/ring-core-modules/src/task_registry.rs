@@ -21,12 +21,12 @@ impl<T> TaskRegistry for T where T: Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Module;
     use ring_core_tasks::{DetectTask, Task};
     use ring_core_units::Unit;
     use std::path::Path;
     use std::rc::Rc;
     use sysinfo::System;
-    use crate::Module;
 
     struct TestTask;
 

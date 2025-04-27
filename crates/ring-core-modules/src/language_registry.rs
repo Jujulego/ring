@@ -20,9 +20,9 @@ impl<T> LanguageRegistry for T where T: Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Module;
     use ring_core_file::{DetectLanguage, Language};
     use std::rc::Rc;
-    use crate::Module;
 
     struct TestUtil;
 

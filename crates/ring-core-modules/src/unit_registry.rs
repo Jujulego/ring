@@ -38,10 +38,10 @@ impl<T> UnitRegistry for T where T: Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Module;
     use ring_core_units::DetectUnit;
     use std::ffi::OsStr;
     use std::rc::Rc;
-    use crate::Module;
 
     struct TestUnit;
 

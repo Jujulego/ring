@@ -1,30 +1,27 @@
-use crate::{Module, Registry};
+use crate::Registry;
 use ring_core_file::FileContent;
-use std::path::{absolute, Path};
+use std::path::Path;
 
 /// Provides calls using file detection module features
-pub trait FileRegistry: Registry {
+pub trait FileRegistry {
     /// Uses all modules to qualify given file path
-    #[inline]
-    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
-        qualify_file(self.modules(), &absolute(path).ok()?)
-    }
+    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent>;
 }
 
-impl<T> FileRegistry for T where T: Registry {}
-
-/// Uses given modules to qualify given file path
-fn qualify_file(modules: &[Box<dyn Module>], path: &Path) -> Option<FileContent> {
-    modules.iter()
-        .flat_map(|module| module.file_qualifiers())
-        .filter_map(|detector| detector.qualify_file(path))
-        .max_by_key(|(_, qualified_path)| qualified_path.components().count())
-        .map(|(content, _)| content)
+impl<T> FileRegistry for T where T: Registry {
+    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
+        self.modules().iter()
+            .flat_map(|module| module.file_qualifiers())
+            .filter_map(|detector| detector.qualify_file(path.as_ref()))
+            .max_by_key(|(_, qualified_path)| qualified_path.components().count())
+            .map(|(content, _)| content)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Module;
     use ring_core_file::QualifyFile;
     use std::rc::Rc;
 
