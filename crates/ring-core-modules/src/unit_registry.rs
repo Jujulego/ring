@@ -1,45 +1,47 @@
-use crate::{Module, Registry};
+use crate::Registry;
 use ring_core_units::Unit;
 use std::path::{absolute, Path};
 use std::rc::Rc;
 
 /// Provides calls using unit detection module features
-pub trait UnitRegistry: Registry {
+pub trait UnitRegistry {
     /// Uses all modules to detect units at given path
-    #[inline]
+    fn detect_units_at<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>>;
+
+    /// Uses all modules to detect units containing given path
+    fn detect_units_containing<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>>;
+}
+
+impl<T> UnitRegistry for T where T: Registry {
     fn detect_units_at<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
         absolute(path)
-            .map(|path| detect_units(self.modules(), &path))
+            .map(|path| self.modules().iter()
+                .flat_map(|module| module.unit_detectors())
+                .filter_map(|detector| detector.detect_unit(&path))
+                .collect()
+            )
             .unwrap_or_default()
     }
 
-    /// Uses all modules to detect units containing given path
-    #[inline]
     fn detect_units_containing<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
         absolute(path).iter()
             .flat_map(|path| path.ancestors())
-            .map(|path| detect_units(self.modules(), path))
+            .map(|path| self.modules().iter()
+                .flat_map(|module| module.unit_detectors())
+                .filter_map(|detector| detector.detect_unit(path))
+                .collect::<Vec<_>>())
             .find(|units| !units.is_empty())
             .unwrap_or_default()
     }
 }
 
-impl<T> UnitRegistry for T where T: Registry {}
-
-/// Uses given modules to detect units at given path
-fn detect_units(modules: &[Box<dyn Module>], path: &Path) -> Vec<Rc<dyn Unit>> {
-    modules.iter()
-        .flat_map(|module| module.unit_detectors())
-        .filter_map(|detector| detector.detect_unit(path))
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
-    use std::ffi::OsStr;
     use super::*;
     use ring_core_units::DetectUnit;
+    use std::ffi::OsStr;
     use std::rc::Rc;
+    use crate::Module;
 
     struct TestUnit;
 
