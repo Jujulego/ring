@@ -1,13 +1,13 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
+use itertools::Itertools;
 use lscolors::LsColors;
 use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
-use ring_core::{Core, Registry};
+use ring_core::{Core, LanguageRegistry};
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
-use itertools::Itertools;
 use tracing::instrument;
 
 /// Prepare list command parsing
