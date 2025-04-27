@@ -244,7 +244,7 @@ impl NpmPackageDetector {
                 }
             },
             Err(err) if err.kind() == io::ErrorKind::NotFound => {
-                debug!(key = ?manifest_path.display(), "npm package miss cached");
+                debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
                 Ok(None)

@@ -3,7 +3,7 @@ use clap::{arg, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
-use ring_core::{Core, TaskCache};
+use ring_core::{Core, TaskCache, TaskRegistry};
 use std::iter::FusedIterator;
 use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
@@ -33,7 +33,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     // Build tree
     let mut tree = Tree::new();
-    let mut tasks = TaskCache::new(core);
+    let tasks = TaskCache::new(core);
 
     for (&pid, process) in sys.processes() {
         let task = tasks.detect_task(process);

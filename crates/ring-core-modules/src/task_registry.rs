@@ -1,25 +1,21 @@
-use crate::{Module, Registry};
+use crate::Registry;
 use ring_core_tasks::Task;
 use std::rc::Rc;
 use sysinfo::Process;
 
 /// Provides calls using task detection module features
-pub trait TaskRegistry: Registry {
+pub trait TaskRegistry {
     /// Uses all modules to detect process's task
-    #[inline]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
-        detect_task(self.modules(), process)
-    }
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>>;
 }
 
-impl<T> TaskRegistry for T where T: Registry {}
-
-/// Uses given modules to detect process's task
-fn detect_task(modules: &[Box<dyn Module>], process: &Process) -> Option<Rc<dyn Task>> {
-    modules.iter()
-        .flat_map(|module| module.task_detectors())
-        .filter_map(|detector| detector.detect_task(process))
-        .next()
+impl<T> TaskRegistry for T where T: Registry {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+        self.modules().iter()
+            .flat_map(|module| module.task_detectors())
+            .filter_map(|detector| detector.detect_task(process))
+            .next()
+    }
 }
 
 #[cfg(test)]
@@ -30,6 +26,7 @@ mod tests {
     use std::path::Path;
     use std::rc::Rc;
     use sysinfo::System;
+    use crate::Module;
 
     struct TestTask;
 
