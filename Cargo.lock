@@ -1132,6 +1132,7 @@ dependencies = [
  "ring-core-file",
  "ring-core-tasks",
  "ring-core-units",
+ "sysinfo",
 ]
 
 [[package]]

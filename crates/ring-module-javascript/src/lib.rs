@@ -10,7 +10,7 @@ pub use crate::node_task_detector::NodeTaskDetector;
 pub use crate::npm_package::{NpmPackage, PackageManifest};
 pub use crate::npm_package_detector::NpmPackageDetector;
 pub use crate::utils::javascript_language;
-use ring_core_file::{DetectLanguage, QualifyPath};
+use ring_core_file::{DetectLanguage, QualifyFile};
 use ring_core_modules::Module;
 use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
@@ -98,7 +98,7 @@ impl Module for JavascriptModule {
     }
 
     #[inline]
-    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
         vec![self.npm_package_detector()]
     }
 

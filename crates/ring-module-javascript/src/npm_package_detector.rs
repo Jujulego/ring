@@ -1,6 +1,6 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyPath};
+use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -244,7 +244,7 @@ impl NpmPackageDetector {
                 }
             },
             Err(err) if err.kind() == io::ErrorKind::NotFound => {
-                debug!(key = ?manifest_path.display(), "npm package miss cached");
+                debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
                 Ok(None)
@@ -297,7 +297,7 @@ impl DetectUnit for NpmPackageDetector {
     }
 }
 
-impl QualifyPath for NpmPackageDetector {
+impl QualifyFile for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of package cases

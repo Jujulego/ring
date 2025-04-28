@@ -1,44 +1,15 @@
-use ring_core_file::{DetectLanguage, QualifyPath};
-use ring_core_tasks::DetectTask;
-use ring_core_units::DetectUnit;
-use std::rc::Rc;
+mod language_registry;
+mod file_registry;
+mod module;
+mod registry;
+mod task_registry;
+mod unit_registry;
+mod registry_ref;
 
-pub trait Module {
-    /// Returns all language detectors implemented by this module.
-    fn language_detectors(&self) -> Vec<Rc<dyn DetectLanguage>> {
-        vec![]
-    }
-
-    /// Returns all path qualifiers implemented by this module.
-    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
-        vec![]
-    }
-
-    /// Returns all task detectors implemented by this module.
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
-        vec![]
-    }
-
-    /// Returns all unit detectors implemented by this module.
-    fn unit_detectors(&self) -> Vec<Rc<dyn DetectUnit>> {
-        vec![]
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct TestModule;
-    impl Module for TestModule {}
-    
-    #[test]
-    fn it_should_return_empty_vec_by_default() {
-        let module = TestModule;
-        
-        assert!(module.language_detectors().is_empty());
-        assert!(module.path_qualifiers().is_empty());
-        assert!(module.task_detectors().is_empty());
-        assert!(module.unit_detectors().is_empty());
-    }
-}
+pub use file_registry::FileRegistry;
+pub use language_registry::LanguageRegistry;
+pub use module::Module;
+pub use registry::Registry;
+pub use registry_ref::RegistryRef;
+pub use task_registry::TaskRegistry;
+pub use unit_registry::UnitRegistry;

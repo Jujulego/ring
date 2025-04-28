@@ -1,13 +1,13 @@
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
+use itertools::Itertools;
 use lscolors::LsColors;
 use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
-use ring_core::Core;
+use ring_core::{Core, FileRegistry, LanguageRegistry, UnitRegistry};
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};
-use itertools::Itertools;
 use tracing::instrument;
 
 /// Prepare list command parsing
@@ -70,7 +70,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                 .map(|language| language_style.apply(language).to_string())
                 .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
             if is_dir {
-                let units = core.detect_units(file.path()).iter()
+                let units = core.detect_units_at(file.path()).iter()
                     .map(|unit| unit.style().apply(unit.kind()).to_string())
                     .join("/");
                 
@@ -94,7 +94,7 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                 .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
 
             if is_dir {
-                let units = core.detect_units(file.path()).iter()
+                let units = core.detect_units_at(file.path()).iter()
                     .map(|unit| unit.kind().to_string())
                     .join("/");
 

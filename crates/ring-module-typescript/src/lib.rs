@@ -5,7 +5,7 @@ mod tsconfig_file;
 pub use crate::tsconfig_file::TsconfigFileDetector;
 pub use crate::typescript_file::TypescriptFileDetector;
 pub use crate::utils::typescript_language;
-use ring_core_file::{DetectLanguage, QualifyPath};
+use ring_core_file::{DetectLanguage, QualifyFile};
 use ring_core_modules::Module;
 use std::rc::Rc;
 
@@ -63,7 +63,7 @@ impl Module for TypescriptModule {
     }
 
     #[inline]
-    fn path_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
         vec![
             self.tsconfig_file_detector()
         ]

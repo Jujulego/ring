@@ -1,17 +1,22 @@
+use crate::shell_task::{ShellKind, ShellTask};
+use ring_core_modules::{RegistryRef, UnitRegistry};
+use ring_core_tasks::{DetectTask, Task};
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
 use sysinfo::Process;
 use tracing::instrument;
-use ring_core_tasks::{DetectTask, Task};
-use crate::shell_task::{ShellKind, ShellTask};
 
-#[derive(Clone, Copy, Debug)]
-pub struct ShellTaskDetector;
+#[derive(Clone)]
+pub struct ShellTaskDetector {
+    registry: Rc<RegistryRef>,
+}
 
 impl ShellTaskDetector {
-    pub fn new() -> ShellTaskDetector {
-        ShellTaskDetector
+    pub fn new(registry: Rc<RegistryRef>) -> ShellTaskDetector {
+        ShellTaskDetector {
+            registry
+        }
     }
 
     pub fn detect_shell_kind(&self, exe: &Path) -> Option<ShellKind> {
@@ -26,18 +31,18 @@ impl ShellTaskDetector {
     }
 }
 
-impl Default for ShellTaskDetector {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl DetectTask for ShellTaskDetector {
     #[instrument(name = "shell-task.detect-task", skip_all)]
     fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
         let exe = process.exe()?;
         let shell_kind = self.detect_shell_kind(exe)?;
-        let task = Rc::new(ShellTask::new(shell_kind, exe.to_path_buf()));
+        
+        let task = Rc::new(ShellTask::new(
+            shell_kind,
+            exe.to_path_buf(),
+            process.cwd()
+                .and_then(|cwd| self.registry.detect_units_containing(cwd).first().cloned())
+        ));
 
         Some(task)
     }

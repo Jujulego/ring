@@ -1,13 +1,11 @@
 mod task_cache;
 
-pub use crate::task_cache::TaskCache;
-use ring_core_file::{FileContent, Language};
-use ring_core_modules::Module;
-use ring_core_tasks::Task;
-use ring_core_units::Unit;
-use std::path::{absolute, Path};
 use std::rc::Rc;
-use sysinfo::Process;
+pub use crate::task_cache::TaskCache;
+pub use ring_core_file::*;
+pub use ring_core_modules::*;
+pub use ring_core_tasks::*;
+pub use ring_core_units::*;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -16,15 +14,9 @@ pub struct Core {
 
 impl Core {
     /// Initiate all modules
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    /// 
-    /// let core = Core::new();
-    /// ```
-    pub fn new() -> Self {
+    pub fn new() -> Rc<Self> {
+        let registry = Rc::new(RegistryRef::new());
+
         let modules: Vec<Box<dyn Module>> = vec![
             #[cfg(feature = "javascript")]
             Box::new(ring_module_javascript::JavascriptModule::new()),
@@ -33,7 +25,7 @@ impl Core {
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "shell")]
-            Box::new(ring_module_shell::ShellModule::new()),
+            Box::new(ring_module_shell::ShellModule::new(registry.clone())),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new()),
             #[cfg(feature = "typescript")]
@@ -42,94 +34,27 @@ impl Core {
             Box::new(ring_module_yaml::YamlModule::new()),
         ];
 
-        Core { modules }
-    }
+        let core = Rc::new(Core { modules });
+        registry.store(core.clone());
 
-    /// Uses all modules to detect given path's language
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    /// use ring_module_rust::rust_language;
-    ///
-    /// let core = Core::new();
-    /// assert_eq!(core.detect_language("src/lib.rs"), Some(rust_language()));
-    /// ```
-    #[inline]
-    pub fn detect_language<P: AsRef<Path>>(&self, path: P) -> Option<Language> {
-        self._detect_language(&absolute(path).ok()?)
-    }
-
-    fn _detect_language(&self, path: &Path) -> Option<Language> {
-        self.modules.iter()
-            .flat_map(|module| module.language_detectors())
-            .filter_map(|detector| detector.detect_language(path))
-            .next()
-    }
-
-    /// Uses all modules to detect task based on given process
-    pub fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
-        self.modules.iter()
-            .flat_map(|module| module.task_detectors())
-            .filter_map(|detector| detector.detect_task(process))
-            .next()
-    }
-
-    /// Uses all modules to detect units at given path
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    ///
-    /// let core = Core::new();
-    /// assert!(!core.detect_units(".").is_empty());
-    /// ```
-    #[inline]
-    pub fn detect_units<P: AsRef<Path>>(&self, path: P) -> Vec<Rc<dyn Unit>> {
-        if let Ok(path) = absolute(path.as_ref()) {
-            self._detect_units(&path)
-        } else {
-            vec![]
-        }
-    }
-
-    fn _detect_units(&self, path: &Path) -> Vec<Rc<dyn Unit>> {
-        self.modules.iter()
-            .flat_map(|module| module.unit_detectors())
-            .filter_map(|detector| detector.detect_unit(path))
-            .collect()
-    }
-
-    /// Uses all modules to qualify given path's content
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_core::Core;
-    /// use ring_core_file::FileContent;
-    /// use ring_module_rust::rust_language;
-    ///
-    /// let core = Core::new();
-    /// assert_eq!(core.qualify_file("Cargo.toml"), Some(FileContent::Manifest));
-    /// ```
-    #[inline]
-    pub fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
-        self._qualify_file(&absolute(path).ok()?)
-    }
-
-    fn _qualify_file(&self, path: &Path) -> Option<FileContent> {
-        self.modules.iter()
-            .flat_map(|module| module.path_qualifiers())
-            .filter_map(|detector| detector.qualify_file(path))
-            .max_by_key(|(_, qualified_path)| qualified_path.components().count())
-            .map(|(content, _)| content)
+        core
     }
 }
 
-impl Default for Core {
-    fn default() -> Self {
-        Self::new()
+impl Registry for Core {
+    fn modules(&self) -> &[Box<dyn Module>] {
+        &self.modules
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_create_new_core() {
+        let core = Core::new();
+
+        assert!(!core.modules().is_empty());
     }
 }

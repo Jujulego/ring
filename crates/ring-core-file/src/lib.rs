@@ -11,6 +11,6 @@ pub trait DetectLanguage {
 }
 
 /// Object able to qualify a given path
-pub trait QualifyPath {
+pub trait QualifyFile {
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)>;
 }
