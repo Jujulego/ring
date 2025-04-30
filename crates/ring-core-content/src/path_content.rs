@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 /// Define the kind of content that can be found at a given path
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum PathContent {
@@ -19,4 +21,19 @@ pub enum PathContent {
     Source,
     /// Files or directories mainly containing test code
     Test,
+}
+
+impl Display for PathContent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PathContent::Artefact => f.write_str(if f.alternate() { "artefacts" } else { "artefact" }),
+            PathContent::Configuration => f.write_str(if f.alternate() { "configs" } else { "config" }),
+            PathContent::Dependency => f.write_str(if f.alternate() { "dependencies" } else { "dependency" }),
+            PathContent::Lockfile => f.write_str("lockfile"),
+            PathContent::Manifest => f.write_str("manifest"),
+            PathContent::Resource => f.write_str(if f.alternate() { "resources" } else { "resource" }),
+            PathContent::Source => f.write_str(if f.alternate() { "sources" } else { "source" }),
+            PathContent::Test => f.write_str(if f.alternate() { "tests" } else { "test" }),
+        }
+    }
 }
