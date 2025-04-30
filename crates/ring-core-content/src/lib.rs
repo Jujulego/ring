@@ -1,7 +1,9 @@
 mod file_content;
 mod language;
+mod path_content;
 
 pub use crate::file_content::FileContent;
+pub use crate::path_content::PathContent;
 pub use crate::language::Language;
 use std::path::Path;
 
