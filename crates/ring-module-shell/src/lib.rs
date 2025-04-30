@@ -7,7 +7,7 @@ pub use crate::shell_file_detector::ShellFileDetector;
 pub use crate::shell_task::{ShellKind, ShellTask};
 pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::shell_language;
-use ring_core_file::{DetectLanguage, QualifyFile};
+use ring_core_content::{DetectLanguage, QualifyFile};
 use ring_core_modules::{Module, RegistryRef};
 use ring_core_tasks::DetectTask;
 use std::rc::Rc;

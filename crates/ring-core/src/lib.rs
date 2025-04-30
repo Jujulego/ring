@@ -2,7 +2,7 @@ mod task_cache;
 
 use std::rc::Rc;
 pub use crate::task_cache::TaskCache;
-pub use ring_core_file::*;
+pub use ring_core_content::*;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
 pub use ring_core_units::*;

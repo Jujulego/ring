@@ -1,5 +1,5 @@
 use crate::Registry;
-use ring_core_file::Language;
+use ring_core_content::Language;
 use std::path::Path;
 
 /// Provides calls using language detection module features
@@ -21,7 +21,7 @@ impl<T> LanguageRegistry for T where T: Registry {
 mod tests {
     use super::*;
     use crate::Module;
-    use ring_core_file::{DetectLanguage, Language};
+    use ring_core_content::{DetectLanguage, Language};
     use std::rc::Rc;
 
     struct TestUtil;

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use cargo_toml::Manifest;
-use ring_core_file::Language;
+use ring_core_content::Language;
 use ring_core_units::Unit;
 use crate::rust_language;
 

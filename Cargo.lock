@@ -1102,7 +1102,7 @@ version = "0.1.0"
 name = "ring-core"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",
@@ -1118,7 +1118,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring-core-file"
+name = "ring-core-content"
 version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
@@ -1129,7 +1129,7 @@ dependencies = [
 name = "ring-core-modules"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-tasks",
  "ring-core-units",
  "sysinfo",
@@ -1149,7 +1149,7 @@ name = "ring-core-units"
 version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
- "ring-core-file",
+ "ring-core-content",
 ]
 
 [[package]]
@@ -1158,7 +1158,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",
@@ -1174,7 +1174,7 @@ dependencies = [
 name = "ring-module-json"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "tracing",
 ]
@@ -1186,7 +1186,7 @@ dependencies = [
  "anyhow",
  "cargo_toml",
  "crossterm 0.29.0",
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",
@@ -1200,7 +1200,7 @@ name = "ring-module-shell"
 version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",
@@ -1212,7 +1212,7 @@ dependencies = [
 name = "ring-module-toml"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "tracing",
 ]
@@ -1221,7 +1221,7 @@ dependencies = [
 name = "ring-module-typescript"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "ring-module-json",
  "tracing",
@@ -1231,7 +1231,7 @@ dependencies = [
 name = "ring-module-yaml"
 version = "0.1.0"
 dependencies = [
- "ring-core-file",
+ "ring-core-content",
  "ring-core-modules",
  "tracing",
 ]

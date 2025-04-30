@@ -1,5 +1,5 @@
 use crate::Registry;
-use ring_core_file::FileContent;
+use ring_core_content::FileContent;
 use std::path::Path;
 
 /// Provides calls using file detection module features
@@ -22,7 +22,7 @@ impl<T> FileRegistry for T where T: Registry {
 mod tests {
     use super::*;
     use crate::Module;
-    use ring_core_file::QualifyFile;
+    use ring_core_content::QualifyFile;
     use std::rc::Rc;
 
     struct TestUtil;

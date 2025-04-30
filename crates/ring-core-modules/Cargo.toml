@@ -6,6 +6,6 @@ edition = "2024"
 [dependencies]
 sysinfo = "0.34.2"
 
-ring-core-file = { path = "../ring-core-file" }
+ring-core-content = { path = "../ring-core-content" }
 ring-core-tasks = { path = "../ring-core-tasks" }
 ring-core-units = { path = "../ring-core-units" }

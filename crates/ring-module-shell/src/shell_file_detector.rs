@@ -1,5 +1,5 @@
 use crate::shell_language;
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, FileContent, Language, QualifyFile};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};

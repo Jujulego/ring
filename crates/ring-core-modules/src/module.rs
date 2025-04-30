@@ -1,4 +1,4 @@
-use ring_core_file::{DetectLanguage, QualifyFile};
+use ring_core_content::{DetectLanguage, QualifyFile};
 use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;

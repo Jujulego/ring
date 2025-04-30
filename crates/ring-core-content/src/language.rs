@@ -14,7 +14,7 @@ impl Language {
     /// # Example
     ///
     /// ```
-    /// use ring_core_file::Language;
+    /// use ring_core_content::Language;
     ///
     /// let language = Language::new("example".to_string());
     /// ```
@@ -28,7 +28,7 @@ impl Language {
     /// # Example
     ///
     /// ```
-    /// use ring_core_file::Language;
+    /// use ring_core_content::Language;
     ///
     /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
     /// ```
@@ -43,7 +43,7 @@ impl Language {
     /// # Example
     ///
     /// ```
-    /// use ring_core_file::Language;
+    /// use ring_core_content::Language;
     ///
     /// let language = Language::new("example".to_string());
     /// assert_eq!(language.name(), "example");
@@ -59,7 +59,7 @@ impl Language {
     ///
     /// ```
     /// use rgb::Rgb;
-    /// use ring_core_file::Language;
+    /// use ring_core_content::Language;
     ///
     /// let language = Language::new("example".to_string());
     /// assert_eq!(language.color(), None);
@@ -79,7 +79,7 @@ impl Language {
     /// # Examples
     ///
     /// ```
-    /// use ring_core_file::Language;
+    /// use ring_core_content::Language;
     /// let language = Language::new("example".to_string()).with_color((0x00, 0xff, 0x00).into());
     ///
     /// println!("{}", language.style().apply(language.name()));

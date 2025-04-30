@@ -1,4 +1,4 @@
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, FileContent, Language, QualifyFile};
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;

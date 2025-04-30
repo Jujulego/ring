@@ -1,6 +1,6 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, FileContent, Language, QualifyFile};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;

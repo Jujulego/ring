@@ -3,7 +3,7 @@ mod json_file;
 
 pub use crate::json_file::JsonFileDetector;
 pub use crate::utils::json_language;
-use ring_core_file::DetectLanguage;
+use ring_core_content::DetectLanguage;
 use ring_core_modules::Module;
 use std::rc::Rc;
 

@@ -1,5 +1,5 @@
 use crate::javascript_language;
-use ring_core_file::Language;
+use ring_core_content::Language;
 use ring_core_units::Unit;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
