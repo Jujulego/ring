@@ -23,6 +23,27 @@ pub enum PathContent {
     Test,
 }
 
+impl PathContent {
+    #[cfg(feature = "crossterm")]
+    pub fn style(&self) -> crossterm::style::ContentStyle {
+        crossterm::style::ContentStyle {
+            foreground_color: match self {
+                PathContent::Artefact => Some(crossterm::style::Color::DarkYellow),
+                PathContent::Configuration => Some(crossterm::style::Color::DarkCyan),
+                PathContent::Dependency => Some(crossterm::style::Color::DarkBlue),
+                PathContent::Lockfile | PathContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
+                PathContent::Resource | PathContent::Source => Some(crossterm::style::Color::Blue),
+                PathContent::Test => Some(crossterm::style::Color::DarkGreen),
+            },
+            attributes: match self {
+                PathContent::Lockfile | PathContent::Resource => crossterm::style::Attribute::Dim.into(),
+                _ => Default::default(),
+            },
+            ..Default::default()
+        }
+    }
+}
+
 impl Display for PathContent {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -49,9 +70,27 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_artefacts() {
+        let style = PathContent::Artefact.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkYellow));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
     fn it_should_display_configurations() {
         assert_eq!(format!("{}", PathContent::Configuration), "config");
         assert_eq!(format!("{:#}", PathContent::Configuration), "configs");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_configurations() {
+        let style = PathContent::Configuration.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkCyan));
+        assert!(style.attributes.is_empty());
     }
 
     #[test]
@@ -61,13 +100,40 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_dependencies() {
+        let style = PathContent::Dependency.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkBlue));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
     fn it_should_display_lockfile() {
         assert_eq!(format!("{}", PathContent::Lockfile), "lockfile");
     }
 
     #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_lockfile() {
+        let style = PathContent::Lockfile.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+    }
+
+    #[test]
     fn it_should_display_manifest() {
         assert_eq!(format!("{}", PathContent::Manifest), "manifest");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_manifest() {
+        let style = PathContent::Manifest.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.is_empty());
     }
 
     #[test]
@@ -77,14 +143,41 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_resources() {
+        let style = PathContent::Resource.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
+        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+    }
+
+    #[test]
     fn it_should_display_sources() {
         assert_eq!(format!("{}", PathContent::Source), "source");
         assert_eq!(format!("{:#}", PathContent::Source), "sources");
     }
 
     #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_sources() {
+        let style = PathContent::Source.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
     fn it_should_display_tests() {
         assert_eq!(format!("{}", PathContent::Test), "test");
         assert_eq!(format!("{:#}", PathContent::Test), "tests");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_tests() {
+        let style = PathContent::Test.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
+        assert!(style.attributes.is_empty());
     }
 }
