@@ -37,3 +37,54 @@ impl Display for PathContent {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_display_artefacts() {
+        assert_eq!(format!("{}", PathContent::Artefact), "artefact");
+        assert_eq!(format!("{:#}", PathContent::Artefact), "artefacts");
+    }
+
+    #[test]
+    fn it_should_display_configurations() {
+        assert_eq!(format!("{}", PathContent::Configuration), "config");
+        assert_eq!(format!("{:#}", PathContent::Configuration), "configs");
+    }
+
+    #[test]
+    fn it_should_display_dependencies() {
+        assert_eq!(format!("{}", PathContent::Dependency), "dependency");
+        assert_eq!(format!("{:#}", PathContent::Dependency), "dependencies");
+    }
+
+    #[test]
+    fn it_should_display_lockfile() {
+        assert_eq!(format!("{}", PathContent::Lockfile), "lockfile");
+    }
+
+    #[test]
+    fn it_should_display_manifest() {
+        assert_eq!(format!("{}", PathContent::Manifest), "manifest");
+    }
+
+    #[test]
+    fn it_should_display_resources() {
+        assert_eq!(format!("{}", PathContent::Resource), "resource");
+        assert_eq!(format!("{:#}", PathContent::Resource), "resources");
+    }
+
+    #[test]
+    fn it_should_display_sources() {
+        assert_eq!(format!("{}", PathContent::Source), "source");
+        assert_eq!(format!("{:#}", PathContent::Source), "sources");
+    }
+
+    #[test]
+    fn it_should_display_tests() {
+        assert_eq!(format!("{}", PathContent::Test), "test");
+        assert_eq!(format!("{:#}", PathContent::Test), "tests");
+    }
+}
