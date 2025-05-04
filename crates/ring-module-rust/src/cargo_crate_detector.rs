@@ -1,7 +1,7 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use cargo_toml::Manifest;
-use ring_core_content::{DetectLanguage, FileContent, Language, QualifyPath};
+use ring_core_content::{DetectLanguage, FileContent, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -195,18 +195,27 @@ impl DetectUnit for CargoCrateDetector {
 }
 
 impl QualifyPath for CargoCrateDetector {
-    #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases
         trace!("stat {}", path.display());
         if path.is_file() {
-            if self._is_manifest(path) { // manifest defines the folder as a crate
-                return Some((FileContent::Manifest, path));
-            } else if self._is_cargo_config(path) {
-                return Some((FileContent::Configuration, path));
-            }
+            self.qualify_path(path)
+                .map(|(p, content)| (p.into(), content))
         } else {
-            return None;
+            None
+        }
+    }
+
+    #[instrument(name = "cargo-crate.qualify-path", skip_all)]
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
+        // Out of crate cases
+        trace!("stat {}", path.display());
+        if path.is_file() {
+            if self._is_manifest(path) { // manifest defines the folder as a crate
+                return Some((PathContent::Manifest, path));
+            } else if self._is_cargo_config(path) {
+                return Some((PathContent::Configuration, path));
+            }
         }
 
         // In crate cases
@@ -222,16 +231,17 @@ impl QualifyPath for CargoCrateDetector {
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
                 if self._is_lockfile(ancestor) {
-                    return Some((FileContent::Lockfile, ancestor));
+                    return Some((PathContent::Lockfile, ancestor));
                 }
 
                 if ancestor.file_name().and_then(OsStr::to_str) == Some("build.rs") {
-                    return Some((FileContent::Other("build".into()), ancestor))
+                    return Some((PathContent::Other("build".into(), &PathContent::Configuration), ancestor))
                 }
             } else {
                 match ancestor.file_name().and_then(OsStr::to_str) {
-                    Some("src") => return Some((FileContent::Source, ancestor)),
-                    Some("tests") => return Some((FileContent::Tests, ancestor)),
+                    Some("src") => return Some((PathContent::Source, ancestor)),
+                    Some("target") => return Some((PathContent::Artefact, ancestor)),
+                    Some("tests") => return Some((PathContent::Test, ancestor)),
                     _ => {},
                 }
             }
