@@ -1,6 +1,5 @@
 use crate::FileContent;
 use std::fmt::{Display, Formatter};
-use tracing::warn;
 
 /// Define the kind of content that can be found at a given path
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -23,11 +22,17 @@ pub enum PathContent {
     Source,
     /// Files or directories mainly containing test code
     Test,
+    /// Something else !
+    Other(String, &'static PathContent),
 }
 
 impl PathContent {
     #[cfg(feature = "crossterm")]
     pub fn style(&self) -> crossterm::style::ContentStyle {
+        if let PathContent::Other(_, parent) = self {
+            return parent.style();
+        }
+
         crossterm::style::ContentStyle {
             foreground_color: match self {
                 PathContent::Artefact => Some(crossterm::style::Color::DarkYellow),
@@ -36,6 +41,7 @@ impl PathContent {
                 PathContent::Lockfile | PathContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
                 PathContent::Resource | PathContent::Source => Some(crossterm::style::Color::Blue),
                 PathContent::Test => Some(crossterm::style::Color::DarkGreen),
+                PathContent::Other(_, _) => unreachable!(),
             },
             attributes: match self {
                 PathContent::Lockfile | PathContent::Resource => crossterm::style::Attribute::Dim.into(),
@@ -55,10 +61,7 @@ impl From<FileContent> for PathContent {
             FileContent::Source => PathContent::Source,
             FileContent::Storage => PathContent::Resource,
             FileContent::Tests => PathContent::Test,
-            FileContent::Other(txt) => {
-                warn!("use of deprecated FileContent::Other({:?})", txt);
-                PathContent::Source
-            }
+            FileContent::Other(label) => PathContent::Other(label, &PathContent::Resource),
         }
     }
 }
@@ -74,6 +77,7 @@ impl Display for PathContent {
             PathContent::Resource => f.write_str(if f.alternate() { "resources" } else { "resource" }),
             PathContent::Source => f.write_str(if f.alternate() { "sources" } else { "source" }),
             PathContent::Test => f.write_str(if f.alternate() { "tests" } else { "test" }),
+            PathContent::Other(label, _) => f.write_str(label),
         }
     }
 }
@@ -195,6 +199,21 @@ mod tests {
     #[cfg(feature = "crossterm")]
     fn it_should_style_tests() {
         let style = PathContent::Test.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_others() {
+        assert_eq!(format!("{}", PathContent::Other("other".into(), &PathContent::Test)), "other");
+        assert_eq!(format!("{:#}", PathContent::Other("other".into(), &PathContent::Test)), "other");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_others() {
+        let style = PathContent::Other("other".into(), &PathContent::Test).style();
 
         assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
         assert!(style.attributes.is_empty());

@@ -1,3 +1,4 @@
+use crate::PathContent;
 use std::fmt::Display;
 
 /// Define the kind of content detected inside a file
@@ -18,19 +19,32 @@ impl FileContent {
         crossterm::style::ContentStyle {
             foreground_color: match self {
                 FileContent::Configuration => Some(crossterm::style::Color::DarkCyan),
-                FileContent::Lockfile
-                | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
-                FileContent::Other(_)
-                | FileContent::Source => Some(crossterm::style::Color::Blue),
+                FileContent::Lockfile | FileContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
+                FileContent::Other(_) | FileContent::Source => Some(crossterm::style::Color::Blue),
                 FileContent::Storage => Some(crossterm::style::Color::DarkYellow),
                 FileContent::Tests => Some(crossterm::style::Color::DarkGreen),
             },
             attributes: match self {
-                FileContent::Other(_)
-                | FileContent::Lockfile => crossterm::style::Attribute::Dim.into(),
+                FileContent::Other(_) | FileContent::Lockfile => crossterm::style::Attribute::Dim.into(),
                 _ => Default::default()
             },
             ..Default::default()
+        }
+    }
+}
+
+impl From<PathContent> for FileContent {
+    fn from(p: PathContent) -> Self {
+        match p {
+            PathContent::Configuration => FileContent::Configuration,
+            PathContent::Lockfile => FileContent::Lockfile,
+            PathContent::Manifest => FileContent::Manifest,
+            PathContent::Source => FileContent::Source,
+            PathContent::Resource => FileContent::Storage,
+            PathContent::Test => FileContent::Tests,
+            PathContent::Artefact => FileContent::Other("artefact".into()),
+            PathContent::Dependency => FileContent::Other("dependency".into()),
+            PathContent::Other(label, _) => FileContent::Other(label),
         }
     }
 }
