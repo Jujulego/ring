@@ -1,4 +1,4 @@
-use ring_core_content::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -54,7 +54,7 @@ impl DetectLanguage for TsconfigFileDetector {
     }
 }
 
-impl QualifyFile for TsconfigFileDetector {
+impl QualifyPath for TsconfigFileDetector {
     #[instrument(name = "tsconfig-file.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         if self._is_tsconfig(path) {

@@ -1,7 +1,7 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use cargo_toml::Manifest;
-use ring_core_content::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, FileContent, Language, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -194,7 +194,7 @@ impl DetectUnit for CargoCrateDetector {
     }
 }
 
-impl QualifyFile for CargoCrateDetector {
+impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
         // Out of crate cases

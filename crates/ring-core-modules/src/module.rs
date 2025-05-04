@@ -1,11 +1,11 @@
-use ring_core_content::{DetectLanguage, QualifyFile};
+use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
 pub trait Module {
     /// Returns all path qualifiers implemented by this module.
-    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![]
     }
 

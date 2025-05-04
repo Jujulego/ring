@@ -1,4 +1,6 @@
+use crate::FileContent;
 use std::fmt::{Display, Formatter};
+use tracing::warn;
 
 /// Define the kind of content that can be found at a given path
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -40,6 +42,23 @@ impl PathContent {
                 _ => Default::default(),
             },
             ..Default::default()
+        }
+    }
+}
+
+impl From<FileContent> for PathContent {
+    fn from(f: FileContent) -> Self {
+        match f {
+            FileContent::Configuration => PathContent::Configuration,
+            FileContent::Lockfile => PathContent::Lockfile,
+            FileContent::Manifest => PathContent::Manifest,
+            FileContent::Source => PathContent::Source,
+            FileContent::Storage => PathContent::Resource,
+            FileContent::Tests => PathContent::Test,
+            FileContent::Other(txt) => {
+                warn!("use of deprecated FileContent::Other({:?})", txt);
+                PathContent::Source
+            }
         }
     }
 }

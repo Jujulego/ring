@@ -22,12 +22,12 @@ impl<T> FileRegistry for T where T: Registry {
 mod tests {
     use super::*;
     use crate::Module;
-    use ring_core_content::QualifyFile;
+    use ring_core_content::QualifyPath;
     use std::rc::Rc;
 
     struct TestUtil;
 
-    impl QualifyFile for TestUtil {
+    impl QualifyPath for TestUtil {
         fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
             Some((FileContent::Tests, path))
         }
@@ -38,9 +38,9 @@ mod tests {
     }
 
     impl Module for TestModule {
-        fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+        fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
             self.utils.iter()
-                .map(|u| u.clone() as Rc<dyn QualifyFile>)
+                .map(|u| u.clone() as Rc<dyn QualifyPath>)
                 .collect()
         }
     }
