@@ -1,18 +1,28 @@
 use crate::Registry;
-use ring_core_content::FileContent;
+use ring_core_content::{FileContent, PathContent};
 use std::path::Path;
 
-/// Provides calls using file detection module features
+/// Provides calls using path detection module features
 pub trait FileRegistry {
     /// Uses all modules to qualify given file path
+    #[deprecated(note = "use qualify_path instead")]
     fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent>;
+    
+    /// Uses all modules to qualify given path
+    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent> {
+        self.qualify_file(path).map(PathContent::from)
+    }
 }
 
 impl<T> FileRegistry for T where T: Registry {
     fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
+        self.qualify_path(path).map(FileContent::from)
+    }
+    
+    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent> {
         self.modules().iter()
             .flat_map(|module| module.file_qualifiers())
-            .filter_map(|detector| detector.qualify_file(path.as_ref()))
+            .filter_map(|detector| detector.qualify_path(path.as_ref()))
             .max_by_key(|(_, qualified_path)| qualified_path.components().count())
             .map(|(content, _)| content)
     }

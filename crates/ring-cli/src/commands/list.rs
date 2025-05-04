@@ -66,9 +66,6 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
 
         vec![
             file_style.apply(file_name).to_string(),
-            language
-                .map(|language| language_style.apply(language).to_string())
-                .unwrap_or_else(|| if is_dir { "directory".dim() } else { "unknown".dark_grey() }.to_string()),
             if is_dir {
                 let units = core.detect_units_at(file.path()).iter()
                     .map(|unit| unit.style().apply(unit.kind()).to_string())
@@ -80,19 +77,22 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                     units
                 }
             } else {
-                core.qualify_file(file.path())
-                    .map(|content| content.style().apply(content).to_string())
+                language
+                    .map(|language| language_style.apply(language).to_string())
                     .unwrap_or_else(|| "unknown".dark_grey().to_string())
             },
+            core.qualify_path(file.path())
+                .map(|content| content.style().apply(if is_dir {
+                    format!("{:#}", content)
+                } else {
+                    format!("{content}")
+                }).to_string())
+                .unwrap_or_else(|| "unknown".dark_grey().to_string()),
         ]
     } else {
         // for machines
         vec![
             file_name,
-            language
-                .map(|language| language.to_string())
-                .unwrap_or_else(|| if is_dir { "directory" } else { "unknown" }.to_string()),
-
             if is_dir {
                 let units = core.detect_units_at(file.path()).iter()
                     .map(|unit| unit.kind().to_string())
@@ -104,10 +104,17 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
                     units
                 }
             } else {
-                core.qualify_file(file.path())
-                    .map(|content| content.to_string())
+                language
+                    .map(|language| language.to_string())
                     .unwrap_or_else(|| "unknown".to_string())
             },
+            core.qualify_path(file.path())
+                .map(|content| if is_dir {
+                    format!("{:#}", content)
+                } else {
+                    format!("{content}")
+                })
+                .unwrap_or_else(|| "unknown".to_string()),
         ]
     }
 }
