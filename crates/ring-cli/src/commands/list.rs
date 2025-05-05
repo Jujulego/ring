@@ -83,9 +83,9 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             },
             core.qualify_path(file.path())
                 .map(|content| content.style().apply(if is_dir {
-                    format!("{:#}", content)
+                    format!("{content:#}")
                 } else {
-                    format!("{content}")
+                    content.to_string()
                 }).to_string())
                 .unwrap_or_else(|| "unknown".dark_grey().to_string()),
         ]
@@ -110,9 +110,9 @@ fn format_file(core: &Core, file: FilesItem, ls_colors: &LsColors) -> Vec<String
             },
             core.qualify_path(file.path())
                 .map(|content| if is_dir {
-                    format!("{:#}", content)
+                    format!("{content:#}")
                 } else {
-                    format!("{content}")
+                    content.to_string()
                 })
                 .unwrap_or_else(|| "unknown".to_string()),
         ]
