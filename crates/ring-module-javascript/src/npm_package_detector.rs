@@ -337,7 +337,7 @@ impl QualifyPath for NpmPackageDetector {
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
-                    return Some((PathContent::Lockfile, ancestor));
+                    return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
 
                 match ancestor.file_name().and_then(OsStr::to_str) {

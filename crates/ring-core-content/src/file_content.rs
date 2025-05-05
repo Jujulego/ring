@@ -37,7 +37,6 @@ impl From<PathContent> for FileContent {
     fn from(p: PathContent) -> Self {
         match p {
             PathContent::Configuration => FileContent::Configuration,
-            PathContent::Lockfile => FileContent::Lockfile,
             PathContent::Manifest => FileContent::Manifest,
             PathContent::Source => FileContent::Source,
             PathContent::Resource => FileContent::Storage,

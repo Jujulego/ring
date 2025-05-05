@@ -230,7 +230,7 @@ impl QualifyPath for CargoCrateDetector {
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
                 if self._is_lockfile(ancestor) {
-                    return Some((PathContent::Lockfile, ancestor));
+                    return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
 
                 if ancestor.file_name().and_then(OsStr::to_str) == Some("build.rs") {

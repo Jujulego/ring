@@ -10,10 +10,6 @@ pub enum PathContent {
     Configuration,
     /// Files or directories containing downloaded dependencies of a project
     Dependency,
-    /// Generated file, freezing a resource or a result:
-    /// - file defining dependencies version to install (like the "Cargo.lock" file)
-    /// - a lock protecting a file/folder
-    Lockfile,
     /// Declaration of a "code unit" (npm package, crate, ...)
     Manifest,
     /// Files or directories containing data mainly used as inputs for a project
@@ -30,21 +26,25 @@ impl PathContent {
     #[cfg(feature = "crossterm")]
     pub fn style(&self) -> crossterm::style::ContentStyle {
         if let PathContent::Other(_, parent) = self {
-            return parent.style();
+            let mut style = parent.style();
+            style.attributes.set(crossterm::style::Attribute::Italic);
+
+            return style;
         }
 
         crossterm::style::ContentStyle {
             foreground_color: match self {
-                PathContent::Artefact => Some(crossterm::style::Color::DarkYellow),
+                PathContent::Artefact => Some(crossterm::style::Color::DarkRed),
                 PathContent::Configuration => Some(crossterm::style::Color::DarkCyan),
                 PathContent::Dependency => Some(crossterm::style::Color::DarkBlue),
-                PathContent::Lockfile | PathContent::Manifest => Some(crossterm::style::Color::DarkMagenta),
-                PathContent::Resource | PathContent::Source => Some(crossterm::style::Color::Blue),
+                PathContent::Manifest => Some(crossterm::style::Color::DarkCyan),
+                PathContent::Resource => Some(crossterm::style::Color::DarkMagenta),
+                PathContent::Source => Some(crossterm::style::Color::Blue),
                 PathContent::Test => Some(crossterm::style::Color::DarkGreen),
                 PathContent::Other(_, _) => unreachable!(),
             },
             attributes: match self {
-                PathContent::Lockfile | PathContent::Resource => crossterm::style::Attribute::Dim.into(),
+                PathContent::Manifest => crossterm::style::Attribute::Bold.into(),
                 _ => Default::default(),
             },
             ..Default::default()
@@ -56,7 +56,7 @@ impl From<FileContent> for PathContent {
     fn from(f: FileContent) -> Self {
         match f {
             FileContent::Configuration => PathContent::Configuration,
-            FileContent::Lockfile => PathContent::Lockfile,
+            FileContent::Lockfile => PathContent::Other("lockfile".to_string(), &PathContent::Manifest),
             FileContent::Manifest => PathContent::Manifest,
             FileContent::Source => PathContent::Source,
             FileContent::Storage => PathContent::Resource,
@@ -72,7 +72,6 @@ impl Display for PathContent {
             PathContent::Artefact => f.write_str(if f.alternate() { "artefacts" } else { "artefact" }),
             PathContent::Configuration => f.write_str(if f.alternate() { "configs" } else { "config" }),
             PathContent::Dependency => f.write_str(if f.alternate() { "dependencies" } else { "dependency" }),
-            PathContent::Lockfile => f.write_str("lockfile"),
             PathContent::Manifest => f.write_str("manifest"),
             PathContent::Resource => f.write_str(if f.alternate() { "resources" } else { "resource" }),
             PathContent::Source => f.write_str(if f.alternate() { "sources" } else { "source" }),
@@ -129,20 +128,6 @@ mod tests {
 
         assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkBlue));
         assert!(style.attributes.is_empty());
-    }
-
-    #[test]
-    fn it_should_display_lockfile() {
-        assert_eq!(format!("{}", PathContent::Lockfile), "lockfile");
-    }
-
-    #[test]
-    #[cfg(feature = "crossterm")]
-    fn it_should_style_lockfile() {
-        let style = PathContent::Lockfile.style();
-
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
-        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
     }
 
     #[test]
