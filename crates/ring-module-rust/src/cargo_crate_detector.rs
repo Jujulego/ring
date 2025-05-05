@@ -196,7 +196,6 @@ impl DetectUnit for CargoCrateDetector {
 
 impl QualifyPath for CargoCrateDetector {
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-        // Out of crate cases
         trace!("stat {}", path.display());
         if path.is_file() {
             self.qualify_path(path)

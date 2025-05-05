@@ -1,6 +1,6 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
-use ring_core_content::{DetectLanguage, FileContent, Language, QualifyPath};
+use ring_core_content::{DetectLanguage, FileContent, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -298,17 +298,27 @@ impl DetectUnit for NpmPackageDetector {
 }
 
 impl QualifyPath for NpmPackageDetector {
-    #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+        trace!("stat {}", path.display());
+        if path.is_file() {
+            self.qualify_path(path)
+                .map(|(p, content)| (p.into(), content))
+        } else {
+            None
+        }
+    }
+
+    #[instrument(name = "npm-package.qualify-path", skip_all)]
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of package cases
         trace!("stat {}", path.display());
         if path.is_file() {
             if self._is_manifest(path) {
-                return Some((FileContent::Manifest, path));
+                return Some((PathContent::Manifest, path));
             }
 
             if self._is_npm_configuration(path) || self._is_yarn_configuration(path) {
-                return Some((FileContent::Configuration, path));
+                return Some((PathContent::Configuration, path));
             }
         } else {
             return None;
@@ -323,18 +333,20 @@ impl QualifyPath for NpmPackageDetector {
             } else {
                 break;
             }
-            
+
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
-                    return Some((FileContent::Lockfile, ancestor));
+                    return Some((PathContent::Lockfile, ancestor));
                 }
 
                 match ancestor.file_name().and_then(OsStr::to_str) {
-                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp-commonjs".into()), ancestor)),
-                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp-esm".into()), ancestor)),
+                    Some(".pnp.cjs") => return Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), ancestor)),
+                    Some(".pnp.loader.mjs") => return Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), ancestor)),
                     _ => {}
                 }
+            } else if ancestor.file_name().and_then(OsStr::to_str) == Some("node_modules") {
+                return Some((PathContent::Dependency, ancestor));
             }
         }
 
