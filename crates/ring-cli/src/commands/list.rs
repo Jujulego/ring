@@ -4,7 +4,7 @@ use itertools::Itertools;
 use lscolors::LsColors;
 use ring_cli_fs::{FilesItem, FilesIterator};
 use ring_cli_list::List;
-use ring_core::{Core, FileRegistry, LanguageRegistry, UnitRegistry};
+use ring_core::{Core, PathRegistry, LanguageRegistry, UnitRegistry};
 use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::{env, io};

@@ -3,22 +3,12 @@ use ring_core_content::{FileContent, PathContent};
 use std::path::Path;
 
 /// Provides calls using path detection module features
-pub trait FileRegistry {
-    /// Uses all modules to qualify given file path
-    #[deprecated(note = "use qualify_path instead")]
-    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent>;
-    
+pub trait PathRegistry {
     /// Uses all modules to qualify given path
-    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent> {
-        self.qualify_file(path).map(PathContent::from)
-    }
+    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent>;
 }
 
-impl<T> FileRegistry for T where T: Registry {
-    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
-        self.qualify_path(path).map(FileContent::from)
-    }
-    
+impl<T> PathRegistry for T where T: Registry {
     fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent> {
         self.modules().iter()
             .flat_map(|module| module.file_qualifiers())
@@ -40,6 +30,10 @@ mod tests {
     impl QualifyPath for TestUtil {
         fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
             Some((FileContent::Tests, path))
+        }
+        
+        fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
+            Some((PathContent::Test, path))
         }
     }
 
@@ -75,6 +69,6 @@ mod tests {
             modules: vec![Box::new(module)],
         };
 
-        assert_eq!(registry.qualify_file("/test"), Some(FileContent::Tests));
+        assert_eq!(registry.qualify_path("/test"), Some(PathContent::Test));
     }
 }
