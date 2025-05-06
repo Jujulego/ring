@@ -1,5 +1,5 @@
 use crate::shell_language;
-use ring_core_content::{DetectLanguage, FileContent, Language, PathContent, QualifyPath};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -116,10 +116,6 @@ impl DetectLanguage for ShellFileDetector {
 }
 
 impl QualifyPath for ShellFileDetector {
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-        self.qualify_path(path).map(|(p, content)| (p.into(), content))
-    }
-
     #[instrument(name = "shell-file.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         if self._is_bash_config_file(path) || self._is_zsh_config_file(path) {

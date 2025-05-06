@@ -1,7 +1,7 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use cargo_toml::Manifest;
-use ring_core_content::{DetectLanguage, FileContent, Language, PathContent, QualifyPath};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -195,16 +195,6 @@ impl DetectUnit for CargoCrateDetector {
 }
 
 impl QualifyPath for CargoCrateDetector {
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-        trace!("stat {}", path.display());
-        if path.is_file() {
-            self.qualify_path(path)
-                .map(|(p, content)| (p.into(), content))
-        } else {
-            None
-        }
-    }
-
     #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of crate cases
@@ -269,33 +259,33 @@ mod tests {
         let detector = CargoCrateDetector::new();
 
         assert_eq!(
-            detector.qualify_file(Path::new("assets/.cargo/config")),
-            Some((FileContent::Configuration, Path::new("assets/.cargo/config")))
+            detector.qualify_path(Path::new("assets/.cargo/config")),
+            Some((PathContent::Configuration, Path::new("assets/.cargo/config")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/.cargo/config.toml")),
-            Some((FileContent::Configuration, Path::new("assets/.cargo/config.toml")))
+            detector.qualify_path(Path::new("assets/.cargo/config.toml")),
+            Some((PathContent::Configuration, Path::new("assets/.cargo/config.toml")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/build.rs")),
-            Some((FileContent::Other("build".into()), Path::new("assets/build.rs")))
+            detector.qualify_path(Path::new("assets/build.rs")),
+            Some((PathContent::Other("build".into(), &PathContent::Configuration), Path::new("assets/build.rs")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/Cargo.toml")),
-            Some((FileContent::Manifest, Path::new("assets/Cargo.toml")))
+            detector.qualify_path(Path::new("assets/Cargo.toml")),
+            Some((PathContent::Manifest, Path::new("assets/Cargo.toml")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/Cargo.lock")),
-            Some((FileContent::Lockfile, Path::new("assets/Cargo.lock")))
+            detector.qualify_path(Path::new("assets/Cargo.lock")),
+            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/Cargo.lock")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/src/lib.rs")),
-            Some((FileContent::Source, Path::new("assets/src")))
+            detector.qualify_path(Path::new("assets/src/lib.rs")),
+            Some((PathContent::Source, Path::new("assets/src")))
         );
         assert_eq!(
-            detector.qualify_file(Path::new("assets/tests/test.rs")),
-            Some((FileContent::Tests, Path::new("assets/tests")))
+            detector.qualify_path(Path::new("assets/tests/test.rs")),
+            Some((PathContent::Test, Path::new("assets/tests")))
         );
-        assert_eq!(detector.qualify_file(Path::new("do-not-exists.toml")), None);
+        assert_eq!(detector.qualify_path(Path::new("do-not-exists.toml")), None);
     }
 }

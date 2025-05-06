@@ -1,5 +1,5 @@
 use crate::Registry;
-use ring_core_content::{FileContent, PathContent};
+use ring_core_content::PathContent;
 use std::path::Path;
 
 /// Provides calls using path detection module features
@@ -28,10 +28,6 @@ mod tests {
     struct TestUtil;
 
     impl QualifyPath for TestUtil {
-        fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-            Some((FileContent::Tests, path))
-        }
-        
         fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
             Some((PathContent::Test, path))
         }

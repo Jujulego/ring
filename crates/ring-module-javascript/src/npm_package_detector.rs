@@ -1,6 +1,6 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
-use ring_core_content::{DetectLanguage, FileContent, Language, PathContent, QualifyPath};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -298,16 +298,6 @@ impl DetectUnit for NpmPackageDetector {
 }
 
 impl QualifyPath for NpmPackageDetector {
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-        trace!("stat {}", path.display());
-        if path.is_file() {
-            self.qualify_path(path)
-                .map(|(p, content)| (p.into(), content))
-        } else {
-            None
-        }
-    }
-
     #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of package cases
@@ -386,24 +376,24 @@ mod tests {
     fn it_should_qualify_npm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/package.json")), Some((FileContent::Manifest, Path::new("assets/package.json"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/package-lock.json")), Some((FileContent::Lockfile, Path::new("assets/package-lock.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/package.json")), Some((PathContent::Manifest, Path::new("assets/package.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/package-lock.json")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/package-lock.json"))));
     }
 
     #[test]
     fn it_should_qualify_pnpm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/pnpm-lock.yaml")), Some((FileContent::Lockfile, Path::new("assets/pnpm-lock.yaml"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/pnpm-lock.yaml")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/pnpm-lock.yaml"))));
     }
 
     #[test]
     fn it_should_qualify_yarn_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp-commonjs".into()), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp-esm".into()), Path::new("assets/.pnp.loader.mjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.cjs")), Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.loader.mjs")), Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.yarnrc.yml")), Some((PathContent::Configuration, Path::new("assets/.yarnrc.yml"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/yarn.lock")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/yarn.lock"))));
     }
 }
