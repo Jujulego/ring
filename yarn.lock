@@ -394,7 +394,7 @@ __metadata:
     "@rollup/plugin-node-resolve": "npm:16.0.1"
     "@swc/core": "npm:1.11.24"
     "@swc/helpers": "npm:0.5.17"
-    "@types/node": "npm:22.15.12"
+    "@types/node": "npm:22.15.13"
     "@types/yargs": "npm:17.0.33"
     chalk: "npm:5.4.1"
     chalk-template: "npm:1.1.0"
@@ -737,12 +737,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:22.15.12":
-  version: 22.15.12
-  resolution: "@types/node@npm:22.15.12"
+"@types/node@npm:22.15.13":
+  version: 22.15.13
+  resolution: "@types/node@npm:22.15.13"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/b9c34f8089764edf229576e4b7d51681a4dfaf0893bf08cd884aec2e76a79a2a74d4ce114590a61cf4419e6818185730ed6165b015c5e552b4ad4444eb2f06db
+  checksum: 10c0/1490568417ada4cbe3a3f316c40870f7024ebca9ae60f81ca66f61f34e4f5500483c73355961746c90faa77764f8ad620973a88b97c6ff805902aea2c429c254
   languageName: node
   linkType: hard
 
