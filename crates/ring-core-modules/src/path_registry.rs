@@ -1,18 +1,18 @@
 use crate::Registry;
-use ring_core_file::FileContent;
+use ring_core_content::PathContent;
 use std::path::Path;
 
-/// Provides calls using file detection module features
-pub trait FileRegistry {
-    /// Uses all modules to qualify given file path
-    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent>;
+/// Provides calls using path detection module features
+pub trait PathRegistry {
+    /// Uses all modules to qualify given path
+    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent>;
 }
 
-impl<T> FileRegistry for T where T: Registry {
-    fn qualify_file<P: AsRef<Path>>(&self, path: P) -> Option<FileContent> {
+impl<T> PathRegistry for T where T: Registry {
+    fn qualify_path<P: AsRef<Path>>(&self, path: P) -> Option<PathContent> {
         self.modules().iter()
             .flat_map(|module| module.file_qualifiers())
-            .filter_map(|detector| detector.qualify_file(path.as_ref()))
+            .filter_map(|detector| detector.qualify_path(path.as_ref()))
             .max_by_key(|(_, qualified_path)| qualified_path.components().count())
             .map(|(content, _)| content)
     }
@@ -22,14 +22,14 @@ impl<T> FileRegistry for T where T: Registry {
 mod tests {
     use super::*;
     use crate::Module;
-    use ring_core_file::QualifyFile;
+    use ring_core_content::QualifyPath;
     use std::rc::Rc;
 
     struct TestUtil;
 
-    impl QualifyFile for TestUtil {
-        fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
-            Some((FileContent::Tests, path))
+    impl QualifyPath for TestUtil {
+        fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
+            Some((PathContent::Test, path))
         }
     }
 
@@ -38,9 +38,9 @@ mod tests {
     }
 
     impl Module for TestModule {
-        fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+        fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
             self.utils.iter()
-                .map(|u| u.clone() as Rc<dyn QualifyFile>)
+                .map(|u| u.clone() as Rc<dyn QualifyPath>)
                 .collect()
         }
     }
@@ -65,6 +65,6 @@ mod tests {
             modules: vec![Box::new(module)],
         };
 
-        assert_eq!(registry.qualify_file("/test"), Some(FileContent::Tests));
+        assert_eq!(registry.qualify_path("/test"), Some(PathContent::Test));
     }
 }

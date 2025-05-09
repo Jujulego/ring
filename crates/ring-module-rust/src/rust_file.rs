@@ -1,5 +1,5 @@
 use crate::rust_language;
-use ring_core_file::{DetectLanguage, Language};
+use ring_core_content::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
 use tracing::{instrument, trace};

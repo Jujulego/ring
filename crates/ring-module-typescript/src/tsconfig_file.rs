@@ -1,4 +1,4 @@
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -54,11 +54,11 @@ impl DetectLanguage for TsconfigFileDetector {
     }
 }
 
-impl QualifyFile for TsconfigFileDetector {
+impl QualifyPath for TsconfigFileDetector {
     #[instrument(name = "tsconfig-file.qualify-path", skip_all)]
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         if self._is_tsconfig(path) {
-            Some((FileContent::Configuration, path))
+            Some((PathContent::Configuration, path))
         } else {
             None
         }
@@ -81,7 +81,7 @@ mod tests {
     fn it_should_qualify_as_config_file() {
         let detector = TsconfigFileDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/tsconfig.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.json"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/tsconfig.test.json")), Some((FileContent::Configuration, Path::new("assets/tsconfig.test.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.test.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.test.json"))));
     }
 }

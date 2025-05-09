@@ -22,7 +22,6 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-fs/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-list/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-toml/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-file/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/rint-core-file-content/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-json/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-yaml/src" isTestSource="false" />
@@ -33,6 +32,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-cli-tree/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-tasks/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-shell/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-content/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

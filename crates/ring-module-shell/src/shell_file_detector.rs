@@ -1,5 +1,5 @@
 use crate::shell_language;
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -20,7 +20,7 @@ impl ShellFileDetector {
     fn _is_script_file(&self, path: &Path) -> bool {
         matches!(
             path.extension().and_then(OsStr::to_str),
-            Some("bash") | Some("bsh") | Some("csh") | Some("sh")
+            Some("bash") | Some("bsh") | Some("csh") | Some("sh") | Some("zsh")
         )
     }
 
@@ -115,12 +115,13 @@ impl DetectLanguage for ShellFileDetector {
     }
 }
 
-impl QualifyFile for ShellFileDetector {
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+impl QualifyPath for ShellFileDetector {
+    #[instrument(name = "shell-file.qualify-path", skip_all)]
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         if self._is_bash_config_file(path) || self._is_zsh_config_file(path) {
-            Some((FileContent::Configuration, path))
+            Some((PathContent::Configuration, path))
         } else if self._is_bash_history_file(path) || self._is_zsh_history_file(path) {
-            Some((FileContent::Storage, path))
+            Some((PathContent::Other("history".to_string(), &PathContent::Artefact), path))
         } else {
             None
         }

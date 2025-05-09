@@ -1,6 +1,6 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
-use ring_core_file::{DetectLanguage, FileContent, Language, QualifyFile};
+use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -297,18 +297,18 @@ impl DetectUnit for NpmPackageDetector {
     }
 }
 
-impl QualifyFile for NpmPackageDetector {
+impl QualifyPath for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)> {
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of package cases
         trace!("stat {}", path.display());
         if path.is_file() {
             if self._is_manifest(path) {
-                return Some((FileContent::Manifest, path));
+                return Some((PathContent::Manifest, path));
             }
 
             if self._is_npm_configuration(path) || self._is_yarn_configuration(path) {
-                return Some((FileContent::Configuration, path));
+                return Some((PathContent::Configuration, path));
             }
         } else {
             return None;
@@ -323,18 +323,20 @@ impl QualifyFile for NpmPackageDetector {
             } else {
                 break;
             }
-            
+
             trace!("stat {}", ancestor.display());
             if ancestor.is_file() {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
-                    return Some((FileContent::Lockfile, ancestor));
+                    return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
 
                 match ancestor.file_name().and_then(OsStr::to_str) {
-                    Some(".pnp.cjs") => return Some((FileContent::Other("pnp-commonjs".into()), ancestor)),
-                    Some(".pnp.loader.mjs") => return Some((FileContent::Other("pnp-esm".into()), ancestor)),
+                    Some(".pnp.cjs") => return Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), ancestor)),
+                    Some(".pnp.loader.mjs") => return Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), ancestor)),
                     _ => {}
                 }
+            } else if ancestor.file_name().and_then(OsStr::to_str) == Some("node_modules") {
+                return Some((PathContent::Dependency, ancestor));
             }
         }
 
@@ -374,24 +376,24 @@ mod tests {
     fn it_should_qualify_npm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/package.json")), Some((FileContent::Manifest, Path::new("assets/package.json"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/package-lock.json")), Some((FileContent::Lockfile, Path::new("assets/package-lock.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/package.json")), Some((PathContent::Manifest, Path::new("assets/package.json"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/package-lock.json")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/package-lock.json"))));
     }
 
     #[test]
     fn it_should_qualify_pnpm_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/pnpm-lock.yaml")), Some((FileContent::Lockfile, Path::new("assets/pnpm-lock.yaml"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/pnpm-lock.yaml")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/pnpm-lock.yaml"))));
     }
 
     #[test]
     fn it_should_qualify_yarn_files() {
         let detector = NpmPackageDetector::new();
 
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.cjs")), Some((FileContent::Other("pnp-commonjs".into()), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.pnp.loader.mjs")), Some((FileContent::Other("pnp-esm".into()), Path::new("assets/.pnp.loader.mjs"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/.yarnrc.yml")), Some((FileContent::Configuration, Path::new("assets/.yarnrc.yml"))));
-        assert_eq!(detector.qualify_file(Path::new("assets/yarn.lock")), Some((FileContent::Lockfile, Path::new("assets/yarn.lock"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.cjs")), Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("assets/.pnp.cjs"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.loader.mjs")), Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("assets/.pnp.loader.mjs"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/.yarnrc.yml")), Some((PathContent::Configuration, Path::new("assets/.yarnrc.yml"))));
+        assert_eq!(detector.qualify_path(Path::new("assets/yarn.lock")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/yarn.lock"))));
     }
 }

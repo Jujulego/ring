@@ -12,7 +12,7 @@ pub use crate::cargo_task_detector::CargoTaskDetector;
 pub use crate::rust_file::RustFileDetector;
 pub use crate::rustup_task_detector::RustupTaskDetector;
 pub use crate::utils::rust_language;
-use ring_core_file::{DetectLanguage, QualifyFile};
+use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
 use ring_core_tasks::DetectTask;
 use ring_core_units::DetectUnit;
@@ -117,7 +117,7 @@ impl Module for RustModule {
     }
 
     #[inline]
-    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyFile>> {
+    fn file_qualifiers(&self) -> Vec<Rc<dyn QualifyPath>> {
         vec![
             self.cargo_crate_detector(),
         ]

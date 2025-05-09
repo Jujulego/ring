@@ -1,0 +1,191 @@
+use std::fmt::{Display, Formatter};
+
+/// Define the kind of content that can be found at a given path
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PathContent {
+    /// Files or directories containing results of a processing (compiled file, or files produced as output of a program)
+    Artefact,
+    /// Configuration files
+    Configuration,
+    /// Files or directories containing downloaded dependencies of a project
+    Dependency,
+    /// Declaration of a "code unit" (npm package, crate, ...)
+    Manifest,
+    /// Files or directories containing data mainly used as inputs for a project
+    Resource,
+    /// Files or directories mainly containing source code
+    Source,
+    /// Files or directories mainly containing test code
+    Test,
+    /// Something else !
+    Other(String, &'static PathContent),
+}
+
+impl PathContent {
+    #[cfg(feature = "crossterm")]
+    pub fn style(&self) -> crossterm::style::ContentStyle {
+        if let PathContent::Other(_, parent) = self {
+            let mut style = parent.style();
+            style.attributes.set(crossterm::style::Attribute::Italic);
+
+            return style;
+        }
+
+        crossterm::style::ContentStyle {
+            foreground_color: match self {
+                PathContent::Artefact => Some(crossterm::style::Color::DarkRed),
+                PathContent::Configuration => Some(crossterm::style::Color::DarkCyan),
+                PathContent::Dependency => Some(crossterm::style::Color::DarkBlue),
+                PathContent::Manifest => Some(crossterm::style::Color::DarkCyan),
+                PathContent::Resource => Some(crossterm::style::Color::DarkMagenta),
+                PathContent::Source => Some(crossterm::style::Color::Blue),
+                PathContent::Test => Some(crossterm::style::Color::DarkGreen),
+                PathContent::Other(_, _) => unreachable!(),
+            },
+            attributes: match self {
+                PathContent::Manifest => crossterm::style::Attribute::Bold.into(),
+                _ => Default::default(),
+            },
+            ..Default::default()
+        }
+    }
+}
+
+impl Display for PathContent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PathContent::Artefact => f.write_str(if f.alternate() { "artefacts" } else { "artefact" }),
+            PathContent::Configuration => f.write_str(if f.alternate() { "configs" } else { "config" }),
+            PathContent::Dependency => f.write_str(if f.alternate() { "dependencies" } else { "dependency" }),
+            PathContent::Manifest => f.write_str("manifest"),
+            PathContent::Resource => f.write_str(if f.alternate() { "resources" } else { "resource" }),
+            PathContent::Source => f.write_str(if f.alternate() { "sources" } else { "source" }),
+            PathContent::Test => f.write_str(if f.alternate() { "tests" } else { "test" }),
+            PathContent::Other(label, _) => f.write_str(label),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_display_artefacts() {
+        assert_eq!(format!("{}", PathContent::Artefact), "artefact");
+        assert_eq!(format!("{:#}", PathContent::Artefact), "artefacts");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_artefacts() {
+        let style = PathContent::Artefact.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkRed));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_configurations() {
+        assert_eq!(format!("{}", PathContent::Configuration), "config");
+        assert_eq!(format!("{:#}", PathContent::Configuration), "configs");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_configurations() {
+        let style = PathContent::Configuration.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkCyan));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_dependencies() {
+        assert_eq!(format!("{}", PathContent::Dependency), "dependency");
+        assert_eq!(format!("{:#}", PathContent::Dependency), "dependencies");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_dependencies() {
+        let style = PathContent::Dependency.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkBlue));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_manifest() {
+        assert_eq!(format!("{}", PathContent::Manifest), "manifest");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_manifest() {
+        let style = PathContent::Manifest.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkCyan));
+        assert!(style.attributes.has(crossterm::style::Attribute::Bold));
+    }
+
+    #[test]
+    fn it_should_display_resources() {
+        assert_eq!(format!("{}", PathContent::Resource), "resource");
+        assert_eq!(format!("{:#}", PathContent::Resource), "resources");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_resources() {
+        let style = PathContent::Resource.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_sources() {
+        assert_eq!(format!("{}", PathContent::Source), "source");
+        assert_eq!(format!("{:#}", PathContent::Source), "sources");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_sources() {
+        let style = PathContent::Source.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_tests() {
+        assert_eq!(format!("{}", PathContent::Test), "test");
+        assert_eq!(format!("{:#}", PathContent::Test), "tests");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_tests() {
+        let style = PathContent::Test.style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
+        assert!(style.attributes.is_empty());
+    }
+
+    #[test]
+    fn it_should_display_others() {
+        assert_eq!(format!("{}", PathContent::Other("other".into(), &PathContent::Test)), "other");
+        assert_eq!(format!("{:#}", PathContent::Other("other".into(), &PathContent::Test)), "other");
+    }
+
+    #[test]
+    #[cfg(feature = "crossterm")]
+    fn it_should_style_others() {
+        let style = PathContent::Other("other".into(), &PathContent::Test).style();
+
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
+        assert!(style.attributes.has(crossterm::style::Attribute::Italic));
+    }
+}

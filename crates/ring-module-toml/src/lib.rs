@@ -3,7 +3,7 @@ mod utils;
 
 pub use crate::toml_file::TomlFileDetector;
 pub use crate::utils::toml_language;
-use ring_core_file::DetectLanguage;
+use ring_core_content::DetectLanguage;
 use ring_core_modules::Module;
 use std::rc::Rc;
 

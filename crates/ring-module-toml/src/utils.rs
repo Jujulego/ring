@@ -1,4 +1,4 @@
-use ring_core_file::Language;
+use ring_core_content::Language;
 
 /// Creates a toml language object
 ///

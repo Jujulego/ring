@@ -5,7 +5,7 @@ edition = "2024"
 
 [features]
 crossterm = [
-    "ring-core-file/crossterm",
+    "ring-core-content/crossterm",
     "ring-core-tasks/crossterm",
     "ring-core-units/crossterm",
     "ring-module-javascript?/crossterm",
@@ -25,7 +25,7 @@ yaml = ["dep:ring-module-yaml"]
 sysinfo = "0.35.0"
 tracing = "0.1.41"
 
-ring-core-file = { path = "../ring-core-file" }
+ring-core-content = { path = "../ring-core-content" }
 ring-core-modules = { path = "../ring-core-modules" }
 ring-core-tasks = { path = "../ring-core-tasks" }
 ring-core-units = { path = "../ring-core-units" }

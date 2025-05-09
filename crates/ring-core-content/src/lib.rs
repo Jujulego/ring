@@ -1,7 +1,7 @@
-mod file_content;
 mod language;
+mod path_content;
 
-pub use crate::file_content::FileContent;
+pub use crate::path_content::PathContent;
 pub use crate::language::Language;
 use std::path::Path;
 
@@ -11,6 +11,6 @@ pub trait DetectLanguage {
 }
 
 /// Object able to qualify a given path
-pub trait QualifyFile {
-    fn qualify_file<'a>(&self, path: &'a Path) -> Option<(FileContent, &'a Path)>;
+pub trait QualifyPath {
+    fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)>;
 }

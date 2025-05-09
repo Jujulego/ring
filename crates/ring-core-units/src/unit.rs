@@ -1,4 +1,4 @@
-use ring_core_file::Language;
+use ring_core_content::Language;
 use std::path::Path;
 
 /// Group of files, contained in a same directory, working together in a given purpose
