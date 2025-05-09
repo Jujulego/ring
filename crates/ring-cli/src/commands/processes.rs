@@ -79,7 +79,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
         })
         .collect();
 
-    print!("{}", list);
+    print!("{list}");
 
     Ok(())
 }
