@@ -1,4 +1,3 @@
-use crate::FileContent;
 use std::fmt::{Display, Formatter};
 
 /// Define the kind of content that can be found at a given path
@@ -48,20 +47,6 @@ impl PathContent {
                 _ => Default::default(),
             },
             ..Default::default()
-        }
-    }
-}
-
-impl From<FileContent> for PathContent {
-    fn from(f: FileContent) -> Self {
-        match f {
-            FileContent::Configuration => PathContent::Configuration,
-            FileContent::Lockfile => PathContent::Other("lockfile".to_string(), &PathContent::Manifest),
-            FileContent::Manifest => PathContent::Manifest,
-            FileContent::Source => PathContent::Source,
-            FileContent::Storage => PathContent::Resource,
-            FileContent::Tests => PathContent::Test,
-            FileContent::Other(label) => PathContent::Other(label, &PathContent::Resource),
         }
     }
 }
