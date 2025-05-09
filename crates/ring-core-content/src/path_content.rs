@@ -96,7 +96,7 @@ mod tests {
     fn it_should_style_artefacts() {
         let style = PathContent::Artefact.style();
 
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkYellow));
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkRed));
         assert!(style.attributes.is_empty());
     }
 
@@ -140,8 +140,8 @@ mod tests {
     fn it_should_style_manifest() {
         let style = PathContent::Manifest.style();
 
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
-        assert!(style.attributes.is_empty());
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkCyan));
+        assert!(style.attributes.has(crossterm::style::Attribute::Bold));
     }
 
     #[test]
@@ -155,8 +155,8 @@ mod tests {
     fn it_should_style_resources() {
         let style = PathContent::Resource.style();
 
-        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Blue));
-        assert!(style.attributes.has(crossterm::style::Attribute::Dim));
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkMagenta));
+        assert!(style.attributes.is_empty());
     }
 
     #[test]
@@ -201,6 +201,6 @@ mod tests {
         let style = PathContent::Other("other".into(), &PathContent::Test).style();
 
         assert_eq!(style.foreground_color, Some(crossterm::style::Color::DarkGreen));
-        assert!(style.attributes.is_empty());
+        assert!(style.attributes.has(crossterm::style::Attribute::Italic));
     }
 }
