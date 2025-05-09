@@ -91,6 +91,9 @@ jobs:
             runner: windows-latest
             target: x86_64-pc-windows-msvc
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -132,6 +135,9 @@ jobs:
   docs-tests:
     name: Documentation tests
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
