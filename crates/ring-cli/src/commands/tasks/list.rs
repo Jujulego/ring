@@ -1,24 +1,28 @@
+use crate::commands::tasks::utils::ProcessAncestors;
 use bytesize::ByteSize;
-use clap::{arg, ArgAction, ArgMatches, Command};
+use clap::{arg, Arg, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
 use ring_core::{Core, TaskCache, TaskRegistry};
-use std::iter::FusedIterator;
-use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System, Users};
+use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 
-/// Prepare processes command parsing
+/// Prepare tasks list command parsing
 pub fn setup() -> Command {
-    Command::new("processes")
-        .visible_alias("ps")
-        .about("List running processes")
-        .arg(arg!(-a --all "Display all processes")
-            .action(ArgAction::SetTrue))
+    Command::new("list")
+        .visible_alias("ls")
+        .about("List running tasks")
+        .args(args())
 }
 
-/// Handle processes command execution
-#[instrument(name = "cli.processes", skip_all, fields(options.all = args.get_flag("all")))]
+pub fn args() -> [Arg; 1] {
+    [arg!(-a --all "Display all processes")
+            .action(ArgAction::SetTrue)]
+}
+
+/// Handle tasks list command execution
+#[instrument(name = "cli.tasks.list", skip_all, fields(options.all = args.get_flag("all")))]
 pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     // Parse arguments
     let show_all = args.get_flag("all");
@@ -72,9 +76,9 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
-            task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
-                .or_else(|| process.name().to_str().map(|s| s.to_string()))
-                .unwrap_or("unknown".dark_grey().to_string()),
+                task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                    .or_else(|| process.name().to_str().map(|s| s.to_string()))
+                    .unwrap_or("unknown".dark_grey().to_string()),
             ]
         })
         .collect();
@@ -83,30 +87,3 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     Ok(())
 }
-
-struct ProcessAncestors<'a> {
-    sys: &'a System,
-    process: Option<&'a Process>,
-}
-
-impl<'a> ProcessAncestors<'a> {
-    fn new(sys: &'a System, process: &'a Process) -> Self {
-        Self {
-            sys,
-            process: Some(process),
-        }
-    }
-}
-
-impl<'a> Iterator for ProcessAncestors<'a> {
-    type Item = &'a Process;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let process = self.process?;
-        self.process = process.parent().and_then(|pid| self.sys.process(pid));
-
-        Some(process)
-    }
-}
-
-impl FusedIterator for ProcessAncestors<'_> {}

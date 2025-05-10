@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand_required(true)
         .subcommands([
             commands::list::setup(),
-            commands::processes::setup(),
+            commands::tasks::setup(),
         ])
         .arg(arg!(-v --verbose "Prints more logs")
             .global(true)
@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
     
     match args.subcommand() {
         Some(("list", args)) => commands::list::handle(&core, args),
-        Some(("processes", args)) => commands::processes::handle(&core, args),
+        Some(("tasks", args)) => commands::tasks::handle(&core, args),
         _ => unreachable!(),
     }
 }
