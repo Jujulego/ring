@@ -28,15 +28,6 @@ impl CargoCrateDetector {
     }
 
     /// Checks if given path is a Cargo manifest
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::CargoCrateDetector;
-    ///
-    /// let detector = CargoCrateDetector::new();
-    /// assert!(detector.is_manifest("assets/Cargo.toml"));
-    /// ```
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
@@ -49,15 +40,6 @@ impl CargoCrateDetector {
     }
 
     /// Checks if given path is a Cargo lockfile
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::CargoCrateDetector;
-    ///
-    /// let detector = CargoCrateDetector::new();
-    /// assert!(detector.is_lockfile("assets/Cargo.lock"));
-    /// ```
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
@@ -70,16 +52,6 @@ impl CargoCrateDetector {
     }
 
     /// Checks if given path is a Cargo config file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::CargoCrateDetector;
-    ///
-    /// let detector = CargoCrateDetector::new();
-    /// assert!(detector.is_cargo_config("assets/.cargo/config"));
-    /// assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
-    /// ```
     pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
@@ -94,15 +66,6 @@ impl CargoCrateDetector {
     }
 
     /// Checks if given path is a Cargo crate
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::CargoCrateDetector;
-    ///
-    /// let detector = CargoCrateDetector::new();
-    /// assert!(detector.is_crate("assets"));
-    /// ```
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
@@ -294,5 +257,48 @@ mod tests {
             Some((PathContent::Test, Path::new("assets/tests")))
         );
         assert_eq!(detector.qualify_path(Path::new("do-not-exists.toml")), None);
+    }
+
+    #[test]
+    fn it_should_detect_cargo_manifest() {
+        let detector = CargoCrateDetector::new();
+        assert!(detector.is_manifest("assets/Cargo.toml"));
+    }
+
+    #[test]
+    fn it_should_detect_cargo_lockfile() {
+        let detector = CargoCrateDetector::new();
+        assert!(detector.is_lockfile("assets/Cargo.lock"));
+    }
+
+    #[test]
+    fn it_should_detect_cargo_config_files() {
+        let detector = CargoCrateDetector::new();
+
+        assert!(detector.is_cargo_config("assets/.cargo/config"));
+        assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
+    }
+
+    #[test]
+    fn it_should_detect_cargo_crate() {
+        let detector = CargoCrateDetector::new();
+
+        assert!(detector.is_crate("assets"));
+    }
+
+    #[test]
+    fn it_should_load_cargo_crate() {
+        let detector = CargoCrateDetector::new();
+        let crt = detector.load_crate_at("assets").unwrap().unwrap();
+
+        assert_eq!(crt.name(), Some("assets"));
+    }
+
+    #[test]
+    fn it_should_load_parent_cargo_crate() {
+        let detector = CargoCrateDetector::new();
+        let crt = detector.load_crate_containing("assets/src").unwrap().unwrap();
+
+        assert_eq!(crt.name(), Some("assets"));
     }
 }
