@@ -1468,6 +1468,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring-module-ring"
+version = "0.1.0"
+
+[[package]]
 name = "ring-module-rust"
 version = "0.1.0"
 dependencies = [
