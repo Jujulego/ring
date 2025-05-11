@@ -4,7 +4,7 @@ use ring_core_units::Unit;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-/// Parsed content of package.json files
+/// Parsed content of package.json file
 #[derive(Clone, Debug, Deserialize)]
 pub struct PackageManifest {
     pub name: Option<String>,
