@@ -90,56 +90,34 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_should_mark_crate_as_package() {
+    fn it_should_handle_crate_units() {
         let manifest = CargoManifest {
             package: Some(CargoPackage {
-                name: "package".to_string(),
+                name: "test".to_string(),
             }),
             ..Default::default()
         };
 
-        let crt = CargoCrate::new(manifest, PathBuf::from("/test"));
+        let crt = CargoCrate::new(manifest, PathBuf::from("/toto"));
 
-        assert!(!crt.is_workspace());
         assert_eq!(crt.kind(), "cargo:crate");
+        assert_eq!(crt.root(), Path::new("/toto"));
+        assert_eq!(crt.language(), Some(rust_language()));
+        assert_eq!(Unit::name(&crt), Some("test"));
     }
 
     #[test]
-    fn it_should_mark_crate_as_workspace() {
+    fn it_should_handle_workspace_units() {
         let manifest = CargoManifest {
             workspace: Some(Default::default()),
             ..Default::default()
         };
 
-        let crt = CargoCrate::new(manifest, PathBuf::from("/test"));
+        let crt = CargoCrate::new(manifest, PathBuf::from("/toto"));
 
-        assert!(crt.is_workspace());
         assert_eq!(crt.kind(), "cargo:workspace");
-    }
-
-    #[test]
-    fn name_should_return_package_name_from_manifest() {
-        let manifest = CargoManifest {
-            package: Some(CargoPackage {
-                name: "package".to_string(),
-            }),
-            ..Default::default()
-        };
-
-        let crt = CargoCrate::new(manifest, PathBuf::from("/test"));
-
-        assert_eq!(crt.name(), Some("package"));
-    }
-
-    #[test]
-    fn name_should_return_folder_name() {
-        let manifest = CargoManifest {
-            workspace: Some(Default::default()),
-            ..Default::default()
-        };
-
-        let crt = CargoCrate::new(manifest, PathBuf::from("/test"));
-
-        assert_eq!(crt.name(), Some("test"));
+        assert_eq!(crt.root(), Path::new("/toto"));
+        assert_eq!(crt.language(), Some(rust_language()));
+        assert_eq!(Unit::name(&crt), Some("toto"));
     }
 }
