@@ -1,112 +1,16 @@
-use bytesize::ByteSize;
-use clap::{arg, ArgAction, ArgMatches, Command};
-use crossterm::style::Stylize;
-use ring_cli_list::List;
-use ring_cli_tree::Tree;
-use ring_core::{Core, TaskCache, TaskRegistry};
-use std::iter::FusedIterator;
-use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System, Users};
-use tracing::{instrument, trace};
+use clap::{ArgMatches, Command};
+use ring_core::Core;
+use crate::commands::tasks;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {
-    Command::new("processes")
+    tasks::list::setup()
+        .name("processes")
+        .visible_alias(None) // <= removes existing aliases
         .visible_alias("ps")
-        .about("List running processes")
-        .arg(arg!(-a --all "Display all processes")
-            .action(ArgAction::SetTrue))
 }
 
-/// Handle processes command execution
-#[instrument(name = "cli.processes", skip_all, fields(options.all = args.get_flag("all")))]
+/// Handle tasks command execution
 pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
-    // Parse arguments
-    let show_all = args.get_flag("all");
-
-    // List processes
-    trace!("load running processes");
-    let sys = System::new_with_specifics(
-        RefreshKind::nothing()
-            .with_processes(ProcessRefreshKind::everything()),
-    );
-    let users = Users::new_with_refreshed_list();
-
-    // Build tree
-    let mut tree = Tree::new();
-    let tasks = TaskCache::new(core);
-
-    for (&pid, process) in sys.processes() {
-        let task = tasks.detect_task(process);
-
-        if task.is_some() || show_all {
-            let ancestors = ProcessAncestors::new(&sys, process);
-
-            let parent = ancestors.skip(1)
-                .find(|proc| show_all || tasks.detect_task(proc).is_some());
-
-            if let Some(parent) = parent {
-                tree.add_node(pid, parent.pid());
-            } else {
-                tree.add_root(pid);
-            }
-        }
-    }
-
-    // Print processes
-    let list: List = tree.iter()
-        .map(|node| {
-            let process = sys.process(*node.key).unwrap();
-            let task = tasks.detect_task(process);
-
-            vec![
-                node.to_string(),
-                process.user_id()
-                    .and_then(|uid| users.get_user_by_id(uid))
-                    .map(|u| u.name().to_string())
-                    .unwrap_or("unknown".dark_grey().to_string()),
-                task.as_ref()
-                    .map(|t| t.style().apply(t.kind()).to_string())
-                    .unwrap_or("unknown".dark_grey().to_string()),
-                task.as_ref()
-                    .and_then(|t| t.working_unit())
-                    .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
-                    .unwrap_or("unknown".dark_grey().to_string()),
-                format!("{:>10}", ByteSize::b(process.virtual_memory())),
-            task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
-                .or_else(|| process.name().to_str().map(|s| s.to_string()))
-                .unwrap_or("unknown".dark_grey().to_string()),
-            ]
-        })
-        .collect();
-
-    print!("{list}");
-
-    Ok(())
+    tasks::list::handle(core, args)
 }
-
-struct ProcessAncestors<'a> {
-    sys: &'a System,
-    process: Option<&'a Process>,
-}
-
-impl<'a> ProcessAncestors<'a> {
-    fn new(sys: &'a System, process: &'a Process) -> Self {
-        Self {
-            sys,
-            process: Some(process),
-        }
-    }
-}
-
-impl<'a> Iterator for ProcessAncestors<'a> {
-    type Item = &'a Process;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let process = self.process?;
-        self.process = process.parent().and_then(|pid| self.sys.process(pid));
-
-        Some(process)
-    }
-}
-
-impl FusedIterator for ProcessAncestors<'_> {}
