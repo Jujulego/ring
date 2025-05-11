@@ -7,14 +7,20 @@ use ring_core_tasks::Task;
 #[derive(Clone)]
 pub struct RingTask {
     exe: PathBuf,
+    is_self: bool,
     working_unit: Option<Rc<dyn Unit>>,
 }
 
 impl RingTask {
     /// Creates a new ring task
     #[inline]
-    pub fn new(exe: PathBuf, working_unit: Option<Rc<dyn Unit>>) -> RingTask {
-        RingTask { exe, working_unit }
+    pub fn new(exe: PathBuf, is_self: bool, working_unit: Option<Rc<dyn Unit>>) -> RingTask {
+        RingTask { exe, is_self, working_unit }
+    }
+    
+    /// Returns true if it is the current process
+    pub fn is_self(&self) -> bool {
+        self.is_self
     }
 }
 
@@ -41,6 +47,11 @@ impl Task for RingTask {
     fn style(&self) -> crossterm::style::ContentStyle {
         crossterm::style::ContentStyle {
             foreground_color: Some(crossterm::style::Color::Rgb { r: 0xff, g: 0xd7, b: 0x00 }),
+            attributes: if self.is_self {
+                crossterm::style::Attribute::Underlined.into()
+            } else {
+                Default::default()
+            },
             ..Default::default()
         }
     }
