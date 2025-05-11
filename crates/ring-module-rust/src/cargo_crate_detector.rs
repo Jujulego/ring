@@ -1,12 +1,12 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
-use cargo_toml::Manifest;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -137,21 +137,28 @@ impl CargoCrateDetector {
         }
 
         trace!("read file {}", manifest_path.display());
-        match Manifest::from_path(&manifest_path) {
-            Ok(manifest) => {
-                let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
+        match fs::read_to_string(&manifest_path) {
+            Ok(content) => {
+                match toml::from_str(&content) {
+                    Ok(manifest) => {
+                        let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
 
-                debug!(key = %manifest_path.display(), "cargo crate cached");
-                self.cache.borrow_mut().insert(manifest_path, crt.clone());
+                        debug!(key = %manifest_path.display(), "cargo crate cached");
+                        self.cache.borrow_mut().insert(manifest_path, crt.clone());
 
-                Ok(crt)
-            },
-            Err(cargo_toml::Error::Io(err)) if err.kind() == io::ErrorKind::NotFound => {
+                        Ok(crt)
+                    }
+                    Err(err) => {
+                        Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
+                    }
+                }
+            }
+            Err(err) if err.kind() == io::ErrorKind::NotFound => {
                 debug!(key = %manifest_path.display(), "cargo crate miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
                 Ok(None)
-            },
+            }
             Err(err) => {
                 Err(anyhow!(err).context(format!("Failed to load {}", manifest_path.display())))
             }
