@@ -1,6 +1,6 @@
 use crate::commands::tasks::utils::ProcessAncestors;
 use bytesize::ByteSize;
-use clap::{arg, value_parser, Arg, ArgAction, ArgMatches, Command};
+use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
@@ -12,18 +12,14 @@ use tracing::{instrument, trace};
 /// Prepare tasks list command parsing
 pub fn setup() -> Command {
     Command::new("list")
-        .visible_alias("ls")
+        .visible_aliases(["ls", "ps"])
         .about("List running tasks")
-        .args(args())
-}
-
-pub fn args() -> [Arg; 2] {
-    [
-        arg!([pid] "Pid to focus")
-            .value_parser(value_parser!(Pid)),
-        arg!(-a --all "Display all processes")
-            .action(ArgAction::SetTrue)
-    ]
+        .args([
+            arg!([pid] "Pid to focus")
+                .value_parser(value_parser!(Pid)),
+            arg!(-a --all "Display all processes")
+                .action(ArgAction::SetTrue)
+        ])
 }
 
 /// Handle tasks list command execution

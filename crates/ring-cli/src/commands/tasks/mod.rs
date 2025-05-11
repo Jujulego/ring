@@ -7,13 +7,11 @@ mod utils;
 /// Prepare tasks command parsing
 pub fn setup() -> Command {
     Command::new("tasks")
-        .aliases(["task", "ps"])
-        .about("List running tasks")
+        .alias("task")
+        .about("Managing running tasks")
         .subcommands([
             list::setup()
         ])
-        .args_conflicts_with_subcommands(true)
-        .args(list::args())
 }
 
 /// Handle tasks command execution
