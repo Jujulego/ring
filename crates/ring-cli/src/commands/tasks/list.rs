@@ -1,11 +1,12 @@
 use crate::commands::tasks::utils::ProcessAncestors;
 use bytesize::ByteSize;
-use clap::{arg, Arg, ArgAction, ArgMatches, Command};
+use clap::{arg, value_parser, Arg, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
 use ring_core::{Core, TaskCache, TaskRegistry};
-use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
+use std::collections::HashSet;
+use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 
 /// Prepare tasks list command parsing
@@ -16,15 +17,20 @@ pub fn setup() -> Command {
         .args(args())
 }
 
-pub fn args() -> [Arg; 1] {
-    [arg!(-a --all "Display all processes")
-            .action(ArgAction::SetTrue)]
+pub fn args() -> [Arg; 2] {
+    [
+        arg!([pid] "Pid to focus")
+            .value_parser(value_parser!(Pid)),
+        arg!(-a --all "Display all processes")
+            .action(ArgAction::SetTrue)
+    ]
 }
 
 /// Handle tasks list command execution
 #[instrument(name = "cli.tasks.list", skip_all, fields(options.all = args.get_flag("all")))]
 pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
     // Parse arguments
+    let focused_pid = args.get_one::<Pid>("pid");
     let show_all = args.get_flag("all");
 
     // List processes
@@ -33,16 +39,35 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
         RefreshKind::nothing()
             .with_processes(ProcessRefreshKind::everything()),
     );
+
+    trace!("load users");
     let users = Users::new_with_refreshed_list();
 
     // Build tree
     let mut tree = Tree::new();
     let tasks = TaskCache::new(core);
 
+    let focused_ancestors = focused_pid.and_then(|&pid| sys.process(pid)).iter()
+        .flat_map(|process| ProcessAncestors::new(&sys, process))
+        .map(|process| process.pid())
+        .collect::<HashSet<_>>();
+
     for (&pid, process) in sys.processes() {
         let task = tasks.detect_task(process);
 
-        if task.is_some() || show_all {
+        let focused = if let Some(focused_pid) = focused_pid {
+            if focused_ancestors.contains(&pid) {
+                true
+            } else {
+                ProcessAncestors::new(&sys, process)
+                    .map(|process| process.pid())
+                    .any(|pid| &pid == focused_pid)
+            }
+        } else {
+            true
+        };
+
+        if focused && (task.is_some() || show_all) {
             let ancestors = ProcessAncestors::new(&sys, process);
 
             let parent = ancestors.skip(1)
@@ -62,7 +87,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
             let process = sys.process(*node.key).unwrap();
             let task = tasks.detect_task(process);
 
-            vec![
+            let mut line = vec![
                 node.to_string(),
                 process.user_id()
                     .and_then(|uid| users.get_user_by_id(uid))
@@ -79,7 +104,14 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                 task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
                     .or_else(|| process.name().to_str().map(|s| s.to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
-            ]
+            ];
+
+            if focused_pid.is_some_and(|pid| pid == node.key) {
+                line.iter_mut()
+                    .for_each(|item| *item = item.clone().bold().to_string());
+            }
+
+            line
         })
         .collect();
 
