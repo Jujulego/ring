@@ -22,6 +22,8 @@ impl Core {
             Box::new(ring_module_javascript::JavascriptModule::new()),
             #[cfg(feature = "json")]
             Box::new(ring_module_json::JsonModule::new()),
+            #[cfg(feature = "ring")]
+            Box::new(ring_module_ring::RingModule::new(registry.clone())),
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "shell")]

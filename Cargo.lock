@@ -1395,6 +1395,7 @@ dependencies = [
  "ring-core-units",
  "ring-module-javascript",
  "ring-module-json",
+ "ring-module-ring",
  "ring-module-rust",
  "ring-module-shell",
  "ring-module-toml",
