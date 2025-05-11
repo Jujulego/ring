@@ -1395,6 +1395,7 @@ dependencies = [
  "ring-core-units",
  "ring-module-javascript",
  "ring-module-json",
+ "ring-module-ring",
  "ring-module-rust",
  "ring-module-shell",
  "ring-module-toml",
@@ -1464,6 +1465,18 @@ version = "0.1.0"
 dependencies = [
  "ring-core-content",
  "ring-core-modules",
+ "tracing",
+]
+
+[[package]]
+name = "ring-module-ring"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.29.0",
+ "ring-core-modules",
+ "ring-core-tasks",
+ "ring-core-units",
+ "sysinfo",
  "tracing",
 ]
 

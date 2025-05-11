@@ -60,7 +60,7 @@ impl Task for ShellTask {
         self.shell_kind.into()
     }
 
-    /// Returns none
+    /// Returns detected unit
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.working_unit.clone()
