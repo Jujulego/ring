@@ -1,7 +1,8 @@
+use anyhow::anyhow;
 use clap::{arg, value_parser, ArgMatches, Command};
 use ring_core::Core;
-use sysinfo::Pid;
-use tracing::instrument;
+use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
+use tracing::{instrument, trace, warn};
 
 /// Prepare tasks inspect command parsing
 pub fn setup() -> Command {
@@ -16,5 +17,18 @@ pub fn setup() -> Command {
 /// Handle tasks inspect command execution
 #[instrument(name = "cli.tasks.inspect", skip_all)]
 pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
+    // Parse arguments
+    let pid = args.get_one::<Pid>("pid").unwrap();
+
+    // Load process
+    trace!("load running processes");
+    let sys = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_processes(ProcessRefreshKind::everything()),
+    );
+
+    let process = sys.process(*pid)
+        .ok_or(anyhow!("Process {pid} not found"))?;
+
     Ok(())
 }
