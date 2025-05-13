@@ -31,6 +31,10 @@ mod tests {
     struct TestTask;
 
     impl Task for TestTask {
+        fn id(&self) -> &str {
+            "test"
+        }
+
         fn exe(&self) -> &Path {
             unimplemented!()
         }

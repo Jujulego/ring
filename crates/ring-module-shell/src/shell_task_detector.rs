@@ -38,6 +38,7 @@ impl DetectTask for ShellTaskDetector {
         let shell_kind = self.detect_shell_kind(exe)?;
         
         let task = Rc::new(ShellTask::new(
+            format!("process:{}", process.pid()),
             shell_kind,
             exe.to_path_buf(),
             process.cwd()

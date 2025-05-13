@@ -5,9 +5,12 @@ use std::rc::Rc;
 
 /// Detected process
 pub trait Task {
+    /// Task identifier
+    fn id(&self) -> &str;
+
     /// Path to the running executable
     fn exe(&self) -> &Path;
-    
+
     /// Returns the task's kind
     fn kind(&self) -> &str;
 
@@ -18,6 +21,7 @@ pub trait Task {
     #[inline]
     fn inspect(&self) -> TaskData {
         TaskData {
+            id: self.id().to_string(),
             kind: self.kind().to_string(),
         }
     }

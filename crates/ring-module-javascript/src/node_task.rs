@@ -7,14 +7,15 @@ use crate::NpmPackage;
 /// A node process
 #[derive(Clone, Debug)]
 pub struct NodeTask {
+    id: String,
     script: PathBuf,
     npm_package: Option<Rc<NpmPackage>>,
 }
 
 impl NodeTask {
     /// Create a new node task
-    pub fn new(script: PathBuf, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
-        NodeTask { script, npm_package }
+    pub fn new(id: String, script: PathBuf, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
+        NodeTask { id, script, npm_package }
     }
 
     /// Returns the package this task is working in
@@ -24,6 +25,12 @@ impl NodeTask {
 }
 
 impl Task for NodeTask {
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        &self.id
+    }
+
     fn exe(&self) -> &Path {
         &self.script
     }

@@ -6,6 +6,7 @@ use ring_core_tasks::Task;
 /// A ring process
 #[derive(Clone)]
 pub struct RingTask {
+    id: String,
     exe: PathBuf,
     is_self: bool,
     working_unit: Option<Rc<dyn Unit>>,
@@ -14,8 +15,8 @@ pub struct RingTask {
 impl RingTask {
     /// Creates a new ring task
     #[inline]
-    pub fn new(exe: PathBuf, is_self: bool, working_unit: Option<Rc<dyn Unit>>) -> RingTask {
-        RingTask { exe, is_self, working_unit }
+    pub fn new(id: String, exe: PathBuf, is_self: bool, working_unit: Option<Rc<dyn Unit>>) -> RingTask {
+        RingTask { id, exe, is_self, working_unit }
     }
     
     /// Returns true if it is the current process
@@ -25,6 +26,12 @@ impl RingTask {
 }
 
 impl Task for RingTask {
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        &self.id
+    }
+
     /// Returns the ring executable
     #[inline]
     fn exe(&self) -> &Path {

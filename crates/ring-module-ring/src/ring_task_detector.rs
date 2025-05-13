@@ -26,6 +26,7 @@ impl DetectTask for RingTaskDetector {
         
         if matches!(exe.file_stem().and_then(OsStr::to_str), Some("ring") | Some("ring-cli")) {
             let task = Rc::new(RingTask::new(
+                format!("process:{}", process.pid()),
                 exe.to_path_buf(),
                 process.pid().as_u32() == std::process::id(),
                 process.cwd()

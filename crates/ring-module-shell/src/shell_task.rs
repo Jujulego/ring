@@ -28,6 +28,7 @@ impl From<ShellKind> for &'static str {
 /// A shell process
 #[derive(Clone)]
 pub struct ShellTask {
+    id: String,
     exe: PathBuf,
     shell_kind: ShellKind,
     working_unit: Option<Rc<dyn Unit>>,
@@ -36,8 +37,8 @@ pub struct ShellTask {
 impl ShellTask {
     /// Creates a new shell task
     #[inline]
-    pub fn new(shell_kind: ShellKind, exe: PathBuf, working_unit: Option<Rc<dyn Unit>>) -> ShellTask {
-        ShellTask { shell_kind, exe, working_unit }
+    pub fn new(id: String, shell_kind: ShellKind, exe: PathBuf, working_unit: Option<Rc<dyn Unit>>) -> ShellTask {
+        ShellTask { id, shell_kind, exe, working_unit }
     }
 
     /// Returns the kind of shell running in the task
@@ -48,6 +49,12 @@ impl ShellTask {
 }
 
 impl Task for ShellTask {
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        &self.id
+    }
+
     /// Returns the shell executable
     #[inline]
     fn exe(&self) -> &Path {

@@ -41,7 +41,7 @@ impl NodeTaskDetector {
                 .and_then(|cwd| self.npm_package_detector.load_package_containing(cwd).transpose())
                 .transpose()?;
             
-            let task = NodeTask::new(script, package);
+            let task = NodeTask::new(format!("process:{}", process.pid()), script, package);
 
             return Ok(Some(Rc::new(task)))
         }

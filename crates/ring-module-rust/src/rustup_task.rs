@@ -6,17 +6,24 @@ use std::rc::Rc;
 /// A rustup process
 #[derive(Clone, Debug)]
 pub struct RustupTask {
+    id: String,
     exe: PathBuf,
 }
 
 impl RustupTask {
     /// Creates a new rustup task
-    pub fn new(exe: PathBuf) -> RustupTask {
-        RustupTask { exe }
+    pub fn new(id: String, exe: PathBuf) -> RustupTask {
+        RustupTask { id, exe }
     }
 }
 
 impl Task for RustupTask {
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        &self.id
+    }
+
     /// Returns path to the rustup executable
     fn exe(&self) -> &Path {
         &self.exe

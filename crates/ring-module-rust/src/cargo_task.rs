@@ -7,14 +7,15 @@ use crate::cargo_crate::CargoCrate;
 /// A cargo process
 #[derive(Clone, Debug)]
 pub struct CargoTask {
+    id: String,
     exe: PathBuf,
     cargo_crate: Option<Rc<CargoCrate>>,
 }
 
 impl CargoTask {
     /// Create a new cargo task
-    pub fn new(exe: PathBuf, cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
-        CargoTask { exe, cargo_crate }
+    pub fn new(id: String, exe: PathBuf, cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
+        CargoTask { id, exe, cargo_crate }
     }
 
     /// Returns the crate this task is working in
@@ -24,6 +25,12 @@ impl CargoTask {
 }
 
 impl Task for CargoTask {
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        &self.id
+    }
+
     /// Returns path to the cargo executable
     fn exe(&self) -> &Path {
         &self.exe
