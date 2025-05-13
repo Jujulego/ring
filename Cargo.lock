@@ -1464,6 +1464,7 @@ dependencies = [
  "ring-cli-tree",
  "ring-core",
  "sentry",
+ "serde_json",
  "sysinfo",
  "tracing",
  "tracing-subscriber",
@@ -1534,6 +1535,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
  "ring-core-units",
+ "serde",
  "sysinfo",
 ]
 

@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use clap::{arg, value_parser, ArgMatches, Command};
-use ring_core::Core;
+use ring_core::{Core, TaskRegistry};
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace, warn};
 
@@ -29,6 +29,15 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     let process = sys.process(*pid)
         .ok_or(anyhow!("Process {pid} not found"))?;
+
+    // Inspect process
+    let task = core.detect_task(process)
+        .ok_or(anyhow!("Process {pid} not recognized"))?;
+    
+    let data = task.inspect();
+    let json = serde_json::to_string_pretty(&data)?;
+
+    println!("{json}");
 
     Ok(())
 }

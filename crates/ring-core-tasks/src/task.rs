@@ -1,6 +1,7 @@
+use crate::task_data::TaskData;
+use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
-use ring_core_units::Unit;
 
 /// Detected process
 pub trait Task {
@@ -12,6 +13,14 @@ pub trait Task {
 
     /// Returns the unit the task is working in
     fn working_unit(&self) -> Option<Rc<dyn Unit>>;
+
+    /// Builds a [`TaskData`] object from the current task
+    #[inline]
+    fn inspect(&self) -> TaskData {
+        TaskData {
+            kind: self.kind().to_string(),
+        }
+    }
     
     /// Returns a crossterm style object
     #[cfg(feature = "crossterm")]

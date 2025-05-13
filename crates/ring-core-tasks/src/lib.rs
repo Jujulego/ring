@@ -1,4 +1,5 @@
 mod task;
+mod task_data;
 
 use std::rc::Rc;
 use sysinfo::Process;
