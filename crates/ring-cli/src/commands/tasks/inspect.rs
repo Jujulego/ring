@@ -1,6 +1,7 @@
 use anyhow::anyhow;
-use clap::{arg, value_parser, ArgMatches, Command};
+use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use ring_core::{Core, TaskRegistry};
+use std::io::{stdout, IsTerminal};
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace, warn};
 
@@ -11,6 +12,8 @@ pub fn setup() -> Command {
         .args([
             arg!(<pid> "Pid of the task to inspect")
                 .value_parser(value_parser!(Pid)),
+            arg!(--pretty "Force pretty print")
+                .action(ArgAction::SetTrue),
         ])
 }
 
@@ -32,12 +35,14 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
 
     // Inspect process
     let task = core.detect_task(process)
+        .map(|task| task.inspect())
         .ok_or(anyhow!("Process {pid} not recognized"))?;
-    
-    let data = task.inspect();
-    let json = serde_json::to_string_pretty(&data)?;
 
-    println!("{json}");
+    if stdout().is_terminal() || args.get_flag("pretty") {
+        serde_json::to_writer_pretty(stdout(), &task)?;
+    } else {
+        serde_json::to_writer(stdout(), &task)?;
+    }
 
     Ok(())
 }
