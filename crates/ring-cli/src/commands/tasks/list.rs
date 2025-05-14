@@ -97,7 +97,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
-                task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                task.and_then(|t| t.executable().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
                     .or_else(|| process.name().to_str().map(|s| s.to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
             ];

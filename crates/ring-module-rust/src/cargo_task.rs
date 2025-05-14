@@ -32,7 +32,7 @@ impl Task for CargoTask {
     }
 
     /// Returns path to the cargo executable
-    fn exe(&self) -> &Path {
+    fn executable(&self) -> &Path {
         &self.exe
     }
 

@@ -57,7 +57,7 @@ impl Task for ShellTask {
 
     /// Returns the shell executable
     #[inline]
-    fn exe(&self) -> &Path {
+    fn executable(&self) -> &Path {
         &self.exe
     }
 

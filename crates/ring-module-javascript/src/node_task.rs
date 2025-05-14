@@ -9,13 +9,14 @@ use crate::NpmPackage;
 pub struct NodeTask {
     id: String,
     script: PathBuf,
+    node_exe: PathBuf,
     npm_package: Option<Rc<NpmPackage>>,
 }
 
 impl NodeTask {
     /// Create a new node task
-    pub fn new(id: String, script: PathBuf, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
-        NodeTask { id, script, npm_package }
+    pub fn new(id: String, script: PathBuf, node_exe: PathBuf, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
+        NodeTask { id, script, node_exe, npm_package }
     }
 
     /// Returns the package this task is working in
@@ -31,8 +32,12 @@ impl Task for NodeTask {
         &self.id
     }
 
-    fn exe(&self) -> &Path {
+    fn executable(&self) -> &Path {
         &self.script
+    }
+
+    fn interpreter(&self) -> Option<&Path> {
+        Some(&self.node_exe)
     }
 
     fn kind(&self) -> &str {

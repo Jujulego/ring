@@ -35,7 +35,7 @@ mod tests {
             "test"
         }
 
-        fn exe(&self) -> &Path {
+        fn executable(&self) -> &Path {
             unimplemented!()
         }
 

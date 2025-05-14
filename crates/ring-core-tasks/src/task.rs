@@ -9,7 +9,12 @@ pub trait Task {
     fn id(&self) -> &str;
 
     /// Path to the running executable
-    fn exe(&self) -> &Path;
+    fn executable(&self) -> &Path;
+
+    /// Path to the interpreter used to run the executable
+    fn interpreter(&self) -> Option<&Path> {
+        None
+    }
 
     /// Returns the task's kind
     fn kind(&self) -> &str;
@@ -23,6 +28,8 @@ pub trait Task {
         TaskData {
             id: self.id().to_string(),
             kind: self.kind().to_string(),
+            executable: self.executable().to_path_buf(),
+            interpreter: self.interpreter().map(|p| p.to_path_buf()),
         }
     }
     

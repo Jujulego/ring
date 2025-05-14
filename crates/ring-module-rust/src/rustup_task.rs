@@ -25,7 +25,7 @@ impl Task for RustupTask {
     }
 
     /// Returns path to the rustup executable
-    fn exe(&self) -> &Path {
+    fn executable(&self) -> &Path {
         &self.exe
     }
 

@@ -34,7 +34,7 @@ impl Task for RingTask {
 
     /// Returns the ring executable
     #[inline]
-    fn exe(&self) -> &Path {
+    fn executable(&self) -> &Path {
         &self.exe
     }
 

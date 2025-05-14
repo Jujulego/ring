@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 /// Descriptive data on a given task
@@ -5,4 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct TaskData {
     pub id: String,
     pub kind: String,
+    pub executable: PathBuf,
+    pub interpreter: Option<PathBuf>,
 }
