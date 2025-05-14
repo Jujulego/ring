@@ -7,5 +7,5 @@ pub struct TaskData {
     pub id: String,
     pub kind: String,
     pub executable: PathBuf,
-    pub interpreter: Option<PathBuf>,
+    pub script: Option<PathBuf>,
 }

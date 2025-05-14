@@ -11,8 +11,8 @@ pub trait Task {
     /// Path to the running executable
     fn executable(&self) -> &Path;
 
-    /// Path to the interpreter used to run the executable
-    fn interpreter(&self) -> Option<&Path> {
+    /// Path to the script ran by the executable
+    fn script(&self) -> Option<&Path> {
         None
     }
 
@@ -29,7 +29,7 @@ pub trait Task {
             id: self.id().to_string(),
             kind: self.kind().to_string(),
             executable: self.executable().to_path_buf(),
-            interpreter: self.interpreter().map(|p| p.to_path_buf()),
+            script: self.script().map(|p| p.to_path_buf()),
         }
     }
     

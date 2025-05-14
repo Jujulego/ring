@@ -8,14 +8,14 @@ use crate::NpmPackage;
 #[derive(Clone, Debug)]
 pub struct NodeTask {
     id: String,
-    script: PathBuf,
     node_exe: PathBuf,
     npm_package: Option<Rc<NpmPackage>>,
+    script: Option<PathBuf>,
 }
 
 impl NodeTask {
     /// Create a new node task
-    pub fn new(id: String, script: PathBuf, node_exe: PathBuf, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
+    pub fn new(id: String, node_exe: PathBuf, script: Option<PathBuf>, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
         NodeTask { id, script, node_exe, npm_package }
     }
 
@@ -33,11 +33,11 @@ impl Task for NodeTask {
     }
 
     fn executable(&self) -> &Path {
-        &self.script
+        &self.node_exe
     }
 
-    fn interpreter(&self) -> Option<&Path> {
-        Some(&self.node_exe)
+    fn script(&self) -> Option<&Path> {
+        self.script.as_deref()
     }
 
     fn kind(&self) -> &str {

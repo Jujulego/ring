@@ -29,22 +29,20 @@ impl NodeTaskDetector {
     /// Builds a `NodeTask` object from given process.
     pub fn load_node_task(&self, process: &Process) -> anyhow::Result<Option<Rc<NodeTask>>> {
         if self.is_node_task(process) {
-            let mut script = extract_node_script(&process.cmd()[1..])
-                .map(PathBuf::from)
-                .unwrap_or_else(|| process.exe().unwrap().to_path_buf());
-
-            if let Some(cwd) = process.cwd() {
-                script = cwd.join(script);
-            }
+            let script = extract_node_script(&process.cmd()[1..])
+                .map(PathBuf::from);
+            
+            let script = script.zip(process.cwd())
+                .map(|(script, cwd)| cwd.join(script));
 
             let package = process.cwd()
                 .and_then(|cwd| self.npm_package_detector.load_package_containing(cwd).transpose())
                 .transpose()?;
-            
+
             let task = NodeTask::new(
                 format!("process:{}", process.pid()),
-                script,
                 process.exe().unwrap().to_path_buf(),
+                script,
                 package
             );
 
