@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct TaskData {
     pub id: String,
     pub kind: String,
-    pub executable: PathBuf,
+    pub cwd: PathBuf,
+    pub exe: PathBuf,
     pub script: Option<PathBuf>,
 }

@@ -35,12 +35,16 @@ mod tests {
             "test"
         }
 
-        fn executable(&self) -> &Path {
+        fn kind(&self) -> &str {
+            "test"
+        }
+
+        fn cwd(&self) -> &Path {
             unimplemented!()
         }
 
-        fn kind(&self) -> &str {
-            "test"
+        fn exe(&self) -> &Path {
+            unimplemented!()
         }
 
         fn working_unit(&self) -> Option<Rc<dyn Unit>> {

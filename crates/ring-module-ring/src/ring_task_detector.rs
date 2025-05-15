@@ -1,10 +1,10 @@
+use crate::RingTask;
+use ring_core_modules::{RegistryRef, UnitRegistry};
+use ring_core_tasks::{DetectTask, Task};
 use std::ffi::OsStr;
 use std::rc::Rc;
 use sysinfo::Process;
 use tracing::instrument;
-use ring_core_modules::{RegistryRef, UnitRegistry};
-use ring_core_tasks::{DetectTask, Task};
-use crate::RingTask;
 
 #[derive(Clone)]
 pub struct RingTaskDetector {
@@ -26,9 +26,7 @@ impl DetectTask for RingTaskDetector {
         
         if matches!(exe.file_stem().and_then(OsStr::to_str), Some("ring") | Some("ring-cli")) {
             let task = Rc::new(RingTask::new(
-                format!("process:{}", process.pid()),
-                exe.to_path_buf(),
-                process.pid().as_u32() == std::process::id(),
+                process.into(),
                 process.cwd()
                     .and_then(|cwd| self.registry.detect_units_containing(cwd).first().cloned())
             ));

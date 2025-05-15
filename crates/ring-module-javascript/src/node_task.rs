@@ -1,22 +1,21 @@
+use crate::NpmPackage;
+use ring_core_tasks::{ProcessData, Task};
+use ring_core_units::Unit;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use ring_core_tasks::Task;
-use ring_core_units::Unit;
-use crate::NpmPackage;
 
 /// A node process
 #[derive(Clone, Debug)]
 pub struct NodeTask {
-    id: String,
-    node_exe: PathBuf,
+    process: ProcessData,
     npm_package: Option<Rc<NpmPackage>>,
     script: Option<PathBuf>,
 }
 
 impl NodeTask {
     /// Create a new node task
-    pub fn new(id: String, node_exe: PathBuf, script: Option<PathBuf>, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
-        NodeTask { id, script, node_exe, npm_package }
+    pub fn new(process: ProcessData, script: Option<PathBuf>, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
+        NodeTask { process, script, npm_package }
     }
 
     /// Returns the package this task is working in
@@ -29,21 +28,35 @@ impl Task for NodeTask {
     /// Returns the process pid
     #[inline]
     fn id(&self) -> &str {
-        &self.id
+        self.process.id()
     }
 
-    fn executable(&self) -> &Path {
-        &self.node_exe
-    }
-
-    fn script(&self) -> Option<&Path> {
-        self.script.as_deref()
-    }
-
+    /// Returns `"node"`
+    #[inline]
     fn kind(&self) -> &str {
         "node"
     }
 
+    /// Returns the directory node is working in
+    #[inline]
+    fn cwd(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the node executable
+    #[inline]
+    fn exe(&self) -> &Path {
+        self.process.exe()
+    }
+
+    /// Returns the executed script
+    #[inline]
+    fn script(&self) -> Option<&Path> {
+        self.script.as_deref()
+    }
+
+    /// Returns the unit node is working in, if any
+    #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.npm_package.as_ref()
             .map(|pt| pt.clone() as Rc<dyn Unit>)

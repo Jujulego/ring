@@ -99,7 +99,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
                 task.as_ref()
-                    .map(|t| t.script().unwrap_or(t.executable()))
+                    .map(|t| t.script().unwrap_or(t.exe()))
                     .and_then(|f| f.file_name())
                     .and_then(OsStr::to_str)
                     .map(|s| s.to_string())
@@ -110,6 +110,11 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
             if focused_pid.is_some_and(|pid| pid == node.key) {
                 line.iter_mut()
                     .for_each(|item| *item = item.clone().bold().to_string());
+            }
+
+            if node.key.as_u32() == std::process::id() {
+                line.iter_mut()
+                    .for_each(|item| *item = item.clone().italic().to_string());
             }
 
             line

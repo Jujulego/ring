@@ -8,19 +8,24 @@ pub trait Task {
     /// Task identifier
     fn id(&self) -> &str;
 
+    /// Returns the task's kind
+    fn kind(&self) -> &str;
+
+    /// Path to the directory the task is working in
+    fn cwd(&self) -> &Path;
+
     /// Path to the running executable
-    fn executable(&self) -> &Path;
+    fn exe(&self) -> &Path;
 
     /// Path to the script ran by the executable
     fn script(&self) -> Option<&Path> {
         None
     }
 
-    /// Returns the task's kind
-    fn kind(&self) -> &str;
-
     /// Returns the unit the task is working in
-    fn working_unit(&self) -> Option<Rc<dyn Unit>>;
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        None
+    }
 
     /// Builds a [`TaskData`] object from the current task
     #[inline]
@@ -28,7 +33,8 @@ pub trait Task {
         TaskData {
             id: self.id().to_string(),
             kind: self.kind().to_string(),
-            executable: self.executable().to_path_buf(),
+            cwd: self.cwd().to_path_buf(),
+            exe: self.exe().to_path_buf(),
             script: self.script().map(|p| p.to_path_buf()),
         }
     }

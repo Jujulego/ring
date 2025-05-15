@@ -28,11 +28,7 @@ impl CargoTaskDetector {
         if self.is_cargo_task(process) {
             if let Some(cwd) = process.cwd() {
                 let unit = self.crate_detector.load_crate_containing(cwd)?;
-                let task = CargoTask::new(
-                    format!("process:{}", process.pid()),
-                    process.exe().unwrap().to_path_buf(),
-                    unit
-                );
+                let task = CargoTask::new(process.into(), unit);
 
                 return Ok(Some(Rc::new(task)))
             }
