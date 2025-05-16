@@ -36,6 +36,12 @@ impl Task for CargoTask {
         "cargo"
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory cargo is working in
     #[inline]
     fn cwd(&self) -> &Path {

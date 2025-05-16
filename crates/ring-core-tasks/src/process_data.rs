@@ -5,14 +5,15 @@ use sysinfo::Process;
 #[derive(Clone, Debug)]
 pub struct ProcessData {
     id: String,
+    cmd: Vec<String>,
     cwd: PathBuf,
     exe: PathBuf,
 }
 
 impl ProcessData {
     #[inline]
-    pub fn new(id: String, cwd: PathBuf, exe: PathBuf) -> ProcessData {
-        ProcessData { id, cwd, exe }
+    pub fn new(id: String, cwd: PathBuf, exe: PathBuf, cmd: Vec<String>) -> ProcessData {
+        ProcessData { id, cmd, cwd, exe }
     }
 
     #[inline]
@@ -20,6 +21,11 @@ impl ProcessData {
         &self.id
     }
 
+    #[inline]
+    pub fn cmd(&self) -> &[String] {
+        &self.cmd
+    }
+    
     #[inline]
     pub fn cwd(&self) -> &Path {
         &self.cwd
@@ -35,6 +41,10 @@ impl From<&Process> for ProcessData {
     fn from(process: &Process) -> ProcessData {
         ProcessData {
             id: format!("process:{}", process.pid()),
+            cmd: process.cmd().iter()
+                .filter_map(|s| s.to_str())
+                .map(|s| s.to_string())
+                .collect(),
             cwd: process.cwd().unwrap().to_path_buf(),
             exe: process.exe().unwrap().to_path_buf(),
         }

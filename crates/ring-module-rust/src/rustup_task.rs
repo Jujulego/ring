@@ -31,6 +31,12 @@ impl Task for RustupTask {
         "rustup"
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory rustup is working in
     #[inline]
     fn cwd(&self) -> &Path {

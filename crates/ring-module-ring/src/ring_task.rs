@@ -31,6 +31,12 @@ impl Task for RingTask {
         "ring"
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory ring is working in
     #[inline]
     fn cwd(&self) -> &Path {

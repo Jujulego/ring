@@ -23,7 +23,6 @@ mod tests {
     use super::*;
     use crate::Module;
     use ring_core_tasks::{DetectTask, Task};
-    use ring_core_units::Unit;
     use std::path::Path;
     use std::rc::Rc;
     use sysinfo::System;
@@ -45,10 +44,6 @@ mod tests {
 
         fn exe(&self) -> &Path {
             unimplemented!()
-        }
-
-        fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-            None
         }
     }
 

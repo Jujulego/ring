@@ -60,6 +60,12 @@ impl Task for ShellTask {
         self.shell_kind.into()
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory shell is working in
     #[inline]
     fn cwd(&self) -> &Path {

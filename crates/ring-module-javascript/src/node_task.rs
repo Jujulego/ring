@@ -37,6 +37,12 @@ impl Task for NodeTask {
         "node"
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory node is working in
     #[inline]
     fn cwd(&self) -> &Path {
