@@ -1,3 +1,4 @@
+use crate::unit_data::UnitData;
 use ring_core_content::Language;
 use std::path::Path;
 
@@ -10,13 +11,26 @@ pub trait Unit {
     fn root(&self) -> &Path;
 
     /// Returns the unit's main language, if any
+    #[inline]
     fn language(&self) -> Option<Language> {
         None
     }
 
     /// Returns the unit's name, if any
+    #[inline]
     fn name(&self) -> Option<&str> {
         None
+    }
+
+    /// Builds a [`UnitData`] object from the current task
+    #[inline]
+    fn inspect(&self) -> UnitData {
+        UnitData {
+            kind: self.kind().to_string(),
+            language: self.language(),
+            name: self.name().map(|n| n.to_string()),
+            root: self.root().to_path_buf(),
+        }
     }
 
     #[cfg(feature = "crossterm")]

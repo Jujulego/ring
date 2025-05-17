@@ -1,8 +1,10 @@
 mod unit;
+mod unit_data;
 
+pub use crate::unit::Unit;
+pub use crate::unit_data::UnitData;
 use std::path::Path;
 use std::rc::Rc;
-pub use unit::Unit;
 
 /// Object able to detect a unit at given path
 pub trait DetectUnit {

@@ -45,6 +45,7 @@ pub trait Task {
             cwd: self.cwd().to_path_buf(),
             exe: self.exe().to_path_buf(),
             script: self.script().map(|p| p.to_path_buf()),
+            working_unit: self.working_unit().map(|u| u.inspect())
         }
     }
     
