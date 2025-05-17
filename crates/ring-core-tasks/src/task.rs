@@ -104,7 +104,7 @@ mod tests {
     }
 
     #[test]
-    fn inspect_should_return_build_data_using_other_methods() {
+    fn inspect_should_build_data_using_other_methods() {
         let task = TestTask;
         let data = task.inspect();
 
@@ -116,7 +116,8 @@ mod tests {
         assert!(data.script.is_none());
         assert!(data.working_unit.is_none());
     }
-    
+
+    #[cfg(feature = "crossterm")]
     #[test]
     fn style_should_return_default_style_by_default() {
         let task = TestTask;
