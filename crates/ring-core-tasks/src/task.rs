@@ -56,3 +56,71 @@ pub trait Task {
         Default::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use super::*;
+
+    struct TestTask;
+
+    impl Task for TestTask {
+        fn id(&self) -> &str {
+            "id"
+        }
+
+        fn kind(&self) -> &str {
+            "kind"
+        }
+
+        fn cwd(&self) -> &Path {
+            "/test".as_ref()
+        }
+
+        fn exe(&self) -> &Path {
+            "/test/exe".as_ref()
+        }
+    }
+
+    #[test]
+    fn args_should_return_an_empty_slice_by_default() {
+        let task = TestTask;
+
+        assert!(task.args().is_empty());
+    }
+
+    #[test]
+    fn script_should_return_none_by_default() {
+        let task = TestTask;
+
+        assert!(task.script().is_none());
+    }
+
+    #[test]
+    fn working_unit_should_return_none_by_default() {
+        let task = TestTask;
+
+        assert!(task.working_unit().is_none());
+    }
+
+    #[test]
+    fn inspect_should_return_build_data_using_other_methods() {
+        let task = TestTask;
+        let data = task.inspect();
+
+        assert_eq!(data.id, "id");
+        assert_eq!(data.kind, "kind");
+        assert_eq!(data.args, Vec::<String>::new());
+        assert_eq!(data.cwd, PathBuf::from("/test"));
+        assert_eq!(data.exe, PathBuf::from("/test/exe"));
+        assert!(data.script.is_none());
+        assert!(data.working_unit.is_none());
+    }
+    
+    #[test]
+    fn style_should_return_default_style_by_default() {
+        let task = TestTask;
+
+        assert_eq!(task.style(), Default::default());
+    }
+}
