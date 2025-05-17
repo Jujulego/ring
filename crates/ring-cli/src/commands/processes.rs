@@ -8,6 +8,7 @@ pub fn setup() -> Command {
         .name("processes")
         .visible_alias(None) // <= removes existing aliases
         .visible_alias("ps")
+        .hide(true)
 }
 
 /// Handle tasks command execution

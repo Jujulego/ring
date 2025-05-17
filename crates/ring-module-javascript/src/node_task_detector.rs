@@ -1,7 +1,7 @@
 use crate::node_task::NodeTask;
 use crate::NpmPackageDetector;
-use ring_core_tasks::{DetectTask, Task};
-use std::ffi::{OsStr, OsString};
+use ring_core_tasks::{DetectTask, ProcessData, Task};
+use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::rc::Rc;
 use sysinfo::Process;
@@ -29,19 +29,18 @@ impl NodeTaskDetector {
     /// Builds a `NodeTask` object from given process.
     pub fn load_node_task(&self, process: &Process) -> anyhow::Result<Option<Rc<NodeTask>>> {
         if self.is_node_task(process) {
-            let mut script = extract_node_script(&process.cmd()[1..])
-                .map(PathBuf::from)
-                .unwrap_or_else(|| process.exe().unwrap().to_path_buf());
-
-            if let Some(cwd) = process.cwd() {
-                script = cwd.join(script);
-            }
+            let data: ProcessData = process.into();
+            let script = extract_node_script(&data.cmd()[1..])
+                .map(PathBuf::from);
+            
+            let script = script.zip(process.cwd())
+                .map(|(script, cwd)| cwd.join(script));
 
             let package = process.cwd()
                 .and_then(|cwd| self.npm_package_detector.load_package_containing(cwd).transpose())
                 .transpose()?;
-            
-            let task = NodeTask::new(script, package);
+
+            let task = NodeTask::new(data, script, package);
 
             return Ok(Some(Rc::new(task)))
         }
@@ -67,9 +66,9 @@ impl DetectTask for NodeTaskDetector {
     }
 }
 
-fn extract_node_script(mut args: &[OsString]) -> Option<&OsStr> {
+fn extract_node_script(mut args: &[String]) -> Option<&String> {
     while !args.is_empty() {
-        let arg = args.first().unwrap().to_str().unwrap();
+        let arg = args.first().unwrap().as_str();
 
         if arg.starts_with('-') {
             if ["-r", "--require", "--import"].contains(&arg) {
@@ -83,7 +82,6 @@ fn extract_node_script(mut args: &[OsString]) -> Option<&OsStr> {
     }
 
     args.first()
-        .map(|str| str.as_os_str())
 }
 
 #[cfg(test)]
@@ -92,9 +90,9 @@ mod tests {
 
     #[test]
     fn it_should_extract_node_script() {
-        let args = ["-r", "toto", "test.js"].map(OsString::from);
+        let args = ["-r", "toto", "test.js"].map(|s| s.to_owned());
 
-        assert_eq!(extract_node_script(&args[2..]).and_then(|str| str.to_str()), Some("test.js"));
-        assert_eq!(extract_node_script(&args).and_then(|str| str.to_str()), Some("test.js"));
+        assert_eq!(extract_node_script(&args[2..]).map(|s| s.as_str()), Some("test.js"));
+        assert_eq!(extract_node_script(&args).map(|s| s.as_str()), Some("test.js"));
     }
 }

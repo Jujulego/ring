@@ -6,6 +6,7 @@ use ring_cli_list::List;
 use ring_cli_tree::Tree;
 use ring_core::{Core, TaskCache, TaskRegistry};
 use std::collections::HashSet;
+use std::ffi::OsStr;
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 
@@ -97,7 +98,11 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                     .and_then(|u| u.name().map(|s| u.style().apply(s).to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
-                task.and_then(|t| t.exe().file_name().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                task.as_ref()
+                    .map(|t| t.script().unwrap_or(t.exe()))
+                    .and_then(|f| f.file_name())
+                    .and_then(OsStr::to_str)
+                    .map(|s| s.to_string())
                     .or_else(|| process.name().to_str().map(|s| s.to_string()))
                     .unwrap_or("unknown".dark_grey().to_string()),
             ];
@@ -105,6 +110,11 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
             if focused_pid.is_some_and(|pid| pid == node.key) {
                 line.iter_mut()
                     .for_each(|item| *item = item.clone().bold().to_string());
+            }
+
+            if node.key.as_u32() == std::process::id() {
+                line.iter_mut()
+                    .for_each(|item| *item = item.clone().italic().to_string());
             }
 
             line

@@ -20,7 +20,7 @@ impl ShellFileDetector {
     fn _is_script_file(&self, path: &Path) -> bool {
         matches!(
             path.extension().and_then(OsStr::to_str),
-            Some("bash") | Some("bsh") | Some("csh") | Some("sh") | Some("zsh")
+            Some("bash") | Some("bsh") | Some("csh") | Some("ps1") | Some("sh") | Some("zsh")
         )
     }
 

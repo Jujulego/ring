@@ -23,7 +23,8 @@ impl RustupTaskDetector {
     /// Builds a `RustupTask` object from given process.
     pub fn load_rustup_task(&self, process: &Process) -> Option<Rc<RustupTask>> {
         if self.is_rustup_task(process) {
-            let task = RustupTask::new(process.exe().unwrap().to_path_buf());
+            let task = RustupTask::new(process.into());
+            
             Some(Rc::new(task))
         } else {
             None

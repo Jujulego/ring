@@ -19,6 +19,7 @@ fn main() -> anyhow::Result<()> {
             commands::processes::setup(),
             commands::tasks::setup(),
         ])
+        .infer_subcommands(true)
         .arg(arg!(-v --verbose "Prints more logs")
             .global(true)
             .required(false)

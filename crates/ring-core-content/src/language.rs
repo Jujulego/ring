@@ -1,8 +1,9 @@
-use std::fmt::{Display, Formatter};
 use rgb::Rgb;
+use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 /// Represents a language
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Language {
     name: String,
     color: Option<Rgb<u8>>,

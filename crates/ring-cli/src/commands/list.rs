@@ -15,7 +15,7 @@ pub fn setup() -> Command {
     Command::new("list")
         .visible_alias("ls")
         .aliases(["l", "ll"])
-        .about("List files and directories (in current directory by default)")
+        .about("List files and directories")
         .arg(arg!([path])
             .value_parser(value_parser!(PathBuf)))
         .arg(arg!(-a --all "Display all files")

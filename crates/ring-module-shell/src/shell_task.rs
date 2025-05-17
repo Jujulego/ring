@@ -1,6 +1,6 @@
-use ring_core_tasks::Task;
+use ring_core_tasks::{ProcessData, Task};
 use ring_core_units::Unit;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
 
 /// Shell kind detected
@@ -28,7 +28,7 @@ impl From<ShellKind> for &'static str {
 /// A shell process
 #[derive(Clone)]
 pub struct ShellTask {
-    exe: PathBuf,
+    process: ProcessData,
     shell_kind: ShellKind,
     working_unit: Option<Rc<dyn Unit>>,
 }
@@ -36,8 +36,8 @@ pub struct ShellTask {
 impl ShellTask {
     /// Creates a new shell task
     #[inline]
-    pub fn new(shell_kind: ShellKind, exe: PathBuf, working_unit: Option<Rc<dyn Unit>>) -> ShellTask {
-        ShellTask { shell_kind, exe, working_unit }
+    pub fn new(process: ProcessData, shell_kind: ShellKind, working_unit: Option<Rc<dyn Unit>>) -> ShellTask {
+        ShellTask { process, shell_kind, working_unit }
     }
 
     /// Returns the kind of shell running in the task
@@ -48,16 +48,34 @@ impl ShellTask {
 }
 
 impl Task for ShellTask {
-    /// Returns the shell executable
+    /// Returns the process pid
     #[inline]
-    fn exe(&self) -> &Path {
-        &self.exe
+    fn id(&self) -> &str {
+        self.process.id()
     }
 
     /// Returns the kind of shell running in the task
     #[inline]
     fn kind(&self) -> &str {
         self.shell_kind.into()
+    }
+
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
+    /// Returns the directory shell is working in
+    #[inline]
+    fn cwd(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the shell executable
+    #[inline]
+    fn exe(&self) -> &Path {
+        self.process.exe()
     }
 
     /// Returns detected unit

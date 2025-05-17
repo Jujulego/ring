@@ -1447,6 +1447,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
 dependencies = [
  "bytemuck",
+ "serde",
 ]
 
 [[package]]
@@ -1464,6 +1465,7 @@ dependencies = [
  "ring-cli-tree",
  "ring-core",
  "sentry",
+ "serde_json",
  "sysinfo",
  "tracing",
  "tracing-subscriber",
@@ -1515,7 +1517,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
  "rgb",
- "tracing",
+ "serde",
 ]
 
 [[package]]
@@ -1534,6 +1536,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
  "ring-core-units",
+ "serde",
  "sysinfo",
 ]
 
@@ -1543,6 +1546,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
  "ring-core-content",
+ "serde",
 ]
 
 [[package]]

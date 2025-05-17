@@ -1,20 +1,20 @@
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
-use ring_core_tasks::Task;
-use ring_core_units::Unit;
 use crate::cargo_crate::CargoCrate;
+use ring_core_tasks::{ProcessData, Task};
+use ring_core_units::Unit;
+use std::path::Path;
+use std::rc::Rc;
 
 /// A cargo process
 #[derive(Clone, Debug)]
 pub struct CargoTask {
-    exe: PathBuf,
+    process: ProcessData,
     cargo_crate: Option<Rc<CargoCrate>>,
 }
 
 impl CargoTask {
     /// Create a new cargo task
-    pub fn new(exe: PathBuf, cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
-        CargoTask { exe, cargo_crate }
+    pub fn new(process: ProcessData, cargo_crate: Option<Rc<CargoCrate>>) -> CargoTask {
+        CargoTask { process, cargo_crate }
     }
 
     /// Returns the crate this task is working in
@@ -24,17 +24,38 @@ impl CargoTask {
 }
 
 impl Task for CargoTask {
-    /// Returns path to the cargo executable
-    fn exe(&self) -> &Path {
-        &self.exe
+    /// Returns the process pid
+    #[inline]
+    fn id(&self) -> &str {
+        self.process.id()
     }
 
     /// Returns `"cargo"`
+    #[inline]
     fn kind(&self) -> &str {
         "cargo"
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
+    /// Returns the directory cargo is working in
+    #[inline]
+    fn cwd(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns path to the cargo executable
+    #[inline]
+    fn exe(&self) -> &Path {
+        self.process.exe()
+    }
+
     /// Returns the crate this task is working in
+    #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.cargo_crate.as_ref()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
