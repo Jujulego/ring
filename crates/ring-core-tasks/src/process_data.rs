@@ -39,14 +39,32 @@ impl ProcessData {
 
 impl From<&Process> for ProcessData {
     fn from(process: &Process) -> ProcessData {
-        ProcessData {
-            id: format!("process:{}", process.pid()),
-            cmd: process.cmd().iter()
+        ProcessData::new(
+            format!("process:{}", process.pid()),
+            process.cwd().unwrap().to_path_buf(),
+            process.exe().unwrap().to_path_buf(),
+            process.cmd().iter()
                 .filter_map(|s| s.to_str())
                 .map(|s| s.to_string())
                 .collect(),
-            cwd: process.cwd().unwrap().to_path_buf(),
-            exe: process.exe().unwrap().to_path_buf(),
-        }
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use sysinfo::{Pid, System};
+    use super::*;
+
+    #[test]
+    fn it_should_extract_data_from_process() {
+        let sys = System::new_all();
+        let process = sys.process(Pid::from_u32(std::process::id())).unwrap();
+        let data = ProcessData::from(process);
+
+        assert_eq!(data.id(), format!("process:{}", process.pid()));
+        assert_eq!(data.cmd().len(), process.cmd().len());
+        assert_eq!(data.cwd(), process.cwd().unwrap());
+        assert_eq!(data.exe(), process.exe().unwrap());
     }
 }
