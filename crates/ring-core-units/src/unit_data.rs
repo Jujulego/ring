@@ -38,3 +38,35 @@ impl Unit for UnitData {
         self.clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_implement_unit_trait() {
+        let data = UnitData {
+            kind: "kind".to_string(),
+            language: None,
+            name: Some("name".to_string()),
+            root: PathBuf::from("/test"),
+        };
+
+        assert_eq!(data.kind(), "kind");
+        assert_eq!(data.root(), Path::new("/test"));
+        assert!(data.language().is_none());
+        assert_eq!(data.name(), Some("name"));
+    }
+
+    #[test]
+    fn inspect_should_return_a_clone() {
+        let data = UnitData {
+            kind: "kind".to_string(),
+            language: None,
+            name: Some("name".to_string()),
+            root: PathBuf::from("/test"),
+        };
+
+        assert_eq!(data.root, data.inspect().root);
+    }
+}

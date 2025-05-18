@@ -109,4 +109,20 @@ mod tests {
         assert!(data.args().is_empty());
         assert_eq!(data.script(), Some(Path::new("/test/script")));
     }
+
+    #[test]
+    fn inspect_should_return_a_clone() {
+        let data = ProcessTaskData {
+            id: "id".to_string(),
+            kind: "kind".to_string(),
+            args: vec![],
+            color: Some(Rgb { r: 0, g: 0, b: 0 }),
+            executable: PathBuf::from("/test/exe"),
+            script: Some(PathBuf::from("/test/script")),
+            working_directory: PathBuf::from("/test"),
+            working_unit: None,
+        };
+
+        assert_eq!(data.id, data.inspect().id);
+    }
 }
