@@ -1523,6 +1523,9 @@ dependencies = [
 [[package]]
 name = "ring-core-fs"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
 
 [[package]]
 name = "ring-core-modules"
