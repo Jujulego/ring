@@ -1,6 +1,5 @@
-mod filesystem;
 mod path_adaptator;
-mod yarn_archives;
+mod adaptators;
 
 pub use crate::path_adaptator::PathAdaptator;
-pub use crate::filesystem::Filesystem;
+pub use crate::adaptators::*;
