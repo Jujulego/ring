@@ -20,7 +20,7 @@ impl ShellFileDetector {
     fn _is_script_file(&self, path: &Path) -> bool {
         matches!(
             path.extension().and_then(OsStr::to_str),
-            Some("bash") | Some("bsh") | Some("csh") | Some("ps1") | Some("sh") | Some("zsh")
+            Some("bash") | Some("bsh") | Some("csh") | Some("sh") | Some("zsh")
         )
     }
 
@@ -122,6 +122,8 @@ impl QualifyPath for ShellFileDetector {
             Some((PathContent::Configuration, path))
         } else if self._is_bash_history_file(path) || self._is_zsh_history_file(path) {
             Some((PathContent::Other("history".to_string(), &PathContent::Artefact), path))
+        } else if self._is_script_file(path) {
+            Some((PathContent::Other("script".to_string(), &PathContent::Source), path))
         } else {
             None
         }
