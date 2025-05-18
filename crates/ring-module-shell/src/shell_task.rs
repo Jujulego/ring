@@ -1,4 +1,3 @@
-use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
@@ -10,7 +9,6 @@ pub enum ShellKind {
     Bash,
     Cmd,
     Shell,
-    PowerShell,
     Zsh,
 }
 
@@ -20,7 +18,6 @@ impl From<ShellKind> for &'static str {
             ShellKind::Bash => "bash",
             ShellKind::Cmd => "cmd",
             ShellKind::Shell => "shell",
-            ShellKind::PowerShell => "powershell",
             ShellKind::Zsh => "zsh",
         }
     }
@@ -66,14 +63,6 @@ impl Task for ShellTask {
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.working_unit.clone()
     }
-
-    #[inline]
-    fn color(&self) -> Option<Rgb<u8>> {
-        match self.shell_kind() {
-            ShellKind::PowerShell => Some(Rgb { r: 0x42, g: 0x72, b: 0xc9 }),
-            _ => None,
-        }
-    }
 }
 
 impl ProcessTask for ShellTask {
@@ -105,7 +94,6 @@ mod tests {
         assert_eq!({ let t: &str = ShellKind::Bash.into(); t }, "bash");
         assert_eq!({ let t: &str = ShellKind::Cmd.into(); t }, "cmd");
         assert_eq!({ let t: &str = ShellKind::Shell.into(); t }, "shell");
-        assert_eq!({ let t: &str = ShellKind::PowerShell.into(); t }, "powershell");
         assert_eq!({ let t: &str = ShellKind::Zsh.into(); t }, "zsh");
     }
 }

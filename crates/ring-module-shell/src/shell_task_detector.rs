@@ -24,7 +24,6 @@ impl ShellTaskDetector {
             Some("bash") => Some(ShellKind::Bash),
             Some("cmd") => Some(ShellKind::Cmd),
             Some("sh") => Some(ShellKind::Shell),
-            Some("pwsh") | Some("powershell") => Some(ShellKind::PowerShell),
             Some("zsh") => Some(ShellKind::Zsh),
             _ => None
         }
