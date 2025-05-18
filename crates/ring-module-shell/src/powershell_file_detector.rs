@@ -19,15 +19,15 @@ impl PowershellFileDetector {
         path.extension().and_then(OsStr::to_str) == Some("ps1")
     }
 
-    /// Checks if given path is a shell file
+    /// Checks if given path is a powershell file
     ///
     /// # Examples
     ///
     /// ```
-    /// use ring_module_shell::ShellFileDetector;
+    /// use ring_module_shell::PowershellFileDetector;
     ///
-    /// let detector = ShellFileDetector::new();
-    /// assert!(detector.is_shell_file("assets/test.sh"));
+    /// let detector = PowershellFileDetector::new();
+    /// assert!(detector.is_shell_file("assets/test.ps1"));
     /// ```
     #[inline]
     pub fn is_shell_file<P: AsRef<Path>>(&self, path: P) -> bool {
