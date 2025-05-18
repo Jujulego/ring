@@ -1,3 +1,4 @@
+use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
@@ -37,12 +38,9 @@ impl Task for RingTask {
         self.working_unit.clone()
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: Some(crossterm::style::Color::Rgb { r: 0xff, g: 0xd7, b: 0x00 }),
-            ..Default::default()
-        }
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        Some(Rgb { r: 0xff, g: 0xd7, b: 0x00 })
     }
 }
 

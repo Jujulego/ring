@@ -3,6 +3,7 @@ use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use rgb::Rgb;
 
 /// A node process
 #[derive(Clone, Debug)]
@@ -44,12 +45,9 @@ impl Task for NodeTask {
             .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: Some(crossterm::style::Color::Rgb { r: 0x5f, g: 0xa0, b: 0x4e }),
-            ..Default::default()
-        }
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        Some(Rgb { r: 0x5f, g: 0xa0, b: 0x4e })
     }
 }
 

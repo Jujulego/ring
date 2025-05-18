@@ -1,4 +1,5 @@
 use crate::{ProcessTask, Task};
+use rgb::Rgb;
 use ring_core_units::{Unit, UnitData};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -10,6 +11,7 @@ pub struct ProcessTaskData {
     pub id: String,
     pub kind: String,
     pub args: Vec<String>,
+    pub color: Option<Rgb<u8>>,
     pub executable: PathBuf,
     pub script: Option<PathBuf>,
     pub working_directory: PathBuf,
@@ -31,6 +33,11 @@ impl Task for ProcessTaskData {
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.working_unit.as_ref()
             .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
+    }
+
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        self.color
     }
 }
 

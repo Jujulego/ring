@@ -2,6 +2,7 @@ use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
+use rgb::Rgb;
 
 /// A rustup process
 #[derive(Clone, Debug)]
@@ -37,13 +38,9 @@ impl Task for RustupTask {
         None
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: Some(crossterm::style::Color::Rgb { r: 0xe3, g: 0x3b, b: 0x26 }),
-            attributes: crossterm::style::Attribute::Dim.into(),
-            ..Default::default()
-        }
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 })
     }
 }
 

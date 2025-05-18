@@ -1,3 +1,4 @@
+use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
@@ -66,14 +67,11 @@ impl Task for ShellTask {
         self.working_unit.clone()
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: match self.shell_kind() {
-                ShellKind::PowerShell => Some(crossterm::style::Color::Rgb { r: 0x42, g: 0x72, b: 0xc9 }),
-                _ => None,
-            },
-            ..Default::default()
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        match self.shell_kind() {
+            ShellKind::PowerShell => Some(Rgb { r: 0x42, g: 0x72, b: 0xc9 }),
+            _ => None,
         }
     }
 }

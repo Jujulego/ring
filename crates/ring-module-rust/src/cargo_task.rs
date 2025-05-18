@@ -1,4 +1,5 @@
 use crate::cargo_crate::CargoCrate;
+use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
@@ -43,12 +44,9 @@ impl Task for CargoTask {
             .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: Some(crossterm::style::Color::Rgb { r: 0xe3, g: 0x3b, b: 0x26 }),
-            ..Default::default()
-        }
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 })
     }
 }
 

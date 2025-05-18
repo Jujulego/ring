@@ -1,3 +1,4 @@
+use rgb::Rgb;
 use ring_core_units::Unit;
 use std::rc::Rc;
 
@@ -15,11 +16,21 @@ pub trait Task {
         None
     }
 
+    /// Returns a color associated with the task
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        None
+    }
+
     /// Returns a crossterm style object
     #[cfg(feature = "crossterm")]
     #[inline]
     fn style(&self) -> crossterm::style::ContentStyle {
-        Default::default()
+        crossterm::style::ContentStyle {
+            foreground_color: self.color()
+                .map(|color| crossterm::style::Color::Rgb { r: color.r, g: color.g, b: color.b }),
+            ..Default::default()
+        }
     }
 }
 
@@ -37,6 +48,10 @@ mod tests {
         fn kind(&self) -> &str {
             "kind"
         }
+
+        fn color(&self) -> Option<Rgb<u8>> {
+            Some(Rgb { r: 0, g: 255, b: 0})
+        }
     }
 
     #[test]
@@ -49,8 +64,8 @@ mod tests {
     #[cfg(feature = "crossterm")]
     #[test]
     fn style_should_return_default_style_by_default() {
-        let task = TestTask;
+        let style = TestTask.style();
 
-        assert_eq!(task.style(), Default::default());
+        assert_eq!(style.foreground_color, Some(crossterm::style::Color::Rgb { r: 0, g: 255, b: 0 }));
     }
 }

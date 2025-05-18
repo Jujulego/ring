@@ -1535,6 +1535,7 @@ name = "ring-core-tasks"
 version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
+ "rgb",
  "ring-core-units",
  "serde",
  "sysinfo",
@@ -1554,7 +1555,7 @@ name = "ring-module-javascript"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "crossterm 0.29.0",
+ "rgb",
  "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
@@ -1580,7 +1581,7 @@ dependencies = [
 name = "ring-module-ring"
 version = "0.1.0"
 dependencies = [
- "crossterm 0.29.0",
+ "rgb",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",
@@ -1593,7 +1594,7 @@ name = "ring-module-rust"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "crossterm 0.29.0",
+ "rgb",
  "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",
@@ -1609,7 +1610,7 @@ dependencies = [
 name = "ring-module-shell"
 version = "0.1.0"
 dependencies = [
- "crossterm 0.29.0",
+ "rgb",
  "ring-core-content",
  "ring-core-modules",
  "ring-core-tasks",

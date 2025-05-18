@@ -32,7 +32,8 @@ pub trait ProcessTask: Task {
             working_directory: self.working_directory().to_path_buf(),
             executable: self.executable().to_path_buf(),
             script: self.script().map(|p| p.to_path_buf()),
-            working_unit: self.working_unit().map(|u| u.inspect())
+            working_unit: self.working_unit().map(|u| u.inspect()),
+            color: self.color(),
         }
     }
 }
