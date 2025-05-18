@@ -1,5 +1,5 @@
 use ring_core_content::{DetectLanguage, QualifyPath};
-use ring_core_tasks::DetectTask;
+use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
@@ -15,7 +15,7 @@ pub trait Module {
     }
 
     /// Returns all task detectors implemented by this module.
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+    fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
         vec![]
     }
 

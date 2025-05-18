@@ -1,6 +1,6 @@
 use crate::RingTask;
 use ring_core_modules::{RegistryRef, UnitRegistry};
-use ring_core_tasks::{DetectTask, Task};
+use ring_core_tasks::{DetectProcessTask, ProcessTask};
 use std::ffi::OsStr;
 use std::rc::Rc;
 use sysinfo::Process;
@@ -19,9 +19,9 @@ impl RingTaskDetector {
     }
 }
 
-impl DetectTask for RingTaskDetector {
+impl DetectProcessTask for RingTaskDetector {
     #[instrument(name = "ring-task.detect-task", skip_all)]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         let exe = process.exe()?;
         
         if matches!(exe.file_stem().and_then(OsStr::to_str), Some("ring") | Some("ring-cli")) {

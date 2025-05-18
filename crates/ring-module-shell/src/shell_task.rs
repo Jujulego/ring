@@ -1,4 +1,5 @@
-use ring_core_tasks::{ProcessData, Task};
+use rgb::Rgb;
+use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
@@ -60,39 +61,38 @@ impl Task for ShellTask {
         self.shell_kind.into()
     }
 
-    /// Returns the command line used
-    #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
-    }
-
-    /// Returns the directory shell is working in
-    #[inline]
-    fn cwd(&self) -> &Path {
-        self.process.cwd()
-    }
-
-    /// Returns the shell executable
-    #[inline]
-    fn exe(&self) -> &Path {
-        self.process.exe()
-    }
-
     /// Returns detected unit
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         self.working_unit.clone()
     }
 
-    #[cfg(feature = "crossterm")]
-    fn style(&self) -> crossterm::style::ContentStyle {
-        crossterm::style::ContentStyle {
-            foreground_color: match self.shell_kind() {
-                ShellKind::PowerShell => Some(crossterm::style::Color::Rgb { r: 0x42, g: 0x72, b: 0xc9 }),
-                _ => None,
-            },
-            ..Default::default()
+    #[inline]
+    fn color(&self) -> Option<Rgb<u8>> {
+        match self.shell_kind() {
+            ShellKind::PowerShell => Some(Rgb { r: 0x42, g: 0x72, b: 0xc9 }),
+            _ => None,
         }
+    }
+}
+
+impl ProcessTask for ShellTask {
+    /// Returns the shell executable
+    #[inline]
+    fn executable(&self) -> &Path {
+        self.process.exe()
+    }
+
+    /// Returns the directory shell is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
     }
 }
 

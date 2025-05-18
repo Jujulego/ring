@@ -1,6 +1,6 @@
 use crate::shell_task::{ShellKind, ShellTask};
 use ring_core_modules::{RegistryRef, UnitRegistry};
-use ring_core_tasks::{DetectTask, Task};
+use ring_core_tasks::{DetectProcessTask, ProcessTask};
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -31,9 +31,9 @@ impl ShellTaskDetector {
     }
 }
 
-impl DetectTask for ShellTaskDetector {
+impl DetectProcessTask for ShellTaskDetector {
     #[instrument(name = "shell-task.detect-task", skip_all)]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         let exe = process.exe()?;
         let shell_kind = self.detect_shell_kind(exe)?;
         

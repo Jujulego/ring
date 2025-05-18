@@ -1,16 +1,16 @@
 use crate::Registry;
-use ring_core_tasks::Task;
+use ring_core_tasks::ProcessTask;
 use std::rc::Rc;
 use sysinfo::Process;
 
 /// Provides calls using task detection module features
-pub trait TaskRegistry {
+pub trait ProcessTaskRegistry {
     /// Uses all modules to detect process's task
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>>;
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>>;
 }
 
-impl<T> TaskRegistry for T where T: Registry {
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+impl<T> ProcessTaskRegistry for T where T: Registry {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         self.modules().iter()
             .flat_map(|module| module.task_detectors())
             .filter_map(|detector| detector.detect_task(process))
@@ -20,37 +20,39 @@ impl<T> TaskRegistry for T where T: Registry {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
     use super::*;
     use crate::Module;
-    use ring_core_tasks::{DetectTask, Task};
-    use std::path::Path;
+    use ring_core_tasks::{DetectProcessTask, Task};
     use std::rc::Rc;
-    use sysinfo::System;
+    use sysinfo::{Pid, System};
 
     struct TestTask;
 
     impl Task for TestTask {
         fn id(&self) -> &str {
-            "test"
+            "id"
         }
 
         fn kind(&self) -> &str {
-            "test"
+            "kind"
+        }
+    }
+
+    impl ProcessTask for TestTask {
+        fn executable(&self) -> &Path {
+            "/test/exe".as_ref()
         }
 
-        fn cwd(&self) -> &Path {
-            unimplemented!()
-        }
-
-        fn exe(&self) -> &Path {
-            unimplemented!()
+        fn working_directory(&self) -> &Path {
+            "/test".as_ref()
         }
     }
 
     struct TestUtil;
 
-    impl DetectTask for TestUtil {
-        fn detect_task(&self, _: &Process) -> Option<Rc<dyn Task>> {
+    impl DetectProcessTask for TestUtil {
+        fn detect_task(&self, _: &Process) -> Option<Rc<dyn ProcessTask>> {
             Some(Rc::new(TestTask))
         }
     }
@@ -60,9 +62,9 @@ mod tests {
     }
 
     impl Module for TestModule {
-        fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+        fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
             self.utils.iter()
-                .map(|u| u.clone() as Rc<dyn DetectTask>)
+                .map(|u| u.clone() as Rc<dyn DetectProcessTask>)
                 .collect()
         }
     }
@@ -88,7 +90,7 @@ mod tests {
         };
 
         let sys = System::new_all();
-        let process = sys.processes().values().next().unwrap();
+        let process = sys.process(Pid::from_u32(std::process::id())).unwrap();
 
         assert!(registry.detect_task(process).is_some());
     }

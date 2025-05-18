@@ -1,5 +1,5 @@
 use crate::rustup_task::RustupTask;
-use ring_core_tasks::{DetectTask, Task};
+use ring_core_tasks::{DetectProcessTask, ProcessTask};
 use std::ffi::OsStr;
 use std::rc::Rc;
 use sysinfo::Process;
@@ -38,10 +38,10 @@ impl Default for RustupTaskDetector {
     }
 }
 
-impl DetectTask for RustupTaskDetector {
+impl DetectProcessTask for RustupTaskDetector {
     #[instrument(name = "rustup-task.detect-task", skip_all)]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         self.load_rustup_task(process)
-            .map(|t| t as Rc<dyn Task>)
+            .map(|t| t as Rc<dyn ProcessTask>)
     }
 }

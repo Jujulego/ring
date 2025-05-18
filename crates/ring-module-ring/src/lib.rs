@@ -5,7 +5,7 @@ pub use crate::ring_task::RingTask;
 pub use crate::ring_task_detector::RingTaskDetector;
 use std::rc::Rc;
 use ring_core_modules::{Module, RegistryRef};
-use ring_core_tasks::DetectTask;
+use ring_core_tasks::DetectProcessTask;
 
 #[derive(Clone)]
 pub struct RingModule {
@@ -30,7 +30,7 @@ impl RingModule {
 
 impl Module for RingModule {
     #[inline]
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+    fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
         vec![self.ring_task_detector()]
     }
 }
