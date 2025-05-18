@@ -48,6 +48,24 @@ fn extract_script(cmd: &[String]) -> Option<PathBuf> {
     let (idx, _) = cmd.iter()
         .enumerate()
         .find(|&(_, s)| s == "-File")?;
-    
+
     cmd.get(idx + 1).map(PathBuf::from)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_return_none() {
+        assert_eq!(extract_script(&[]), None);
+    }
+
+    #[test]
+    fn it_should_return_script_path() {
+        assert_eq!(
+            extract_script(&["toto".to_string(), "-File".to_string(), "script.ps1".to_string()]),
+            Some(PathBuf::from("script.ps1"))
+        );
+    }
 }
