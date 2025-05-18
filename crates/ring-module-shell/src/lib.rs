@@ -9,7 +9,7 @@ pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::shell_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_modules::{Module, RegistryRef};
-use ring_core_tasks::DetectTask;
+use ring_core_tasks::DetectProcessTask;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -53,7 +53,7 @@ impl Module for ShellModule {
     }
 
     #[inline]
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+    fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
         vec![self.shell_task_detector()]
     }
 }

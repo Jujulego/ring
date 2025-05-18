@@ -1,6 +1,6 @@
 use crate::node_task::NodeTask;
 use crate::NpmPackageDetector;
-use ring_core_tasks::{DetectTask, ProcessData, Task};
+use ring_core_tasks::{DetectProcessTask, ProcessData, ProcessTask};
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -49,11 +49,11 @@ impl NodeTaskDetector {
     }
 }
 
-impl DetectTask for NodeTaskDetector {
+impl DetectProcessTask for NodeTaskDetector {
     #[instrument(name = "node-task.detect-task", skip_all)]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         match self.load_node_task(process) {
-            Ok(opt) => opt.map(|t| t as Rc<dyn Task>),
+            Ok(opt) => opt.map(|t| t as Rc<dyn ProcessTask>),
             Err(err) => {
                 warn!("{}", err);
                 if let Some(source) = err.source() {

@@ -4,7 +4,7 @@ use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
-use ring_core::{Core, TaskCache, TaskRegistry};
+use ring_core::{Core, TaskCache, ProcessTaskRegistry};
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System, Users};
@@ -99,7 +99,7 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                     .unwrap_or("unknown".dark_grey().to_string()),
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
                 task.as_ref()
-                    .map(|t| t.script().unwrap_or(t.exe()))
+                    .map(|t| t.script().unwrap_or(t.executable()))
                     .and_then(|f| f.file_name())
                     .and_then(OsStr::to_str)
                     .map(|s| s.to_string())

@@ -11,5 +11,5 @@ pub use language_registry::LanguageRegistry;
 pub use module::Module;
 pub use registry::Registry;
 pub use registry_ref::RegistryRef;
-pub use task_registry::TaskRegistry;
+pub use task_registry::ProcessTaskRegistry;
 pub use unit_registry::UnitRegistry;

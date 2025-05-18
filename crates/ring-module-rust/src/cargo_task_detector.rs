@@ -1,10 +1,10 @@
+use crate::cargo_task::CargoTask;
+use crate::CargoCrateDetector;
+use ring_core_tasks::{DetectProcessTask, ProcessTask};
 use std::ffi::OsStr;
 use std::rc::Rc;
 use sysinfo::Process;
 use tracing::{debug, instrument, warn};
-use ring_core_tasks::{DetectTask, Task};
-use crate::cargo_task::CargoTask;
-use crate::CargoCrateDetector;
 
 #[derive(Clone, Debug)]
 pub struct CargoTaskDetector {
@@ -38,11 +38,11 @@ impl CargoTaskDetector {
     }
 }
 
-impl DetectTask for CargoTaskDetector {
+impl DetectProcessTask for CargoTaskDetector {
     #[instrument(name = "cargo-task.detect-task", skip_all)]
-    fn detect_task(&self, process: &Process) -> Option<Rc<dyn Task>> {
+    fn detect_task(&self, process: &Process) -> Option<Rc<dyn ProcessTask>> {
         match self.load_cargo_task(process) {
-            Ok(opt) => opt.map(|t| t as Rc<dyn Task>),
+            Ok(opt) => opt.map(|t| t as Rc<dyn ProcessTask>),
             Err(err) => {
                 warn!("{}", err);
                 if let Some(source) = err.source() {

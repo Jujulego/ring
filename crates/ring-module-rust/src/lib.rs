@@ -14,7 +14,7 @@ pub use crate::rustup_task_detector::RustupTaskDetector;
 pub use crate::utils::rust_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
-use ring_core_tasks::DetectTask;
+use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
@@ -124,7 +124,7 @@ impl Module for RustModule {
     }
 
     #[inline]
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+    fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
         vec![
             self.cargo_task_detector(),
             self.rustup_task_detector(),

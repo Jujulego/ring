@@ -12,7 +12,7 @@ pub use crate::npm_package_detector::NpmPackageDetector;
 pub use crate::utils::javascript_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_modules::Module;
-use ring_core_tasks::DetectTask;
+use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
@@ -103,7 +103,7 @@ impl Module for JavascriptModule {
     }
 
     #[inline]
-    fn task_detectors(&self) -> Vec<Rc<dyn DetectTask>> {
+    fn task_detectors(&self) -> Vec<Rc<dyn DetectProcessTask>> {
         vec![self.node_task_detector()]
     }
 

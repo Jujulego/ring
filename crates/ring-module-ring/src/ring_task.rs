@@ -1,4 +1,4 @@
-use ring_core_tasks::{ProcessData, Task};
+use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
@@ -31,24 +31,6 @@ impl Task for RingTask {
         "ring"
     }
 
-    /// Returns the command line used
-    #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
-    }
-
-    /// Returns the directory ring is working in
-    #[inline]
-    fn cwd(&self) -> &Path {
-        self.process.cwd()
-    }
-
-    /// Returns the ring executable
-    #[inline]
-    fn exe(&self) -> &Path {
-        self.process.exe()
-    }
-
     /// Returns the unit ring is working in, if any
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
@@ -61,5 +43,25 @@ impl Task for RingTask {
             foreground_color: Some(crossterm::style::Color::Rgb { r: 0xff, g: 0xd7, b: 0x00 }),
             ..Default::default()
         }
+    }
+}
+
+impl ProcessTask for RingTask {
+    /// Returns the ring executable
+    #[inline]
+    fn executable(&self) -> &Path {
+        self.process.exe()
+    }
+
+    /// Returns the directory ring is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
     }
 }

@@ -1,4 +1,4 @@
-use ring_core_tasks::{ProcessData, Task};
+use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
@@ -60,24 +60,6 @@ impl Task for ShellTask {
         self.shell_kind.into()
     }
 
-    /// Returns the command line used
-    #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
-    }
-
-    /// Returns the directory shell is working in
-    #[inline]
-    fn cwd(&self) -> &Path {
-        self.process.cwd()
-    }
-
-    /// Returns the shell executable
-    #[inline]
-    fn exe(&self) -> &Path {
-        self.process.exe()
-    }
-
     /// Returns detected unit
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
@@ -93,6 +75,26 @@ impl Task for ShellTask {
             },
             ..Default::default()
         }
+    }
+}
+
+impl ProcessTask for ShellTask {
+    /// Returns the shell executable
+    #[inline]
+    fn executable(&self) -> &Path {
+        self.process.exe()
+    }
+
+    /// Returns the directory shell is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
     }
 }
 

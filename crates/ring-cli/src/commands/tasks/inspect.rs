@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
-use ring_core::{Core, TaskRegistry};
+use ring_core::{Core, ProcessTaskRegistry};
 use std::io::{stdout, IsTerminal};
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 use tracing::{instrument, trace, warn};

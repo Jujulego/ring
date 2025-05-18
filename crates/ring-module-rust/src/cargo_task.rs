@@ -1,5 +1,5 @@
 use crate::cargo_crate::CargoCrate;
-use ring_core_tasks::{ProcessData, Task};
+use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
@@ -36,24 +36,6 @@ impl Task for CargoTask {
         "cargo"
     }
 
-    /// Returns the command line used
-    #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
-    }
-
-    /// Returns the directory cargo is working in
-    #[inline]
-    fn cwd(&self) -> &Path {
-        self.process.cwd()
-    }
-
-    /// Returns path to the cargo executable
-    #[inline]
-    fn exe(&self) -> &Path {
-        self.process.exe()
-    }
-
     /// Returns the crate this task is working in
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
@@ -67,5 +49,25 @@ impl Task for CargoTask {
             foreground_color: Some(crossterm::style::Color::Rgb { r: 0xe3, g: 0x3b, b: 0x26 }),
             ..Default::default()
         }
+    }
+}
+
+impl ProcessTask for CargoTask {
+    /// Returns path to the cargo executable
+    #[inline]
+    fn executable(&self) -> &Path {
+        self.process.exe()
+    }
+
+    /// Returns the directory cargo is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
     }
 }
