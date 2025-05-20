@@ -1,12 +1,12 @@
 mod task_cache;
 
-use std::rc::Rc;
 pub use crate::task_cache::TaskCache;
 pub use ring_core_content::*;
 use ring_core_fs::PathTools;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
 pub use ring_core_units::*;
+use std::rc::Rc;
 
 /// Holds and manages all modules references
 pub struct Core {
@@ -43,6 +43,10 @@ impl Core {
         registry.store(core.clone());
 
         core
+    }
+    
+    pub fn path_tools(&self) -> Rc<PathTools> {
+        self.path_tools.clone()
     }
 }
 

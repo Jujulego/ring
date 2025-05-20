@@ -2,7 +2,7 @@ use crate::PathAdaptator;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::path::Path;
-use tracing::trace;
+use tracing::{instrument, trace};
 use zip::ZipArchive;
 
 /// Access files in yarn archives. Supports yarn virtual paths.
@@ -17,9 +17,10 @@ impl PathAdaptator for YarnArchives {
     }
 
     #[inline]
+    #[instrument(name="yarn-archives.is_file", skip_all, fields(adaptator = "yarn-archives"))]
     fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
         if let Some((archive, inner)) = split_virtual_path(path) {
-            trace!(path = %archive.display(), "Reading archive");
+            trace!("open archive {}", archive.display());
             let archive = File::open(archive)?;
             let archive = ZipArchive::new(archive)?;
 
