@@ -1,5 +1,6 @@
+pub mod adaptators;
 mod path_adaptator;
-mod adaptators;
+mod path_tools;
 
 pub use crate::path_adaptator::PathAdaptator;
-pub use crate::adaptators::*;
+pub use crate::path_tools::PathTools;
