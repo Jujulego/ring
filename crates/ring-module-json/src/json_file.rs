@@ -1,29 +1,26 @@
 use crate::json_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
+use std::rc::Rc;
 use tracing::{instrument, trace};
 
-#[derive(Clone, Debug, Default)]
-pub struct JsonFileDetector {}
+#[derive(Clone)]
+pub struct JsonFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl JsonFileDetector {
     /// Creates a new instance of JsonFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> JsonFileDetector {
+        JsonFileDetector {
+            path_adaptator: path_tools
+        }
     }
 
     /// Checks if given path is a json file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_json::JsonFileDetector;
-    ///
-    /// let detector = JsonFileDetector::new();
-    /// assert!(detector.is_json_file("assets/test.json"));
-    /// ```
     #[inline]
     pub fn is_json_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_json_file(path.as_ref())
@@ -31,7 +28,8 @@ impl JsonFileDetector {
 
     fn _is_json_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
-        path.is_file() && path.extension().and_then(OsStr::to_str) == Some("json")
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && path.extension().and_then(OsStr::to_str) == Some("json")
     }
 }
 
@@ -49,17 +47,36 @@ impl DetectLanguage for JsonFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_json_language() {
-        let detector = JsonFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+        
+        let detector = JsonFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test.json")), Some(json_language()));
     }
 
     #[test]
     fn it_should_not_detect_json_language() {
-        let detector = JsonFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(false));
+
+        let detector = JsonFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

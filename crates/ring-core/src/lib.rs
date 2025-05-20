@@ -3,12 +3,14 @@ mod task_cache;
 use std::rc::Rc;
 pub use crate::task_cache::TaskCache;
 pub use ring_core_content::*;
+use ring_core_fs::PathTools;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
 pub use ring_core_units::*;
 
 /// Holds and manages all modules references
 pub struct Core {
+    path_tools: Rc<PathTools>,
     modules: Vec<Box<dyn Module>>,
 }
 
@@ -16,12 +18,13 @@ impl Core {
     /// Initiate all modules
     pub fn new() -> Rc<Self> {
         let registry = Rc::new(RegistryRef::new());
+        let path_tools = Rc::new(PathTools::new());
 
         let modules: Vec<Box<dyn Module>> = vec![
             #[cfg(feature = "javascript")]
             Box::new(ring_module_javascript::JavascriptModule::new()),
             #[cfg(feature = "json")]
-            Box::new(ring_module_json::JsonModule::new()),
+            Box::new(ring_module_json::JsonModule::new(path_tools.clone())),
             #[cfg(feature = "ring")]
             Box::new(ring_module_ring::RingModule::new(registry.clone())),
             #[cfg(feature = "rust")]
@@ -36,7 +39,7 @@ impl Core {
             Box::new(ring_module_yaml::YamlModule::new()),
         ];
 
-        let core = Rc::new(Core { modules });
+        let core = Rc::new(Core { path_tools, modules });
         registry.store(core.clone());
 
         core

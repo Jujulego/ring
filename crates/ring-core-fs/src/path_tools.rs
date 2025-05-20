@@ -15,16 +15,24 @@ impl PathTools {
         }
     }
 
-    fn _select_adaptator(&self, path: &Path) -> &dyn PathAdaptator {
+    fn select_adaptator(&self, path: &Path) -> &dyn PathAdaptator {
         self.adaptators.iter()
             .find(|adaptator| adaptator.is_supported(path))
             .map(|adaptator| adaptator.as_ref())
             .unwrap()
     }
+}
+
+impl PathAdaptator for PathTools {
+    #[inline]
+    fn is_supported(&self, path: &Path) -> bool {
+        self.adaptators.iter()
+            .any(|adaptator| adaptator.is_supported(path))
+    }
 
     #[inline]
-    pub fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
-        self._select_adaptator(path).is_file(path)
+    fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
+        self.select_adaptator(path).is_file(path)
     }
 }
 
