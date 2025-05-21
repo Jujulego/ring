@@ -23,15 +23,6 @@ impl JsonModule {
     }
 
     /// Returns a pointer on JsonFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_json::JsonModule;
-    ///
-    /// let module = JsonModule::new();
-    /// let detector = module.json_file_detector();
-    /// ```
     #[inline]
     pub fn json_file_detector(&self) -> Rc<JsonFileDetector> {
         self.json_file_detector.clone()
