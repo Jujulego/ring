@@ -6,8 +6,9 @@ pub use crate::yaml_file::YamlFileDetector;
 use ring_core_content::DetectLanguage;
 use ring_core_modules::Module;
 use std::rc::Rc;
+use ring_core_fs::PathAdaptator;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Clone)]
 pub struct YamlModule {
     yaml_file_detector: Rc<YamlFileDetector>,
 }
@@ -15,20 +16,13 @@ pub struct YamlModule {
 impl YamlModule {
     /// Creates a new instance of YamlModule
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        YamlModule {
+            yaml_file_detector: Rc::new(YamlFileDetector::new(path_adaptator)),
+        }
     }
 
     /// Returns a pointer on YamlFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_yaml::YamlModule;
-    ///
-    /// let module = YamlModule::new();
-    /// let detector = module.yaml_file_detector();
-    /// ```
     #[inline]
     pub fn yaml_file_detector(&self) -> Rc<YamlFileDetector> {
         self.yaml_file_detector.clone()

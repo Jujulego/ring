@@ -36,7 +36,7 @@ impl Core {
             #[cfg(feature = "typescript")]
             Box::new(ring_module_typescript::TypescriptModule::new()),
             #[cfg(feature = "yaml")]
-            Box::new(ring_module_yaml::YamlModule::new()),
+            Box::new(ring_module_yaml::YamlModule::new(path_tools.clone())),
         ];
 
         let core = Rc::new(Core { path_tools, modules });

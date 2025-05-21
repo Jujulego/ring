@@ -2,29 +2,25 @@ use crate::yaml_language;
 use ring_core_content::{DetectLanguage, Language};
 use std::ffi::OsStr;
 use std::path::Path;
+use std::rc::Rc;
 use tracing::{instrument, trace};
+use ring_core_fs::PathAdaptator;
 
-#[derive(Clone, Debug, Default)]
-pub struct YamlFileDetector {}
+#[derive(Clone)]
+pub struct YamlFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl YamlFileDetector {
     /// Creates a new instance of YamlFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> YamlFileDetector {
+        YamlFileDetector {
+            path_adaptator: path_tools
+        }
     }
 
     /// Checks if given path is a yaml file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_yaml::YamlFileDetector;
-    ///
-    /// let detector = YamlFileDetector::new();
-    /// assert!(detector.is_yaml_file("assets/test.yaml"));
-    /// assert!(detector.is_yaml_file("assets/test.yml"));
-    /// ```
     #[inline]
     pub fn is_yaml_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_yaml_file(path.as_ref())
@@ -32,7 +28,8 @@ impl YamlFileDetector {
 
     fn _is_yaml_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
-        path.is_file() && matches!(path.extension().and_then(OsStr::to_str), Some("yaml") | Some("yml"))
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && matches!(path.extension().and_then(OsStr::to_str), Some("yaml") | Some("yml"))
     }
 }
 
@@ -50,10 +47,25 @@ impl DetectLanguage for YamlFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_yaml_language() {
-        let detector = YamlFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = YamlFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test.yaml")), Some(yaml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.yml")), Some(yaml_language()));
@@ -61,7 +73,11 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_yaml_language() {
-        let detector = YamlFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(false));
+
+        let detector = YamlFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
