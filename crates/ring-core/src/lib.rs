@@ -32,7 +32,7 @@ impl Core {
             #[cfg(feature = "shell")]
             Box::new(ring_module_shell::ShellModule::new(registry.clone())),
             #[cfg(feature = "toml")]
-            Box::new(ring_module_toml::TomlModule::new()),
+            Box::new(ring_module_toml::TomlModule::new(path_tools.clone())),
             #[cfg(feature = "typescript")]
             Box::new(ring_module_typescript::TypescriptModule::new()),
             #[cfg(feature = "yaml")]
@@ -63,7 +63,6 @@ mod tests {
     #[test]
     fn it_should_create_new_core() {
         let core = Core::new();
-
         assert!(!core.modules().is_empty());
     }
 }

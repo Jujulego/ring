@@ -4,7 +4,7 @@ use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JsonFileDetector {
@@ -27,7 +27,6 @@ impl JsonFileDetector {
     }
 
     fn _is_json_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
         self.path_adaptator.is_file(path).unwrap_or(false)
             && path.extension().and_then(OsStr::to_str) == Some("json")
     }

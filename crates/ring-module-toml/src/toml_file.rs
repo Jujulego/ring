@@ -1,38 +1,34 @@
 use crate::toml_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::instrument;
 
-#[derive(Clone, Debug, Default)]
-pub struct TomlFileDetector {}
+#[derive(Clone)]
+pub struct TomlFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl TomlFileDetector {
     /// Creates a new instance of TomlFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> TomlFileDetector {
+        TomlFileDetector {
+            path_adaptator: path_tools
+        }
     }
 
     /// Checks if given path is a toml file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_toml::TomlFileDetector;
-    ///
-    /// let detector = TomlFileDetector::new();
-    /// assert!(detector.is_toml_file("Cargo.toml"));
-    /// assert!(!detector.is_toml_file("src"));
-    /// ```
     #[inline]
     pub fn is_toml_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_toml_file(path.as_ref())
     }
 
     fn _is_toml_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        path.is_file() && path.extension().and_then(OsStr::to_str) == Some("toml")
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && path.extension().and_then(OsStr::to_str) == Some("toml")
     }
 }
 
@@ -50,17 +46,36 @@ impl DetectLanguage for TomlFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_toml_language() {
-        let detector = TomlFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = TomlFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test.toml")), Some(toml_language()));
     }
 
     #[test]
     fn it_should_not_detect_toml_language() {
-        let detector = TomlFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(false));
+
+        let detector = TomlFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

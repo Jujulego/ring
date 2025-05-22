@@ -1,5 +1,5 @@
-mod utils;
 mod json_file;
+mod utils;
 
 pub use crate::json_file::JsonFileDetector;
 pub use crate::utils::json_language;

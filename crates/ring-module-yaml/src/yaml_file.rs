@@ -1,10 +1,10 @@
 use crate::yaml_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace};
-use ring_core_fs::PathAdaptator;
+use tracing::instrument;
 
 #[derive(Clone)]
 pub struct YamlFileDetector {
@@ -27,7 +27,6 @@ impl YamlFileDetector {
     }
 
     fn _is_yaml_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
         self.path_adaptator.is_file(path).unwrap_or(false)
             && matches!(path.extension().and_then(OsStr::to_str), Some("yaml") | Some("yml"))
     }
