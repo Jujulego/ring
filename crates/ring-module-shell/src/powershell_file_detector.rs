@@ -1,37 +1,34 @@
-use crate::utils::powershell_language;
+use crate::powershell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
+use std::rc::Rc;
 use tracing::instrument;
 
-#[derive(Clone, Debug, Default)]
-pub struct PowershellFileDetector;
+#[derive(Clone)]
+pub struct PowershellFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl PowershellFileDetector {
     /// Creates a new instance of PowershellFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    #[inline]
-    fn _is_script_file(&self, path: &Path) -> bool {
-        path.extension().and_then(OsStr::to_str) == Some("ps1")
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> Self {
+        Self {
+            path_adaptator: path_tools
+        }
     }
 
     /// Checks if given path is a powershell file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_shell::PowershellFileDetector;
-    ///
-    /// let detector = PowershellFileDetector::new();
-    /// assert!(detector.is_shell_file("assets/test.ps1"));
-    /// ```
     #[inline]
     pub fn is_shell_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_script_file(path.as_ref())
+    }
+
+    fn _is_script_file(&self, path: &Path) -> bool {
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && path.extension().and_then(OsStr::to_str) == Some("ps1")
     }
 }
 
@@ -60,17 +57,50 @@ impl QualifyPath for PowershellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_powershell_language() {
-        let detector = PowershellFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test.ps1")), Some(powershell_language()));
     }
 
     #[test]
+    fn it_should_qualify_file_as_script() {
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
+
+        assert_eq!(
+            detector.qualify_path(Path::new("assets/test.ps1")),
+            Some((PathContent::Other("script".to_string(), &PathContent::Source), Path::new("assets/test.ps1")))
+        );
+    }
+
+    #[test]
     fn it_should_not_detect_powershell_language() {
-        let detector = PowershellFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

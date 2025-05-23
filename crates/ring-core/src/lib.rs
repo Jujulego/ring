@@ -30,7 +30,7 @@ impl Core {
             #[cfg(feature = "rust")]
             Box::new(ring_module_rust::RustModule::new()),
             #[cfg(feature = "shell")]
-            Box::new(ring_module_shell::ShellModule::new(registry.clone())),
+            Box::new(ring_module_shell::ShellModule::new(registry.clone(), path_tools.clone())),
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new(path_tools.clone())),
             #[cfg(feature = "typescript")]

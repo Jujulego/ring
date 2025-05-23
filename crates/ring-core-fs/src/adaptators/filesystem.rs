@@ -1,6 +1,6 @@
+use crate::PathAdaptator;
 use std::path::Path;
 use tracing::{instrument, trace};
-use crate::PathAdaptator;
 
 /// Access files on the filesystem. Supports any path.
 pub struct Filesystem;
@@ -14,7 +14,7 @@ impl PathAdaptator for Filesystem {
     #[inline]
     #[instrument(name="filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
     fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
-        trace!("stat is_file {}", path.display());
+        trace!("stat {}", path.display());
         Ok(path.is_file())
     }
 }

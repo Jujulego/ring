@@ -1,5 +1,5 @@
-use std::path::Path;
 use crate::{adaptators, PathAdaptator};
+use std::path::Path;
 
 pub struct PathTools {
     adaptators: Vec<Box<dyn PathAdaptator>>,
@@ -9,7 +9,7 @@ impl PathTools {
     pub fn new() -> Self {
         PathTools {
             adaptators: vec![
-                Box::new(adaptators::YarnArchives),
+                Box::new(adaptators::YarnArchives::new()),
                 Box::new(adaptators::Filesystem)
             ]
         }

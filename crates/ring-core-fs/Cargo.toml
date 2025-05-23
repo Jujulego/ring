@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.98"
 tracing = "0.1.41"
-zip = "3.0.0"
+zip = "4.0.0"

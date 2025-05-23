@@ -14,8 +14,8 @@ pub struct JsonFileDetector {
 impl JsonFileDetector {
     /// Creates a new instance of JsonFileDetector
     #[inline]
-    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> JsonFileDetector {
-        JsonFileDetector {
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> Self {
+        Self {
             path_adaptator: path_tools
         }
     }
