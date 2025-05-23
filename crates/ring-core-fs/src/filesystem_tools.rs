@@ -1,16 +1,16 @@
 use crate::{adaptators, PathAdaptator};
 use std::path::Path;
 
-pub struct PathTools {
+pub struct FilesystemTools {
     adaptators: Vec<Box<dyn PathAdaptator>>,
 }
 
-impl PathTools {
+impl FilesystemTools {
     pub fn new() -> Self {
-        PathTools {
+        FilesystemTools {
             adaptators: vec![
-                Box::new(adaptators::YarnArchives::new()),
-                Box::new(adaptators::Filesystem)
+                Box::new(adaptators::ArchivesAdaptator::new()),
+                Box::new(adaptators::FilesystemAdaptator)
             ]
         }
     }
@@ -23,7 +23,7 @@ impl PathTools {
     }
 }
 
-impl PathAdaptator for PathTools {
+impl PathAdaptator for FilesystemTools {
     #[inline]
     fn is_supported(&self, path: &Path) -> bool {
         self.adaptators.iter()
@@ -36,7 +36,7 @@ impl PathAdaptator for PathTools {
     }
 }
 
-impl Default for PathTools {
+impl Default for FilesystemTools {
     #[inline]
     fn default() -> Self {
         Self::new()

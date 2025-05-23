@@ -3,9 +3,9 @@ use std::path::Path;
 use tracing::{instrument, trace};
 
 /// Access files on the filesystem. Supports any path.
-pub struct Filesystem;
+pub struct FilesystemAdaptator;
 
-impl PathAdaptator for Filesystem {
+impl PathAdaptator for FilesystemAdaptator {
     #[inline]
     fn is_supported(&self, _: &Path) -> bool {
         true
@@ -25,14 +25,14 @@ mod tests {
 
     #[test]
     fn is_supported_should_return_true() {
-        assert!(Filesystem.is_supported(Path::new("assets/foo.txt")));
+        assert!(FilesystemAdaptator.is_supported(Path::new("assets/foo.txt")));
     }
 
     #[test]
     fn is_file_should_detect_files() {
-        assert!(Filesystem.is_file(Path::new("assets/foo.txt")).unwrap());
+        assert!(FilesystemAdaptator.is_file(Path::new("assets/foo.txt")).unwrap());
 
-        assert!(!Filesystem.is_file(Path::new("assets")).unwrap());
-        assert!(!Filesystem.is_file(Path::new("assets/do-no-exists")).unwrap());
+        assert!(!FilesystemAdaptator.is_file(Path::new("assets")).unwrap());
+        assert!(!FilesystemAdaptator.is_file(Path::new("assets/do-no-exists")).unwrap());
     }
 }

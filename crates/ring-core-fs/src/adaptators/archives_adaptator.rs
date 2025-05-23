@@ -8,15 +8,15 @@ use std::rc::{Rc, Weak};
 use tracing::{instrument, trace};
 use zip::ZipArchive;
 
-/// Access files in yarn archives. Supports yarn virtual paths.
-pub struct YarnArchives {
+/// Access files in archives. Supports yarn virtual paths.
+pub struct ArchivesAdaptator {
     archives: RefCell<HashMap<PathBuf, Weak<RefCell<ZipArchive<File>>>>>
 }
 
-impl YarnArchives {
+impl ArchivesAdaptator {
     #[inline]
     pub fn new() -> Self {
-        YarnArchives {
+        ArchivesAdaptator {
             archives: RefCell::new(HashMap::new())
         }
     }
@@ -37,7 +37,14 @@ impl YarnArchives {
     }
 }
 
-impl PathAdaptator for YarnArchives {
+impl Default for ArchivesAdaptator {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PathAdaptator for ArchivesAdaptator {
     #[inline]
     fn is_supported(&self, path: &Path) -> bool {
         path.ancestors()
@@ -70,7 +77,7 @@ mod tests {
 
     #[test]
     fn is_supported_should_recognize_yarn_virtual_paths() {
-        let archives = YarnArchives::new();
+        let archives = ArchivesAdaptator::new();
 
         assert!(archives.is_supported(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
         assert!(!archives.is_supported(Path::new("assets/foo.txt")));
@@ -78,7 +85,7 @@ mod tests {
 
     #[test]
     fn is_file_should_detect_file_in_archive() {
-        let archives = YarnArchives::new();
+        let archives = ArchivesAdaptator::new();
 
         assert!(archives.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap());
 

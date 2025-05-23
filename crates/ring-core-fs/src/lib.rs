@@ -1,6 +1,6 @@
 pub mod adaptators;
+mod filesystem_tools;
 mod path_adaptator;
-mod path_tools;
 
+pub use crate::filesystem_tools::FilesystemTools;
 pub use crate::path_adaptator::PathAdaptator;
-pub use crate::path_tools::PathTools;

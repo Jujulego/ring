@@ -1,5 +1,5 @@
-mod filesystem;
-mod yarn_archives;
+mod archives_adaptator;
+mod filesystem_adaptator;
 
-pub use filesystem::Filesystem;
-pub use yarn_archives::YarnArchives;
+pub use archives_adaptator::ArchivesAdaptator;
+pub use filesystem_adaptator::FilesystemAdaptator;
