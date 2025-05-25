@@ -135,7 +135,9 @@ impl CargoCrateDetector {
 impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self.path_adaptator.is_file(path).unwrap_or(false) && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
+        let is_file = self.path_adaptator.is_file(path).unwrap_or(false);
+        
+        if is_file && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
         } else {
             None
@@ -237,7 +239,7 @@ mod tests {
     fn it_should_qualify_path_content() {
         let mut path_adaptator = MockTestAdaptator::new();
         path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+            .returning(|p| Ok(p.is_file()));
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 

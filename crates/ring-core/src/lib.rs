@@ -45,7 +45,7 @@ impl Core {
         core
     }
     
-    pub fn path_adaptator(&self) -> Rc<FilesystemTools> {
+    pub fn filesystem_tools(&self) -> Rc<FilesystemTools> {
         self.filesystem_tools.clone()
     }
 }

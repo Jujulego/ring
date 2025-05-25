@@ -15,7 +15,7 @@ use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 
 /// Detector for npm packages, and related files
-#[derive(Clone,)]
+#[derive(Clone)]
 pub struct NpmPackageDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<NpmPackage>>>>,
     path_adaptator: Rc<dyn PathAdaptator>,
