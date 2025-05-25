@@ -16,9 +16,9 @@ pub struct ShellFileDetector {
 impl ShellFileDetector {
     /// Creates a new instance of ShellFileDetector
     #[inline]
-    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
         Self {
-            path_adaptator: path_tools
+            path_adaptator
         }
     }
 

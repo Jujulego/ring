@@ -1793,8 +1793,10 @@ name = "ring-module-javascript"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "mockall",
  "rgb",
  "ring-core-content",
+ "ring-core-fs",
  "ring-core-modules",
  "ring-core-tasks",
  "ring-core-units",

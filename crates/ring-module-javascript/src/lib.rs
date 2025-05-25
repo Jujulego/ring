@@ -11,12 +11,13 @@ pub use crate::npm_package::{NpmPackage, PackageManifest};
 pub use crate::npm_package_detector::NpmPackageDetector;
 pub use crate::utils::javascript_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
+use ring_core_fs::PathAdaptator;
 use ring_core_modules::Module;
 use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct JavascriptModule {
     javascript_file_detector: Rc<JavascriptFileDetector>,
     node_task_detector: Rc<NodeTaskDetector>,
@@ -26,65 +27,32 @@ pub struct JavascriptModule {
 impl JavascriptModule {
     /// Creates a new instance of JavascriptModule
     #[inline]
-    pub fn new() -> Self {
-        let npm_package_detector = Rc::new(NpmPackageDetector::new());
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        let npm_package_detector = Rc::new(NpmPackageDetector::new(path_adaptator.clone()));
         
         JavascriptModule {
-            javascript_file_detector: Rc::new(JavascriptFileDetector::new()),
+            javascript_file_detector: Rc::new(JavascriptFileDetector::new(path_adaptator)),
             node_task_detector: Rc::new(NodeTaskDetector::new(npm_package_detector.clone())),
             npm_package_detector,
         }
     }
 
     /// Returns a pointer on JavascriptFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_javascript::JavascriptModule;
-    ///
-    /// let module = JavascriptModule::new();
-    /// let detector = module.javascript_file_detector();
-    /// ```
     #[inline]
     pub fn javascript_file_detector(&self) -> Rc<JavascriptFileDetector> {
         self.javascript_file_detector.clone()
     }
 
     /// Returns a pointer on NodeTaskDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_javascript::JavascriptModule;
-    ///
-    /// let module = JavascriptModule::new();
-    /// let detector = module.node_task_detector();
-    /// ```
     #[inline]
     pub fn node_task_detector(&self) -> Rc<NodeTaskDetector> {
         self.node_task_detector.clone()
     }
 
     /// Returns a pointer on NpmPackageDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_javascript::JavascriptModule;
-    ///
-    /// let module = JavascriptModule::new();
-    /// let detector = module.npm_package_detector();
-    /// ```
     #[inline]
     pub fn npm_package_detector(&self) -> Rc<NpmPackageDetector> {
         self.npm_package_detector.clone()
-    }
-}
-
-impl Default for JavascriptModule {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

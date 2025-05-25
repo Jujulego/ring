@@ -14,9 +14,9 @@ pub struct TomlFileDetector {
 impl TomlFileDetector {
     /// Creates a new instance of TomlFileDetector
     #[inline]
-    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> TomlFileDetector {
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> TomlFileDetector {
         TomlFileDetector {
-            path_adaptator: path_tools
+            path_adaptator
         }
     }
 

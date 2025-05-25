@@ -22,7 +22,7 @@ impl Core {
 
         let modules: Vec<Box<dyn Module>> = vec![
             #[cfg(feature = "javascript")]
-            Box::new(ring_module_javascript::JavascriptModule::new()),
+            Box::new(ring_module_javascript::JavascriptModule::new(filesystem_tools.clone())),
             #[cfg(feature = "json")]
             Box::new(ring_module_json::JsonModule::new(filesystem_tools.clone())),
             #[cfg(feature = "ring")]
@@ -45,7 +45,7 @@ impl Core {
         core
     }
     
-    pub fn path_tools(&self) -> Rc<FilesystemTools> {
+    pub fn path_adaptator(&self) -> Rc<FilesystemTools> {
         self.filesystem_tools.clone()
     }
 }

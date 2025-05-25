@@ -14,9 +14,9 @@ pub struct YamlFileDetector {
 impl YamlFileDetector {
     /// Creates a new instance of YamlFileDetector
     #[inline]
-    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> YamlFileDetector {
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> YamlFileDetector {
         YamlFileDetector {
-            path_adaptator: path_tools
+            path_adaptator
         }
     }
 
