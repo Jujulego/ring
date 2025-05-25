@@ -28,7 +28,7 @@ impl Core {
             #[cfg(feature = "ring")]
             Box::new(ring_module_ring::RingModule::new(registry.clone())),
             #[cfg(feature = "rust")]
-            Box::new(ring_module_rust::RustModule::new()),
+            Box::new(ring_module_rust::RustModule::new(filesystem_tools.clone())),
             #[cfg(feature = "shell")]
             Box::new(ring_module_shell::ShellModule::new(registry.clone(), filesystem_tools.clone())),
             #[cfg(feature = "toml")]

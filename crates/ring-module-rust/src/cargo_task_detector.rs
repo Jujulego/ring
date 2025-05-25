@@ -6,7 +6,7 @@ use std::rc::Rc;
 use sysinfo::Process;
 use tracing::{debug, instrument, warn};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CargoTaskDetector {
     crate_detector: Rc<CargoCrateDetector>,
 }

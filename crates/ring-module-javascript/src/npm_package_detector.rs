@@ -71,8 +71,8 @@ impl NpmPackageDetector {
     pub fn is_package<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_package(path)
+        trace!("stat {}", path.display());
+        path.is_dir() && self._is_package(path)
     }
 
     fn _is_package(&self, path: &Path) -> bool {
@@ -231,7 +231,7 @@ impl QualifyPath for NpmPackageDetector {
                 break;
             }
 
-            if self.path_adaptator.is_file(path).unwrap_or(false)  {
+            if self.path_adaptator.is_file(ancestor).unwrap_or(false)  {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }

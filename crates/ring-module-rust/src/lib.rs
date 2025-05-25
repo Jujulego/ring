@@ -17,8 +17,9 @@ use ring_core_modules::Module;
 use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
 use std::rc::Rc;
+use ring_core_fs::PathAdaptator;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RustModule {
     cargo_crate_detector: Rc<CargoCrateDetector>,
     cargo_task_detector: Rc<CargoTaskDetector>,
@@ -29,81 +30,39 @@ pub struct RustModule {
 impl RustModule {
     /// Creates a new instance of RustModule
     #[inline]
-    pub fn new() -> Self {
-        let cargo_crate_detector = Rc::new(CargoCrateDetector::new());
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        let cargo_crate_detector = Rc::new(CargoCrateDetector::new(path_adaptator.clone()));
 
         RustModule {
             cargo_crate_detector: cargo_crate_detector.clone(),
             cargo_task_detector: Rc::new(CargoTaskDetector::new(cargo_crate_detector)),
-            rust_file_detector: Rc::new(RustFileDetector::new()),
+            rust_file_detector: Rc::new(RustFileDetector::new(path_adaptator)),
             rustup_task_detector: Rc::new(RustupTaskDetector::new()),
         }
     }
 
     /// Returns a pointer on CargoCrateDetector
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// use ring_module_rust::RustModule;
-    /// 
-    /// let module = RustModule::new();
-    /// let detector = module.cargo_crate_detector();
-    /// ```
     #[inline]
     pub fn cargo_crate_detector(&self) -> Rc<CargoCrateDetector> {
         self.cargo_crate_detector.clone()
     }
 
     /// Returns a pointer on CargoTaskDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::RustModule;
-    ///
-    /// let module = RustModule::new();
-    /// let detector = module.cargo_task_detector();
-    /// ```
     #[inline]
     pub fn cargo_task_detector(&self) -> Rc<CargoTaskDetector> {
         self.cargo_task_detector.clone()
     }
 
     /// Returns a pointer on RustFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::RustModule;
-    ///
-    /// let module = RustModule::new();
-    /// let detector = module.rust_file_detector();
-    /// ```
     #[inline]
     pub fn rust_file_detector(&self) -> Rc<RustFileDetector> {
         self.rust_file_detector.clone()
     }
 
     /// Returns a pointer on RustupTaskDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::RustModule;
-    ///
-    /// let module = RustModule::new();
-    /// let detector = module.rustup_task_detector();
-    /// ```
     #[inline]
     pub fn rustup_task_detector(&self) -> Rc<RustupTaskDetector> {
         self.rustup_task_detector.clone()
-    }
-}
-
-impl Default for RustModule {
-    fn default() -> Self {
-        RustModule::new()
     }
 }
 

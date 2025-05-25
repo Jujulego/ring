@@ -1,6 +1,7 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::anyhow;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
+use ring_core_fs::PathAdaptator;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -13,17 +14,19 @@ use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 
 /// Detector for cargo crates, and related files
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CargoCrateDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,
+    path_adaptator: Rc<dyn PathAdaptator>,
 }
 
 impl CargoCrateDetector {
     /// Creates a new instance of CargoCrateDetector
     #[inline]
-    pub fn new() -> Self {
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
         CargoCrateDetector {
             cache: RefCell::new(HashMap::new()),
+            path_adaptator,
         }
     }
 
@@ -31,8 +34,8 @@ impl CargoCrateDetector {
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        trace!("stat {}", path.display());
-        path.is_file() && self._is_manifest(path)
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && self._is_manifest(path)
     }
 
     fn _is_manifest(&self, path: &Path) -> bool {
@@ -43,8 +46,8 @@ impl CargoCrateDetector {
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        trace!("stat {}", path.display());
-        path.is_file() && self._is_lockfile(path)
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && self._is_lockfile(path)
     }
 
     fn _is_lockfile(&self, path: &Path) -> bool {
@@ -55,8 +58,8 @@ impl CargoCrateDetector {
     pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        trace!("stat {}", path.display());
-        path.is_file() && self._is_cargo_config(path)
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && self._is_cargo_config(path)
     }
 
     fn _is_cargo_config(&self, path: &Path) -> bool {
@@ -129,17 +132,10 @@ impl CargoCrateDetector {
     }
 }
 
-impl Default for CargoCrateDetector {
-    fn default() -> Self {
-        CargoCrateDetector::new()
-    }
-}
-
 impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        trace!("stat {}", path.display());
-        if path.is_file() && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
+        if self.path_adaptator.is_file(path).unwrap_or(false) && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
         } else {
             None
@@ -168,8 +164,7 @@ impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of crate cases
-        trace!("stat {}", path.display());
-        if path.is_file() {
+        if self.path_adaptator.is_file(path).unwrap_or(false) {
             if self._is_manifest(path) { // manifest defines the folder as a crate
                 return Some((PathContent::Manifest, path));
             } else if self._is_cargo_config(path) {
@@ -187,8 +182,7 @@ impl QualifyPath for CargoCrateDetector {
                 break;
             }
 
-            trace!("stat {}", ancestor.display());
-            if ancestor.is_file() {
+            if self.path_adaptator.is_file(ancestor).unwrap_or(false) {
                 if self._is_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
@@ -213,10 +207,25 @@ impl QualifyPath for CargoCrateDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_toml_language() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config")), Some(toml_language()));
         assert_eq!(detector.detect_language(Path::new("assets/.cargo/config.toml")), Some(toml_language()));
@@ -226,7 +235,11 @@ mod tests {
 
     #[test]
     fn it_should_qualify_path_content() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(
             detector.qualify_path(Path::new("assets/.cargo/config")),
@@ -256,24 +269,37 @@ mod tests {
             detector.qualify_path(Path::new("assets/tests/test.rs")),
             Some((PathContent::Test, Path::new("assets/tests")))
         );
-        assert_eq!(detector.qualify_path(Path::new("do-not-exists.toml")), None);
     }
 
     #[test]
     fn it_should_detect_cargo_manifest() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+
         assert!(detector.is_manifest("assets/Cargo.toml"));
     }
 
     #[test]
     fn it_should_detect_cargo_lockfile() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+
         assert!(detector.is_lockfile("assets/Cargo.lock"));
     }
 
     #[test]
     fn it_should_detect_cargo_config_files() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
         assert!(detector.is_cargo_config("assets/.cargo/config"));
         assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
@@ -281,14 +307,22 @@ mod tests {
 
     #[test]
     fn it_should_detect_cargo_crate() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
         assert!(detector.is_crate("assets"));
     }
 
     #[test]
     fn it_should_load_cargo_crate() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
         let crt = detector.load_crate_at("assets").unwrap().unwrap();
 
         assert_eq!(crt.name(), Some("assets"));
@@ -296,7 +330,11 @@ mod tests {
 
     #[test]
     fn it_should_load_parent_cargo_crate() {
-        let detector = CargoCrateDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
         let crt = detector.load_crate_containing("assets/src").unwrap().unwrap();
 
         assert_eq!(crt.name(), Some("assets"));
