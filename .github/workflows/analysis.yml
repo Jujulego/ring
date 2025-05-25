@@ -143,21 +143,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: llvm-tools-preview
-
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Test docs
-        run: cargo --locked llvm-cov --lcov --output-path codecov-docs.json --doctests --all-features
-
-      - name: Upload coverage to Codecov
-        if: ${{ !startsWith(github.head_ref, 'dependabot/') && !startsWith(github.head_ref, 'renovate/') }}
-        uses: codecov/codecov-action@v5
-        with:
-          fail_ci_if_error: true
-          files: codecov-docs.json
-          flags: docs
-          token: ${{ secrets.CODECOV_TOKEN }}
+        run: cargo --locked test --doc --all-features
