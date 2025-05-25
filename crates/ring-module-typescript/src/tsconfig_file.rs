@@ -1,37 +1,33 @@
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
+use ring_core_fs::PathAdaptator;
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::instrument;
 
-#[derive(Clone, Debug, Default)]
-pub struct TsconfigFileDetector {}
+#[derive(Clone)]
+pub struct TsconfigFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl TsconfigFileDetector {
     /// Creates a new instance of TsconfigFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_tools: Rc<dyn PathAdaptator>) -> Self {
+        Self {
+            path_adaptator: path_tools
+        }
     }
 
     /// Checks if given path is a tsconfig file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_typescript::TsconfigFileDetector;
-    ///
-    /// let detector = TsconfigFileDetector::new();
-    /// assert!(detector.is_tsconfig("assets/tsconfig.json"));
-    /// ```
     #[inline]
     pub fn is_tsconfig<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_tsconfig(path.as_ref())
     }
 
     fn _is_tsconfig(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        if !path.is_file() {
+        if !self.path_adaptator.is_file(path).unwrap_or(false) {
             return false;
         }
 
@@ -68,10 +64,25 @@ impl QualifyPath for TsconfigFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_json_language() {
-        let detector = TsconfigFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/tsconfig.json")), Some(json_language()));
         assert_eq!(detector.detect_language(Path::new("assets/tsconfig.test.json")), Some(json_language()));
@@ -79,7 +90,11 @@ mod tests {
 
     #[test]
     fn it_should_qualify_as_config_file() {
-        let detector = TsconfigFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.json"))));
         assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.test.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.test.json"))));

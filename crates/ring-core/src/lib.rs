@@ -34,7 +34,7 @@ impl Core {
             #[cfg(feature = "toml")]
             Box::new(ring_module_toml::TomlModule::new(filesystem_tools.clone())),
             #[cfg(feature = "typescript")]
-            Box::new(ring_module_typescript::TypescriptModule::new()),
+            Box::new(ring_module_typescript::TypescriptModule::new(filesystem_tools.clone())),
             #[cfg(feature = "yaml")]
             Box::new(ring_module_yaml::YamlModule::new(filesystem_tools.clone())),
         ];
