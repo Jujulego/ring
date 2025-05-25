@@ -1,37 +1,34 @@
 use crate::typescript_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::instrument;
 
-#[derive(Clone, Debug, Default)]
-pub struct TypescriptFileDetector {}
+#[derive(Clone)]
+pub struct TypescriptFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl TypescriptFileDetector {
     /// Creates a new instance of TypescriptFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        Self {
+            path_adaptator
+        }
     }
 
     /// Checks if given path is a typescript file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_typescript::TypescriptFileDetector;
-    ///
-    /// let detector = TypescriptFileDetector::new();
-    /// assert!(detector.is_typescript_file("assets/test.ts"));
-    /// ```
     #[inline]
     pub fn is_typescript_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_typescript_file(path.as_ref())
     }
 
     fn _is_typescript_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        path.is_file() && matches!(path.extension().and_then(OsStr::to_str), Some("ts") | Some("cts") | Some("mts") | Some("tsx"))
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && matches!(path.extension().and_then(OsStr::to_str), Some("ts") | Some("cts") | Some("mts") | Some("tsx"))
     }
 }
 
@@ -49,10 +46,25 @@ impl DetectLanguage for TypescriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_typescript_language() {
-        let detector = TypescriptFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = TypescriptFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test.ts")), Some(typescript_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.cts")), Some(typescript_language()));
@@ -62,7 +74,11 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_typescript_language() {
-        let detector = TypescriptFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(false));
+
+        let detector = TypescriptFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

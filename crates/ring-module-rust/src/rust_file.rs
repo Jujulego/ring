@@ -1,38 +1,34 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
 use std::path::Path;
-use tracing::{instrument, trace};
+use std::rc::Rc;
+use tracing::instrument;
 
-#[derive(Clone, Debug, Default)]
-pub struct RustFileDetector {}
+#[derive(Clone)]
+pub struct RustFileDetector {
+    path_adaptator: Rc<dyn PathAdaptator>,
+}
 
 impl RustFileDetector {
     /// Creates a new instance of RustFileDetector
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        Self {
+            path_adaptator,
+        }
     }
 
     /// Checks if given path is a rust file
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_rust::RustFileDetector;
-    ///
-    /// let detector = RustFileDetector::new();
-    /// assert!(detector.is_rust_file("src/lib.rs"));
-    /// assert!(!detector.is_rust_file("src"));
-    /// ```
     #[inline]
     pub fn is_rust_file<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_rust_file(path.as_ref())
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        path.is_file() && path.extension().and_then(OsStr::to_str) == Some("rs")
+        self.path_adaptator.is_file(path).unwrap_or(false)
+            && path.extension().and_then(OsStr::to_str) == Some("rs")
     }
 }
 
@@ -50,17 +46,36 @@ impl DetectLanguage for RustFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mockall::mock;
+    use ring_core_fs::PathAdaptator;
+
+    mock! {
+        TestAdaptator {}
+
+        impl PathAdaptator for TestAdaptator {
+            fn is_supported(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+        }
+    }
 
     #[test]
     fn it_should_detect_rust_language() {
-        let detector = RustFileDetector::new();
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(true));
+
+        let detector = RustFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), Some(rust_language()));
     }
 
     #[test]
     fn it_should_not_detect_rust_language() {
-        let detector = RustFileDetector {};
+        let mut path_adaptator = MockTestAdaptator::new();
+        path_adaptator.expect_is_file()
+            .returning(|_| Ok(false));
+
+        let detector = RustFileDetector::new(Rc::new(path_adaptator));
 
         assert_eq!(detector.detect_language(Path::new("Cargo.toml")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

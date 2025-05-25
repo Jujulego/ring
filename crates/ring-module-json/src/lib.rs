@@ -1,13 +1,14 @@
-mod utils;
 mod json_file;
+mod utils;
 
 pub use crate::json_file::JsonFileDetector;
 pub use crate::utils::json_language;
 use ring_core_content::DetectLanguage;
+use ring_core_fs::PathAdaptator;
 use ring_core_modules::Module;
 use std::rc::Rc;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Clone)]
 pub struct JsonModule {
     json_file_detector: Rc<JsonFileDetector>,
 }
@@ -15,20 +16,13 @@ pub struct JsonModule {
 impl JsonModule {
     /// Creates a new instance of JsonModule
     #[inline]
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+        JsonModule {
+            json_file_detector: Rc::new(JsonFileDetector::new(path_adaptator))
+        }
     }
 
     /// Returns a pointer on JsonFileDetector
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ring_module_json::JsonModule;
-    ///
-    /// let module = JsonModule::new();
-    /// let detector = module.json_file_detector();
-    /// ```
     #[inline]
     pub fn json_file_detector(&self) -> Rc<JsonFileDetector> {
         self.json_file_detector.clone()

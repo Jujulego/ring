@@ -13,6 +13,7 @@ pub use crate::shell_task::{ShellKind, ShellTask};
 pub use crate::shell_task_detector::ShellTaskDetector;
 pub use crate::utils::{powershell_language, shell_language};
 use ring_core_content::{DetectLanguage, QualifyPath};
+use ring_core_fs::PathAdaptator;
 use ring_core_modules::{Module, RegistryRef};
 use ring_core_tasks::DetectProcessTask;
 use std::rc::Rc;
@@ -28,11 +29,11 @@ pub struct ShellModule {
 impl ShellModule {
     /// Creates a new instance of ShellModule
     #[inline]
-    pub fn new(registry: Rc<RegistryRef>) -> Self {
+    pub fn new(registry: Rc<RegistryRef>, path_adaptator: Rc<dyn PathAdaptator>) -> Self {
         ShellModule {
-            powershell_file_detector: Rc::new(PowershellFileDetector::new()),
+            powershell_file_detector: Rc::new(PowershellFileDetector::new(path_adaptator.clone())),
             powershell_task_detector: Rc::new(PowershellTaskDetector::new(registry.clone())),
-            shell_file_detector: Rc::new(ShellFileDetector::new()),
+            shell_file_detector: Rc::new(ShellFileDetector::new(path_adaptator)),
             shell_task_detector: Rc::new(ShellTaskDetector::new(registry)),
         }
     }

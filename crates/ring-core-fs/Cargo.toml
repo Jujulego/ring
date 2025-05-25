@@ -1,0 +1,9 @@
+[package]
+name = "ring-core-fs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+tracing = "0.1.41"
+zip = "4.0.0"

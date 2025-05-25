@@ -7,7 +7,7 @@ use std::rc::Rc;
 use sysinfo::Process;
 use tracing::{debug, instrument, warn};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct NodeTaskDetector {
     npm_package_detector: Rc<NpmPackageDetector>,
 }
