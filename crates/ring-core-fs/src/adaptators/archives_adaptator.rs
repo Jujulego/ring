@@ -61,7 +61,7 @@ impl PathAdaptator for ArchivesAdaptator {
         if let Ok(archive) = self.open_archive(&archive_path) {
             let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
             inner_path += "/";
-            
+
             archive.borrow()
                 .file_names()
                 .any(|name| name.starts_with(&inner_path))
