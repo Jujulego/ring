@@ -58,16 +58,20 @@ impl PathAdaptator for ArchivesAdaptator {
     fn is_dir(&self, path: &Path) -> bool {
         let (archive_path, inner_path) = split_archive_path(path).unwrap();
 
-        if let Ok(archive) = self.open_archive(&archive_path) {
-            let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
-            inner_path += "/";
+        match self.open_archive(&archive_path) {
+            Ok(archive) => {
+                let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
+                inner_path += "/";
 
-            archive.borrow()
-                .file_names()
-                .any(|name| name.starts_with(&inner_path))
-        } else {
-            warn!("unable to open archive {}", archive_path.display());
-            false
+                archive.borrow()
+                    .file_names()
+                    .any(|name| name.starts_with(&inner_path))
+            }
+            Err(err) => {
+                warn!("unable to open archive {}", archive_path.display());
+                debug!("error caused by: {err}");
+                false
+            }
         }
     }
 
