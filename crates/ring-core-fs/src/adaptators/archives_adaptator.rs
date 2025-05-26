@@ -167,6 +167,18 @@ mod tests {
         assert!(!archives.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")));
     }
 
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_parse_yarn_virtual_path() {
+        let virtual_path = Path::new("/home/toto/project/.yarn/__virtual__/cool-virtual-hash/2/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js");
+
+        assert_eq!(
+            parse_yarn_virtual_path(virtual_path),
+            Path::new("/home/toto/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js")
+        );
+    }
+
+    #[cfg(target_os = "windows")]
     #[test]
     fn test_parse_yarn_virtual_path() {
         let virtual_path = Path::new(r"C:\Users\toto\project\.yarn\__virtual__\cool-virtual-hash\2\AppData\Local\Yarn\Berry\cache\cool-hash.zip\node_modules\cool\cool.js");
