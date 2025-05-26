@@ -299,10 +299,7 @@ mod tests {
 
     #[test]
     fn it_should_detect_cargo_crate() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(FilesystemAdaptator));
 
         assert!(detector.is_crate("assets"));
     }
