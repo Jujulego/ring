@@ -27,7 +27,7 @@ impl YamlFileDetector {
     }
 
     fn _is_yaml_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path).unwrap_or(false)
+        self.path_adaptator.is_file(path)
             && matches!(path.extension().and_then(OsStr::to_str), Some("yaml") | Some("yml"))
     }
 }
@@ -54,15 +54,15 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
     #[test]
     fn it_should_detect_yaml_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = YamlFileDetector::new(Rc::new(path_adaptator));
 
@@ -73,8 +73,7 @@ mod tests {
     #[test]
     fn it_should_not_detect_yaml_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(false));
+        path_adaptator.expect_is_file().return_const(false);
 
         let detector = YamlFileDetector::new(Rc::new(path_adaptator));
 

@@ -29,7 +29,7 @@ impl JavascriptFileDetector {
     }
 
     fn _is_javascript_file(&self, path: &Path) -> bool {
-        if !self.path_adaptator.is_file(path).unwrap_or(false) {
+        if !self.path_adaptator.is_file(path) {
             return false;
         }
 
@@ -76,7 +76,8 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
@@ -84,7 +85,7 @@ mod tests {
     fn it_should_detect_javascript_language() {
         let mut path_adaptator = MockTestAdaptator::new();
         path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+            .return_const(true);
 
         let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
 
@@ -99,7 +100,7 @@ mod tests {
     fn it_should_not_detect_javascript_language() {
         let mut path_adaptator = MockTestAdaptator::new();
         path_adaptator.expect_is_file()
-            .returning(|_| Ok(false));
+            .return_const(false);
 
         let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
 

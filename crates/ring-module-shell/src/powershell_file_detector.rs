@@ -27,8 +27,7 @@ impl PowershellFileDetector {
     }
 
     fn _is_script_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && path.extension().and_then(OsStr::to_str) == Some("ps1")
+        self.path_adaptator.is_file(path) && path.extension().and_then(OsStr::to_str) == Some("ps1")
     }
 }
 
@@ -65,15 +64,15 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
     #[test]
     fn it_should_detect_powershell_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
 
@@ -83,8 +82,7 @@ mod tests {
     #[test]
     fn it_should_qualify_file_as_script() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
 
@@ -97,8 +95,7 @@ mod tests {
     #[test]
     fn it_should_not_detect_powershell_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = PowershellFileDetector::new(Rc::new(path_adaptator));
 

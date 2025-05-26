@@ -27,7 +27,7 @@ impl TsconfigFileDetector {
     }
 
     fn _is_tsconfig(&self, path: &Path) -> bool {
-        if !self.path_adaptator.is_file(path).unwrap_or(false) {
+        if !self.path_adaptator.is_file(path) {
             return false;
         }
 
@@ -72,15 +72,15 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
     #[test]
     fn it_should_detect_json_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
 
@@ -91,8 +91,7 @@ mod tests {
     #[test]
     fn it_should_qualify_as_config_file() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
 

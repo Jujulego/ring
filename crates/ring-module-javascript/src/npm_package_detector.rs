@@ -35,8 +35,7 @@ impl NpmPackageDetector {
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_manifest(path)
+        self.path_adaptator.is_file(path) && self._is_manifest(path)
     }
 
     fn _is_manifest(&self, path: &Path) -> bool {
@@ -47,7 +46,7 @@ impl NpmPackageDetector {
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
+        self.path_adaptator.is_file(path)
             && (self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path))
     }
 
@@ -59,8 +58,7 @@ impl NpmPackageDetector {
     pub fn is_npm_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_npm_lockfile(path)
+        self.path_adaptator.is_file(path) && self._is_npm_lockfile(path)
     }
 
     fn _is_npm_lockfile(&self, path: &Path) -> bool {
@@ -71,8 +69,7 @@ impl NpmPackageDetector {
     pub fn is_package<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        trace!("stat {}", path.display());
-        path.is_dir() && self._is_package(path)
+        self.path_adaptator.is_dir(path) && self._is_package(path)
     }
 
     fn _is_package(&self, path: &Path) -> bool {
@@ -83,8 +80,7 @@ impl NpmPackageDetector {
     pub fn is_pnpm_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_pnpm_lockfile(path)
+        self.path_adaptator.is_file(path) && self._is_pnpm_lockfile(path)
     }
 
     fn _is_pnpm_lockfile(&self, path: &Path) -> bool {
@@ -95,8 +91,7 @@ impl NpmPackageDetector {
     pub fn is_yarn_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_yarn_lockfile(path)
+        self.path_adaptator.is_file(path) && self._is_yarn_lockfile(path)
     }
 
     fn _is_yarn_lockfile(&self, path: &Path) -> bool {
@@ -107,8 +102,7 @@ impl NpmPackageDetector {
     pub fn is_yarn_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_yarn_configuration(path)
+        self.path_adaptator.is_file(path) && self._is_yarn_configuration(path)
     }
 
     fn _is_yarn_configuration(&self, path: &Path) -> bool {
@@ -124,7 +118,7 @@ impl NpmPackageDetector {
     pub fn load_package_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         let mut path = path.as_ref();
 
-        if self.path_adaptator.is_file(path).unwrap_or(false) {
+        if self.path_adaptator.is_file(path) {
             path = path.parent().unwrap();
         }
 
@@ -174,7 +168,7 @@ impl NpmPackageDetector {
 impl DetectLanguage for NpmPackageDetector {
     #[instrument(name = "npm-package.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self.path_adaptator.is_file(path).unwrap_or(false)  {
+        if self.path_adaptator.is_file(path)  {
             if self._is_manifest(path) || self._is_npm_lockfile(path) {
                 return Some(json_language());
             }
@@ -209,7 +203,7 @@ impl QualifyPath for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of package cases
-        if self.path_adaptator.is_file(path).unwrap_or(false)  {
+        if self.path_adaptator.is_file(path)  {
             if self._is_manifest(path) {
                 return Some((PathContent::Manifest, path));
             }
@@ -231,7 +225,7 @@ impl QualifyPath for NpmPackageDetector {
                 break;
             }
 
-            if self.path_adaptator.is_file(ancestor).unwrap_or(false)  {
+            if self.path_adaptator.is_file(ancestor)  {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
@@ -261,15 +255,15 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
     #[test]
     fn it_should_detect_manifest_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
@@ -279,8 +273,7 @@ mod tests {
     #[test]
     fn it_should_detect_lockfile_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
@@ -292,8 +285,7 @@ mod tests {
     #[test]
     fn it_should_detect_package_unit() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
@@ -303,8 +295,7 @@ mod tests {
     #[test]
     fn it_should_qualify_npm_files() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
@@ -315,8 +306,7 @@ mod tests {
     #[test]
     fn it_should_qualify_pnpm_files() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
@@ -326,8 +316,7 @@ mod tests {
     #[test]
     fn it_should_qualify_yarn_files() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
 
