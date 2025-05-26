@@ -4,9 +4,8 @@ use clap::{arg, value_parser, ArgAction, ArgMatches, Command};
 use crossterm::style::Stylize;
 use ring_cli_list::List;
 use ring_cli_tree::Tree;
-use ring_core::{Core, TaskCache, ProcessTaskRegistry};
+use ring_core::{Core, LanguageRegistry, ProcessTaskRegistry, TaskCache};
 use std::collections::HashSet;
-use std::ffi::OsStr;
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System, Users};
 use tracing::{instrument, trace};
 
@@ -100,11 +99,14 @@ pub fn handle(core: &Core, args: &ArgMatches) -> anyhow::Result<()> {
                 format!("{:>10}", ByteSize::b(process.virtual_memory())),
                 task.as_ref()
                     .map(|t| t.script().unwrap_or(t.executable()))
-                    .and_then(|f| f.file_name())
-                    .and_then(OsStr::to_str)
-                    .map(|s| s.to_string())
-                    .or_else(|| process.name().to_str().map(|s| s.to_string()))
-                    .unwrap_or("unknown".dark_grey().to_string()),
+                    .and_then(|p| p.file_name().map(|n|
+                        core.detect_language(p)
+                            .map(|l| l.style()).unwrap_or_default()
+                            .apply(n.to_string_lossy())
+                            .to_string()
+                    ))
+                    .unwrap_or_else(|| process.name().to_string_lossy().to_string())
+                    .to_string(),
             ];
 
             if focused_pid.is_some_and(|pid| pid == node.key) {
