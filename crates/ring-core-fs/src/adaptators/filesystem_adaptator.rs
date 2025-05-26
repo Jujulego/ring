@@ -1,4 +1,5 @@
-use crate::PathAdaptator;
+use std::fs::File;
+use crate::{path_adaptator, FileWrapper, PathAdaptator};
 use std::path::Path;
 use tracing::{instrument, trace};
 
@@ -23,6 +24,13 @@ impl PathAdaptator for FilesystemAdaptator {
     fn is_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
         path.is_file()
+    }
+
+    #[inline]
+    #[instrument(name="filesystem.open", skip_all, fields(adaptator = "filesystem"))]
+    fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper>> {
+        trace!("open {}", path.display());
+        Ok(Box::new(File::open(path)?))
     }
 }
 
