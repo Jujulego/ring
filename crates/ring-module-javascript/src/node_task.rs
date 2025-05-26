@@ -9,19 +9,30 @@ use rgb::Rgb;
 #[derive(Clone, Debug)]
 pub struct NodeTask {
     process: ProcessData,
-    npm_package: Option<Rc<NpmPackage>>,
+    working_package: Option<Rc<NpmPackage>>,
     script: Option<PathBuf>,
+    script_package: Option<Rc<NpmPackage>>,
 }
 
 impl NodeTask {
     /// Create a new node task
-    pub fn new(process: ProcessData, script: Option<PathBuf>, npm_package: Option<Rc<NpmPackage>>) -> NodeTask {
-        NodeTask { process, script, npm_package }
+    pub fn new(
+        process: ProcessData,
+        working_package: Option<Rc<NpmPackage>>,
+        script: Option<PathBuf>,
+        script_package: Option<Rc<NpmPackage>>
+    ) -> NodeTask {
+        NodeTask { process, working_package, script, script_package }
     }
 
     /// Returns the package this task is working in
-    pub fn npm_package(&self) -> Option<&Rc<NpmPackage>> {
-        self.npm_package.as_ref()
+    pub fn working_package(&self) -> Option<&Rc<NpmPackage>> {
+        self.working_package.as_ref()
+    }
+
+    /// Returns the package containing this task's script
+    pub fn script_package(&self) -> Option<&Rc<NpmPackage>> {
+        self.script_package.as_ref()
     }
 }
 
@@ -41,7 +52,7 @@ impl Task for NodeTask {
     /// Returns the unit node is working in, if any
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.npm_package.as_ref()
+        self.working_package.as_ref()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 
@@ -74,5 +85,12 @@ impl ProcessTask for NodeTask {
     #[inline]
     fn script(&self) -> Option<&Path> {
         self.script.as_deref()
+    }
+
+    /// Returns the unit containing this task's script
+    #[inline]
+    fn script_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.script_package.as_ref()
+            .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 }

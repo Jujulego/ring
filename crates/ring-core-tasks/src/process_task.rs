@@ -1,6 +1,8 @@
 use crate::process_task_data::ProcessTaskData;
 use crate::Task;
+use ring_core_units::Unit;
 use std::path::Path;
+use std::rc::Rc;
 
 /// Detected process
 pub trait ProcessTask: Task {
@@ -22,6 +24,12 @@ pub trait ProcessTask: Task {
         None
     }
 
+    /// Returns the unit containing the script
+    #[inline]
+    fn script_unit(&self) -> Option<Rc<dyn Unit>> {
+        None
+    }
+
     /// Builds a [`ProcessTaskData`] object from the current task
     #[inline]
     fn inspect(&self) -> ProcessTaskData {
@@ -30,9 +38,10 @@ pub trait ProcessTask: Task {
             kind: self.kind().to_string(),
             args: self.args().to_vec(),
             working_directory: self.working_directory().to_path_buf(),
+            working_unit: self.working_unit().map(|u| u.inspect()),
             executable: self.executable().to_path_buf(),
             script: self.script().map(|p| p.to_path_buf()),
-            working_unit: self.working_unit().map(|u| u.inspect()),
+            script_unit: self.script_unit().map(|u| u.inspect()),
             color: self.color(),
         }
     }
@@ -80,6 +89,13 @@ mod tests {
     }
 
     #[test]
+    fn script_unit_should_return_none_by_default() {
+        let task = TestTask;
+
+        assert!(task.script_unit().is_none());
+    }
+
+    #[test]
     fn working_unit_should_return_none_by_default() {
         let task = TestTask;
 
@@ -97,6 +113,7 @@ mod tests {
         assert_eq!(data.working_directory, PathBuf::from("/test"));
         assert_eq!(data.executable, PathBuf::from("/test/exe"));
         assert!(data.script.is_none());
+        assert!(data.script_unit.is_none());
         assert!(data.working_unit.is_none());
     }
 

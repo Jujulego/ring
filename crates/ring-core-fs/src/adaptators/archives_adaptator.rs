@@ -1,12 +1,11 @@
 use crate::PathAdaptator;
-use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
-use tracing::{instrument, trace, warn};
+use tracing::{debug, instrument, trace, warn};
 use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
@@ -23,15 +22,17 @@ impl ArchivesAdaptator {
     }
 
     fn open_archive(&self, path: &Path) -> anyhow::Result<Rc<RefCell<ZipArchive<File>>>> {
-        if let Some(archive) = self.archives.borrow().get(path).and_then(Weak::upgrade) {
+        let path = path.canonicalize()?;
+
+        if let Some(archive) = self.archives.borrow().get(&path).and_then(Weak::upgrade) {
             Ok(archive.clone())
         } else {
             trace!("open archive {}", path.display());
-            let archive = File::open(path)?;
+            let archive = File::open(&path)?;
             let archive = ZipArchive::new(archive)?;
             let archive = Rc::new(RefCell::new(archive));
 
-            self.archives.borrow_mut().insert(path.to_owned(), Rc::downgrade(&archive));
+            self.archives.borrow_mut().insert(path, Rc::downgrade(&archive));
 
             Ok(archive)
         }
@@ -49,16 +50,15 @@ impl PathAdaptator for ArchivesAdaptator {
     #[inline]
     fn is_supported(&self, path: &Path) -> bool {
         path.ancestors()
-            .filter(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some(Cow::from("zip")))
-            .any(|ancestor| ancestor.is_file())
+            .any(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some("zip".into()))
     }
 
     #[inline]
     #[instrument(name="archives.is_dir", skip_all, fields(adaptator = "archives"))]
     fn is_dir(&self, path: &Path) -> bool {
-        let (archive_path, inner_path) = split_virtual_path(path).unwrap();
+        let (archive_path, inner_path) = split_archive_path(path).unwrap();
 
-        if let Ok(archive) = self.open_archive(archive_path) {
+        if let Ok(archive) = self.open_archive(&archive_path) {
             let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
             inner_path += "/";
             
@@ -74,25 +74,58 @@ impl PathAdaptator for ArchivesAdaptator {
     #[inline]
     #[instrument(name="archives.is_file", skip_all, fields(adaptator = "archives"))]
     fn is_file(&self, path: &Path) -> bool {
-        let (archive_path, inner_path) = split_virtual_path(path).unwrap();
+        let (archive_path, inner_path) = split_archive_path(path).unwrap();
 
-        if let Ok(archive) = self.open_archive(archive_path) {
-            archive.borrow()
-                .index_for_path(inner_path).is_some()
-        } else {
-            warn!("unable to open archive {}", archive_path.display());
-            false
+        match self.open_archive(&archive_path) {
+            Ok(archive) => {
+                archive.borrow()
+                    .index_for_path(inner_path).is_some()
+            }
+            Err(err) => {
+                warn!("unable to open archive {}", archive_path.display());
+                debug!("error caused by: {err}");
+                false
+            }
         }
     }
 }
 
 // Utils
-fn split_virtual_path(path: &Path) -> Option<(&Path, &Path)> {
+fn split_archive_path(path: &Path) -> Option<(PathBuf, &Path)> {
     let archive = path.ancestors()
-        .filter(|ancestor| ancestor.extension() == Some(OsStr::new("zip")))
-        .find(|ancestor| ancestor.is_file())?;
+        .find(|ancestor| ancestor.extension() == Some(OsStr::new("zip")))?;
 
-    Some((archive, path.strip_prefix(archive).unwrap()))
+    let inner = path.strip_prefix(archive).ok()?;
+    let archive = parse_yarn_virtual_path(archive);
+
+    Some((archive, inner))
+}
+
+fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
+    let Some(mut base) = path.ancestors()
+        .find(|ancestor| ancestor.file_name().map(|n| n.to_string_lossy()) == Some("__virtual__".into()))
+        .and_then(Path::parent)
+    else {
+        return path.to_path_buf();
+    };
+
+    let (rest, back_count) = {
+        let mut components = path.strip_prefix(base).unwrap().components();
+        components.next(); // ignore "__virtual__"
+        components.next(); // ignore package archive name
+        let back = components.next()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .and_then(|s| s.parse::<u8>().ok())
+            .unwrap();
+
+        (components.as_path(), back)
+    };
+
+    for _ in 0..back_count {
+        base = base.parent().unwrap();
+    }
+
+    base.join(rest)
 }
 
 #[cfg(test)]
