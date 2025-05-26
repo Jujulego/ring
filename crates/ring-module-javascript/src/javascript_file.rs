@@ -84,8 +84,7 @@ mod tests {
     #[test]
     fn it_should_detect_javascript_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .return_const(true);
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
 
@@ -99,8 +98,7 @@ mod tests {
     #[test]
     fn it_should_not_detect_javascript_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .return_const(false);
+        path_adaptator.expect_is_file().return_const(false);
 
         let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
 

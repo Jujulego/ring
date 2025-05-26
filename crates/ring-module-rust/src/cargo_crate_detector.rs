@@ -215,7 +215,7 @@ mod tests {
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
             fn is_dir(&self, path: &Path) -> bool;
-fn is_file(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
