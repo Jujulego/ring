@@ -31,7 +31,12 @@ impl PathAdaptator for FilesystemTools {
     }
 
     #[inline]
-    fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
+    fn is_dir(&self, path: &Path) -> bool {
+        self.select_adaptator(path).is_dir(path)
+    }
+
+    #[inline]
+    fn is_file(&self, path: &Path) -> bool {
         self.select_adaptator(path).is_file(path)
     }
 }

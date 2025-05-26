@@ -34,8 +34,7 @@ impl CargoCrateDetector {
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_manifest(path)
+        self.path_adaptator.is_file(path) && self._is_manifest(path)
     }
 
     fn _is_manifest(&self, path: &Path) -> bool {
@@ -46,8 +45,7 @@ impl CargoCrateDetector {
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_lockfile(path)
+        self.path_adaptator.is_file(path) && self._is_lockfile(path)
     }
 
     fn _is_lockfile(&self, path: &Path) -> bool {
@@ -58,8 +56,7 @@ impl CargoCrateDetector {
     pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path).unwrap_or(false)
-            && self._is_cargo_config(path)
+        self.path_adaptator.is_file(path) && self._is_cargo_config(path)
     }
 
     fn _is_cargo_config(&self, path: &Path) -> bool {
@@ -72,8 +69,7 @@ impl CargoCrateDetector {
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        trace!("stat {}", path.display());
-        path.is_dir() && self._is_crate(path)
+        self.path_adaptator.is_dir(path) && self._is_crate(path)
     }
 
     fn _is_crate(&self, path: &Path) -> bool {
@@ -135,7 +131,7 @@ impl CargoCrateDetector {
 impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        let is_file = self.path_adaptator.is_file(path).unwrap_or(false);
+        let is_file = self.path_adaptator.is_file(path);
         
         if is_file && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
@@ -166,7 +162,7 @@ impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of crate cases
-        if self.path_adaptator.is_file(path).unwrap_or(false) {
+        if self.path_adaptator.is_file(path) {
             if self._is_manifest(path) { // manifest defines the folder as a crate
                 return Some((PathContent::Manifest, path));
             } else if self._is_cargo_config(path) {
@@ -184,7 +180,7 @@ impl QualifyPath for CargoCrateDetector {
                 break;
             }
 
-            if self.path_adaptator.is_file(ancestor).unwrap_or(false) {
+            if self.path_adaptator.is_file(ancestor) {
                 if self._is_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
@@ -210,6 +206,7 @@ impl QualifyPath for CargoCrateDetector {
 mod tests {
     use super::*;
     use mockall::mock;
+    use ring_core_fs::adaptators::FilesystemAdaptator;
     use ring_core_fs::PathAdaptator;
 
     mock! {
@@ -217,15 +214,15 @@ mod tests {
 
         impl PathAdaptator for TestAdaptator {
             fn is_supported(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+            fn is_dir(&self, path: &Path) -> bool;
+            fn is_file(&self, path: &Path) -> bool;
         }
     }
 
     #[test]
     fn it_should_detect_toml_language() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
@@ -237,11 +234,7 @@ mod tests {
 
     #[test]
     fn it_should_qualify_path_content() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|p| Ok(p.is_file()));
-
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(
             detector.qualify_path(Path::new("assets/.cargo/config")),
@@ -276,8 +269,7 @@ mod tests {
     #[test]
     fn it_should_detect_cargo_manifest() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
@@ -287,8 +279,7 @@ mod tests {
     #[test]
     fn it_should_detect_cargo_lockfile() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
@@ -298,8 +289,7 @@ mod tests {
     #[test]
     fn it_should_detect_cargo_config_files() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
 
@@ -309,11 +299,7 @@ mod tests {
 
     #[test]
     fn it_should_detect_cargo_crate() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
-
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(FilesystemAdaptator));
 
         assert!(detector.is_crate("assets"));
     }
@@ -321,8 +307,7 @@ mod tests {
     #[test]
     fn it_should_load_cargo_crate() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
         let crt = detector.load_crate_at("assets").unwrap().unwrap();
@@ -333,8 +318,7 @@ mod tests {
     #[test]
     fn it_should_load_parent_cargo_crate() {
         let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file()
-            .returning(|_| Ok(true));
+        path_adaptator.expect_is_file().return_const(true);
 
         let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
         let crt = detector.load_crate_containing("assets/src").unwrap().unwrap();
