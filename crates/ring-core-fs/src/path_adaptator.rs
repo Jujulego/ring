@@ -1,5 +1,6 @@
-use std::path::Path;
+use crate::error::FsError;
 use crate::file_wrapper::FileWrapper;
+use std::path::Path;
 
 /// Path based filesystem adaptator
 pub trait PathAdaptator {
@@ -12,6 +13,6 @@ pub trait PathAdaptator {
     /// Indicates if the adaptator can handle given path
     fn is_supported(&self, path: &Path) -> bool;
 
-    fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper + '_>>;
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper + '_>, FsError>;
 }
 

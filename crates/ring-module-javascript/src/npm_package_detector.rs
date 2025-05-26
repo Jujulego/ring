@@ -1,18 +1,16 @@
 use crate::NpmPackage;
 use anyhow::anyhow;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::{FsError, PathAdaptator};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::fs::File;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use tracing::{debug, instrument, trace, warn};
+use tracing::{debug, instrument, warn};
 
 /// Detector for npm packages, and related files
 #[derive(Clone)]
@@ -135,10 +133,9 @@ impl NpmPackageDetector {
             return Ok(crt.clone());
         }
 
-        trace!("read file {}", manifest_path.display());
-        match File::open(&manifest_path) {
-            Ok(ref mut file) => {
-                match serde_json::from_reader(&mut *file) {
+        match self.path_adaptator.open(&manifest_path) {
+            Ok(mut file) => {
+                match serde_json::from_reader(file.as_reader()) {
                     Ok(manifest) => {
                         let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
 
@@ -152,7 +149,7 @@ impl NpmPackageDetector {
                     }
                 }
             },
-            Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            Err(FsError::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
@@ -257,7 +254,7 @@ mod tests {
             fn is_dir(&self, path: &Path) -> bool;
             fn is_file(&self, path: &Path) -> bool;
             fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper>>;
+            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError>;
         }
     }
 

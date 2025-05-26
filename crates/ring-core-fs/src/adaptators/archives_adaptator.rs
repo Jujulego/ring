@@ -1,5 +1,5 @@
+use crate::error::FsError;
 use crate::{FileWrapper, PathAdaptator};
-use anyhow::anyhow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -23,7 +23,7 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn _cached_archive(&self, path: &Path) -> anyhow::Result<Rc<ZipArchive<File>>> {
+    fn _cached_archive(&self, path: &Path) -> Result<Rc<ZipArchive<File>>, FsError> {
         let path = std::path::absolute(path)?;
 
         if let Some(archive) = self.archives.borrow().get(&path) {
@@ -38,7 +38,7 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn _open_archive(&self, path: &Path) -> anyhow::Result<ZipArchive<File>> {
+    fn _open_archive(&self, path: &Path) -> Result<ZipArchive<File>, FsError> {
         trace!("open archive {}", path.display());
         let archive = File::open(&path)?;
         let archive = ZipArchive::new(archive)?;
@@ -103,13 +103,13 @@ impl PathAdaptator for ArchivesAdaptator {
 
     #[inline]
     #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
-    fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper>> {
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
         let archive = self._open_archive(archive_path)?;
         let Some(index) = archive.index_for_path(inner_path) else {
-            return Err(anyhow!("File {} not found inside archive {}", inner_path.display(), archive_path.display()))
+            return Err(FsError::NotFound("File not found inside archive"))//, None))
         };
 
         Ok(Box::new(ZippedFile { archive, index }))

@@ -2,11 +2,10 @@ use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
-use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 #[derive(Clone)]
 pub struct ShellFileDetector {
@@ -80,9 +79,8 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        trace!("read {}", path.display());
-        if let Ok(file) = File::open(path) {
-            let reader = BufReader::new(file);
+        if let Ok(mut file) = self.path_adaptator.open(path) {
+            let reader = BufReader::new(file.as_reader());
             let shebang = reader.lines()
                 .map_while(Result::ok)
                 .find(|line| line.starts_with("#!"));
@@ -130,7 +128,7 @@ impl QualifyPath for ShellFileDetector {
 mod tests {
     use super::*;
     use mockall::mock;
-    use ring_core_fs::{FileWrapper, PathAdaptator};
+    use ring_core_fs::{FileWrapper, FsError, PathAdaptator};
 
     mock! {
         TestAdaptator {}
@@ -139,7 +137,7 @@ mod tests {
             fn is_dir(&self, path: &Path) -> bool;
             fn is_file(&self, path: &Path) -> bool;
             fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper>>;
+            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError>;
         }
     }
 
