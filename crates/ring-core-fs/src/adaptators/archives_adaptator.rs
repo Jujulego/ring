@@ -102,23 +102,26 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        let archive = self._open_archive(archive_path)?;
+        let archive = self._cached_archive(archive_path)?;
         let Some(index) = archive.index_for_path(inner_path) else {
             return Err(Error::NotFound("File not found inside archive"))
         };
 
-        Ok(Box::new(ZippedFile { archive, index }))
+        Ok(Box::new(ZippedFile {
+            archive: self._open_archive(archive_path)?,
+            file_index: index,
+        }))
     }
 }
 
 pub struct ZippedFile {
     archive: ZipArchive<File>,
-    index: usize,
+    file_index: usize,
 }
 
 impl FileWrapper for ZippedFile {
     fn as_reader(&mut self) -> Box<dyn Read + '_> {
-        Box::new(self.archive.by_index(self.index).unwrap())
+        Box::new(self.archive.by_index(self.file_index).unwrap())
     }
 }
 
