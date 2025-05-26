@@ -5,7 +5,8 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
-use tracing::{instrument, trace};
+use itertools::Itertools;
+use tracing::{instrument, trace, warn};
 use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
@@ -53,12 +54,38 @@ impl PathAdaptator for ArchivesAdaptator {
     }
 
     #[inline]
-    #[instrument(name="yarn-archives.is_file", skip_all, fields(adaptator = "yarn-archives"))]
-    fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
+    #[instrument(name="archives.is_dir", skip_all, fields(adaptator = "archives"))]
+    fn is_dir(&self, path: &Path) -> bool {
         let (archive_path, inner_path) = split_virtual_path(path).unwrap();
-        let archive = self.open_archive(archive_path)?;
 
-        Ok(archive.borrow().index_for_path(inner_path).is_some())
+        if let Ok(archive) = self.open_archive(archive_path) {
+            let mut inner_path = inner_path.components()
+                .filter_map(|c| c.as_os_str().to_str())
+                .join("/");
+            
+            inner_path += "/";
+            
+            archive.borrow()
+                .file_names()
+                .any(|name| name.starts_with(&inner_path))
+        } else {
+            warn!("unable to open archive {}", archive_path.display());
+            false
+        }
+    }
+
+    #[inline]
+    #[instrument(name="archives.is_file", skip_all, fields(adaptator = "archives"))]
+    fn is_file(&self, path: &Path) -> bool {
+        let (archive_path, inner_path) = split_virtual_path(path).unwrap();
+
+        if let Ok(archive) = self.open_archive(archive_path) {
+            archive.borrow()
+                .index_for_path(inner_path).is_some()
+        } else {
+            warn!("unable to open archive {}", archive_path.display());
+            false
+        }
     }
 }
 
@@ -84,12 +111,22 @@ mod tests {
     }
 
     #[test]
+    fn is_file_should_detect_directory_in_archive() {
+        let archives = ArchivesAdaptator::new();
+
+        assert!(archives.is_dir(Path::new("assets/yarn-archive.zip/node_modules")));
+
+        assert!(!archives.is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+        assert!(!archives.is_dir(Path::new("assets/yarn-archive.zip/do-not-exists")));
+    }
+
+    #[test]
     fn is_file_should_detect_file_in_archive() {
         let archives = ArchivesAdaptator::new();
 
-        assert!(archives.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap());
+        assert!(archives.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
 
-        assert!(!archives.is_file(Path::new("assets/yarn-archive.zip/node_modules")).unwrap());
-        assert!(!archives.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")).unwrap());
+        assert!(!archives.is_file(Path::new("assets/yarn-archive.zip/node_modules")));
+        assert!(!archives.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")));
     }
 }

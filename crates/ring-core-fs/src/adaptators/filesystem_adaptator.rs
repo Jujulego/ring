@@ -12,10 +12,17 @@ impl PathAdaptator for FilesystemAdaptator {
     }
 
     #[inline]
-    #[instrument(name="filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
-    fn is_file(&self, path: &Path) -> anyhow::Result<bool> {
+    #[instrument(name="filesystem.is_dir", skip_all, fields(adaptator = "filesystem"))]
+    fn is_dir(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
-        Ok(path.is_file())
+        path.is_dir()
+    }
+
+    #[inline]
+    #[instrument(name="filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
+    fn is_file(&self, path: &Path) -> bool {
+        trace!("stat {}", path.display());
+        path.is_file()
     }
 }
 
@@ -29,10 +36,18 @@ mod tests {
     }
 
     #[test]
-    fn is_file_should_detect_files() {
-        assert!(FilesystemAdaptator.is_file(Path::new("assets/foo.txt")).unwrap());
+    fn is_file_should_detect_directories() {
+        assert!(FilesystemAdaptator.is_dir(Path::new("assets")));
 
-        assert!(!FilesystemAdaptator.is_file(Path::new("assets")).unwrap());
-        assert!(!FilesystemAdaptator.is_file(Path::new("assets/do-no-exists")).unwrap());
+        assert!(!FilesystemAdaptator.is_dir(Path::new("assets/foo.txt")));
+        assert!(!FilesystemAdaptator.is_dir(Path::new("assets/do-no-exists")));
+    }
+
+    #[test]
+    fn is_file_should_detect_files() {
+        assert!(FilesystemAdaptator.is_file(Path::new("assets/foo.txt")));
+
+        assert!(!FilesystemAdaptator.is_file(Path::new("assets")));
+        assert!(!FilesystemAdaptator.is_file(Path::new("assets/do-no-exists")));
     }
 }

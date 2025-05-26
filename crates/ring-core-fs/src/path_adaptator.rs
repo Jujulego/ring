@@ -5,6 +5,9 @@ pub trait PathAdaptator {
     /// Indicates if the adaptator can handle given path
     fn is_supported(&self, path: &Path) -> bool;
     
+    /// Tests if given path exists and is a directory
+    fn is_dir(&self, path: &Path) -> bool;
+    
     /// Tests if given path exists and is a file
-    fn is_file(&self, path: &Path) -> anyhow::Result<bool>;
+    fn is_file(&self, path: &Path) -> bool;
 }
