@@ -2,7 +2,7 @@ use std::fs::File;
 use crate::PathAdaptator;
 use std::path::Path;
 use tracing::{instrument, trace};
-use crate::error::FsError;
+use crate::error::Error;
 use crate::file_wrapper::FileWrapper;
 
 /// Access files on the filesystem. Supports any path.
@@ -30,7 +30,7 @@ impl PathAdaptator for FilesystemAdaptator {
 
     #[inline]
     #[instrument(name="filesystem.open", skip_all, fields(adaptator = "filesystem"))]
-    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError> {
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error> {
         trace!("open {}", path.display());
         Ok(Box::new(File::open(path)?))
     }

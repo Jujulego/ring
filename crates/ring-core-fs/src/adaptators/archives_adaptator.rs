@@ -1,18 +1,17 @@
-use crate::error::FsError;
+use crate::error::Error;
 use crate::{FileWrapper, PathAdaptator};
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
 pub struct ArchivesAdaptator {
-    archives: RefCell<HashMap<PathBuf, Rc<ZipArchive<File>>>>
+    archives: RefCell<HashMap<PathBuf, ZipArchive<File>>>
 }
 
 impl ArchivesAdaptator {
@@ -23,24 +22,20 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn _cached_archive(&self, path: &Path) -> Result<Rc<ZipArchive<File>>, FsError> {
+    fn _cached_archive(&self, path: &Path) -> Result<Ref<ZipArchive<File>>, Error> {
         let path = std::path::absolute(path)?;
 
-        if let Some(archive) = self.archives.borrow().get(&path) {
-            Ok(archive.clone())
-        } else {
+        if !self.archives.borrow().contains_key(&path) {
             let archive = self._open_archive(&path)?;
-            let archive = Rc::new(archive);
-
-            self.archives.borrow_mut().insert(path, archive.clone());
-
-            Ok(archive)
+            self.archives.borrow_mut().insert(path.clone(), archive);
         }
+
+        Ok(Ref::map(self.archives.borrow(), |archives| archives.get(&path).unwrap()))
     }
 
-    fn _open_archive(&self, path: &Path) -> Result<ZipArchive<File>, FsError> {
+    fn _open_archive(&self, path: &Path) -> Result<ZipArchive<File>, Error> {
         trace!("open archive {}", path.display());
-        let archive = File::open(&path)?;
+        let archive = File::open(path)?;
         let archive = ZipArchive::new(archive)?;
 
         Ok(archive)
@@ -55,12 +50,6 @@ impl Default for ArchivesAdaptator {
 }
 
 impl PathAdaptator for ArchivesAdaptator {
-    #[inline]
-    fn is_supported(&self, path: &Path) -> bool {
-        path.ancestors()
-            .any(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some("zip".into()))
-    }
-
     #[inline]
     #[instrument(name="archives.is_dir", skip_all, fields(adaptator = "archives"))]
     fn is_dir(&self, path: &Path) -> bool {
@@ -102,14 +91,20 @@ impl PathAdaptator for ArchivesAdaptator {
     }
 
     #[inline]
+    fn is_supported(&self, path: &Path) -> bool {
+        path.ancestors()
+            .any(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some("zip".into()))
+    }
+
+    #[inline]
     #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
-    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError> {
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
         let archive = self._open_archive(archive_path)?;
         let Some(index) = archive.index_for_path(inner_path) else {
-            return Err(FsError::NotFound("File not found inside archive"))//, None))
+            return Err(Error::NotFound("File not found inside archive"))
         };
 
         Ok(Box::new(ZippedFile { archive, index }))

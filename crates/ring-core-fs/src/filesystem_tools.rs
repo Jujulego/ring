@@ -1,6 +1,6 @@
 use crate::{adaptators, PathAdaptator};
 use std::path::Path;
-use crate::error::FsError;
+use crate::error::Error;
 use crate::file_wrapper::FileWrapper;
 
 pub struct FilesystemTools {
@@ -43,7 +43,7 @@ impl PathAdaptator for FilesystemTools {
     }
 
     #[inline]
-    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper + '_>, FsError> {
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper + '_>, Error> {
         self.select_adaptator(path).open(path)
     }
 }
