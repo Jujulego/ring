@@ -127,26 +127,11 @@ impl QualifyPath for ShellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{FileWrapper, FsError, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError>;
-        }
-    }
+    use ring_core_fs::adaptators::FilesystemAdaptator;
 
     #[test]
     fn it_should_detect_shell_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test")), Some(shell_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.sh")), Some(shell_language()));
@@ -154,10 +139,7 @@ mod tests {
 
     #[test]
     fn it_should_qualify_file_as_script() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(
             detector.qualify_path(Path::new("assets/test.sh")),
@@ -167,10 +149,7 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_shell_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

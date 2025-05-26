@@ -244,36 +244,18 @@ impl QualifyPath for NpmPackageDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, FsError>;
-        }
-    }
+    use ring_core_fs::adaptators::FilesystemAdaptator;
 
     #[test]
     fn it_should_detect_manifest_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/package.json")), Some(json_language()));
     }
 
     #[test]
     fn it_should_detect_lockfile_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/package-lock.json")), Some(json_language()));
         assert_eq!(detector.detect_language(Path::new("assets/pnpm-lock.yaml")), Some(yaml_language()));
@@ -282,20 +264,14 @@ mod tests {
 
     #[test]
     fn it_should_detect_package_unit() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_unit(Path::new("assets")).unwrap().name(), Some("test-assets"));
     }
 
     #[test]
     fn it_should_qualify_npm_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/package.json")), Some((PathContent::Manifest, Path::new("assets/package.json"))));
         assert_eq!(detector.qualify_path(Path::new("assets/package-lock.json")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/package-lock.json"))));
@@ -303,20 +279,14 @@ mod tests {
 
     #[test]
     fn it_should_qualify_pnpm_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/pnpm-lock.yaml")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/pnpm-lock.yaml"))));
     }
 
     #[test]
     fn it_should_qualify_yarn_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/.pnp.cjs")), Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("assets/.pnp.cjs"))));
         assert_eq!(detector.qualify_path(Path::new("assets/.pnp.loader.mjs")), Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("assets/.pnp.loader.mjs"))));
