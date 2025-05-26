@@ -1,11 +1,11 @@
 use crate::PathAdaptator;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::{Rc, Weak};
-use itertools::Itertools;
 use tracing::{instrument, trace, warn};
 use zip::ZipArchive;
 
@@ -49,7 +49,7 @@ impl PathAdaptator for ArchivesAdaptator {
     #[inline]
     fn is_supported(&self, path: &Path) -> bool {
         path.ancestors()
-            .filter(|ancestor| ancestor.extension() == Some(OsStr::new("zip")))
+            .filter(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some(Cow::from("zip")))
             .any(|ancestor| ancestor.is_file())
     }
 
@@ -59,10 +59,7 @@ impl PathAdaptator for ArchivesAdaptator {
         let (archive_path, inner_path) = split_virtual_path(path).unwrap();
 
         if let Ok(archive) = self.open_archive(archive_path) {
-            let mut inner_path = inner_path.components()
-                .filter_map(|c| c.as_os_str().to_str())
-                .join("/");
-            
+            let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
             inner_path += "/";
             
             archive.borrow()
