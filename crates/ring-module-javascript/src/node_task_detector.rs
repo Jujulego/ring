@@ -36,11 +36,15 @@ impl NodeTaskDetector {
             let script = script.zip(process.cwd())
                 .map(|(script, cwd)| cwd.join(script));
 
-            let package = process.cwd()
+            let working_package = process.cwd()
                 .and_then(|cwd| self.npm_package_detector.load_package_containing(cwd).transpose())
                 .transpose()?;
 
-            let task = NodeTask::new(data, script, package);
+            let script_package = script.as_ref()
+                .and_then(|script| self.npm_package_detector.load_package_containing(script).transpose())
+                .transpose()?;
+
+            let task = NodeTask::new(data, working_package, script, script_package);
 
             return Ok(Some(Rc::new(task)))
         }

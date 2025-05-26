@@ -14,6 +14,7 @@ pub struct ProcessTaskData {
     pub color: Option<Rgb<u8>>,
     pub executable: PathBuf,
     pub script: Option<PathBuf>,
+    pub script_unit: Option<UnitData>,
     pub working_directory: PathBuf,
     pub working_unit: Option<UnitData>,
 }
@@ -63,6 +64,12 @@ impl ProcessTask for ProcessTaskData {
     }
 
     #[inline]
+    fn script_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.script_unit.as_ref()
+            .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
+    }
+
+    #[inline]
     fn inspect(&self) -> ProcessTaskData {
         self.clone()
     }
@@ -81,6 +88,7 @@ mod tests {
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),
+            script_unit: None,
             working_directory: PathBuf::from("/test"),
             working_unit: None,
         };
@@ -100,6 +108,7 @@ mod tests {
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),
+            script_unit: None,
             working_directory: PathBuf::from("/test"),
             working_unit: None,
         };
@@ -119,6 +128,7 @@ mod tests {
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),
+            script_unit: None,
             working_directory: PathBuf::from("/test"),
             working_unit: None,
         };
