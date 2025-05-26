@@ -82,7 +82,7 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self.open_archive(&archive_path) {
+        match self.open_archive(archive_path) {
             Ok(archive) => {
                 archive.borrow()
                     .index_for_path(inner_path).is_some()
