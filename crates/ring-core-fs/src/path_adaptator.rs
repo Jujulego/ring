@@ -1,6 +1,5 @@
-use std::fs::File;
-use std::io;
 use std::path::Path;
+use crate::file_wrapper::FileWrapper;
 
 /// Path based filesystem adaptator
 pub trait PathAdaptator {
@@ -16,13 +15,3 @@ pub trait PathAdaptator {
     fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper + '_>>;
 }
 
-/// Wraps a file
-pub trait FileWrapper {
-    fn read(&self) -> Box<dyn io::Read + '_>;
-}
-
-impl FileWrapper for File {
-    fn read(&self) -> Box<dyn io::Read + '_> {
-        Box::new(self)
-    }
-}

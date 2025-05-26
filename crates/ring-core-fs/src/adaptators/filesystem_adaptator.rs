@@ -1,7 +1,8 @@
 use std::fs::File;
-use crate::{path_adaptator, FileWrapper, PathAdaptator};
+use crate::{path_adaptator, PathAdaptator};
 use std::path::Path;
 use tracing::{instrument, trace};
+use crate::file_wrapper::FileWrapper;
 
 /// Access files on the filesystem. Supports any path.
 pub struct FilesystemAdaptator;

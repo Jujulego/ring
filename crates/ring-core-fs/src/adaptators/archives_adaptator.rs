@@ -1,8 +1,10 @@
-use crate::PathAdaptator;
+use crate::{FileWrapper, PathAdaptator};
+use anyhow::anyhow;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
@@ -10,7 +12,7 @@ use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
 pub struct ArchivesAdaptator {
-    archives: RefCell<HashMap<PathBuf, Rc<RefCell<ZipArchive<File>>>>>
+    archives: RefCell<HashMap<PathBuf, Rc<ZipArchive<File>>>>
 }
 
 impl ArchivesAdaptator {
@@ -21,21 +23,27 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn open_archive(&self, path: &Path) -> anyhow::Result<Rc<RefCell<ZipArchive<File>>>> {
+    fn _cached_archive(&self, path: &Path) -> anyhow::Result<Rc<ZipArchive<File>>> {
         let path = std::path::absolute(path)?;
 
         if let Some(archive) = self.archives.borrow().get(&path) {
             Ok(archive.clone())
         } else {
-            trace!("open archive {}", path.display());
-            let archive = File::open(&path)?;
-            let archive = ZipArchive::new(archive)?;
-            let archive = Rc::new(RefCell::new(archive));
+            let archive = self._open_archive(&path)?;
+            let archive = Rc::new(archive);
 
             self.archives.borrow_mut().insert(path, archive.clone());
 
             Ok(archive)
         }
+    }
+
+    fn _open_archive(&self, path: &Path) -> anyhow::Result<ZipArchive<File>> {
+        trace!("open archive {}", path.display());
+        let archive = File::open(&path)?;
+        let archive = ZipArchive::new(archive)?;
+
+        Ok(archive)
     }
 }
 
@@ -59,13 +67,12 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self.open_archive(archive_path) {
+        match self._cached_archive(archive_path) {
             Ok(archive) => {
                 let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
                 inner_path += "/";
 
-                archive.borrow()
-                    .file_names()
+                archive.file_names()
                     .any(|name| name.starts_with(&inner_path))
             }
             Err(err) => {
@@ -82,10 +89,9 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self.open_archive(archive_path) {
+        match self._cached_archive(archive_path) {
             Ok(archive) => {
-                archive.borrow()
-                    .index_for_path(inner_path).is_some()
+                archive.index_for_path(inner_path).is_some()
             }
             Err(err) => {
                 warn!("unable to open archive {}", archive_path.display());
@@ -93,6 +99,31 @@ impl PathAdaptator for ArchivesAdaptator {
                 false
             }
         }
+    }
+
+    #[inline]
+    #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
+    fn open(&self, path: &Path) -> anyhow::Result<Box<dyn FileWrapper>> {
+        let path = parse_yarn_virtual_path(path);
+        let (archive_path, inner_path) = split_archive_path(&path).unwrap();
+
+        let archive = self._open_archive(archive_path)?;
+        let Some(index) = archive.index_for_path(inner_path) else {
+            return Err(anyhow!("File {} not found inside archive {}", inner_path.display(), archive_path.display()))
+        };
+
+        Ok(Box::new(ZippedFile { archive, index }))
+    }
+}
+
+pub struct ZippedFile {
+    archive: ZipArchive<File>,
+    index: usize,
+}
+
+impl FileWrapper for ZippedFile {
+    fn read(&mut self) -> Box<dyn Read + '_> {
+        Box::new(self.archive.by_index(self.index).unwrap())
     }
 }
 
