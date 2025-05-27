@@ -6,9 +6,9 @@ mod task_registry;
 mod unit_registry;
 mod registry_ref;
 
-pub use path_registry::PathRegistry;
 pub use language_registry::LanguageRegistry;
 pub use module::Module;
+pub use path_registry::PathRegistry;
 pub use registry::Registry;
 pub use registry_ref::RegistryRef;
 pub use task_registry::ProcessTaskRegistry;

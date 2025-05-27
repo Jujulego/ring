@@ -207,7 +207,7 @@ mod tests {
     use super::*;
     use mockall::mock;
     use ring_core_fs::adaptators::FilesystemAdaptator;
-    use ring_core_fs::{FileWrapper, Error, PathAdaptator};
+    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
 
     mock! {
         TestAdaptator {}

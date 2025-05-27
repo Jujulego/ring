@@ -1,8 +1,8 @@
+use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::Path;
 use std::rc::Rc;
-use rgb::Rgb;
 
 /// A rustup process
 #[derive(Clone, Debug)]

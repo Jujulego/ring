@@ -216,8 +216,8 @@ impl Display for ListItem<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crossterm::style::Stylize;
     use super::*;
+    use crossterm::style::Stylize;
 
     #[test]
     fn it_should_print_rows_with_aligned_columns() {

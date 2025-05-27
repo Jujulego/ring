@@ -3,9 +3,9 @@ mod ring_task_detector;
 
 pub use crate::ring_task::RingTask;
 pub use crate::ring_task_detector::RingTaskDetector;
-use std::rc::Rc;
 use ring_core_modules::{Module, RegistryRef};
 use ring_core_tasks::DetectProcessTask;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct RingModule {

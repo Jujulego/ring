@@ -53,8 +53,8 @@ impl From<&Process> for ProcessData {
 
 #[cfg(test)]
 mod tests {
-    use sysinfo::{Pid, System};
     use super::*;
+    use sysinfo::{Pid, System};
 
     #[test]
     fn it_should_extract_data_from_process() {

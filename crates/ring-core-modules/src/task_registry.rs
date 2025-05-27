@@ -20,10 +20,10 @@ impl<T> ProcessTaskRegistry for T where T: Registry {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
     use super::*;
     use crate::Module;
     use ring_core_tasks::{DetectProcessTask, Task};
+    use std::path::Path;
     use std::rc::Rc;
     use sysinfo::{Pid, System};
 

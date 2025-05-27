@@ -1,5 +1,5 @@
 use ring_core_modules::ProcessTaskRegistry;
-use ring_core_tasks::{ProcessTask};
+use ring_core_tasks::ProcessTask;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;

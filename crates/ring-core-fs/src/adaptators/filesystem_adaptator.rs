@@ -1,9 +1,9 @@
-use std::fs::File;
-use crate::PathAdaptator;
-use std::path::Path;
-use tracing::{instrument, trace};
 use crate::error::Error;
 use crate::file_wrapper::FileWrapper;
+use crate::PathAdaptator;
+use std::fs::File;
+use std::path::Path;
+use tracing::{instrument, trace};
 
 /// Access files on the filesystem. Supports any path.
 pub struct FilesystemAdaptator;

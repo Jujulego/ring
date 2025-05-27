@@ -1,7 +1,7 @@
-use crate::{adaptators, PathAdaptator};
-use std::path::Path;
 use crate::error::Error;
 use crate::file_wrapper::FileWrapper;
+use crate::{adaptators, PathAdaptator};
+use std::path::Path;
 
 pub struct FilesystemTools {
     adaptators: Vec<Box<dyn PathAdaptator>>,
