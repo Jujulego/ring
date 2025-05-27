@@ -112,7 +112,9 @@ pub struct ZippedFile {
 }
 
 impl FileWrapper for ZippedFile {
+    #[instrument(name="archives.reader", skip_all, fields(adaptator = "archives"))]
     fn reader(&mut self) -> Result<Box<dyn Read + '_>, Error> {
+        trace!("decompress {}", self.archive.name_for_index(self.file_index).unwrap());
         Ok(Box::new(self.archive.by_index(self.file_index)?))
     }
 }
