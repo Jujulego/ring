@@ -1,6 +1,7 @@
 use crate::error::Error;
+use crate::pool::{Pool, PoolRef};
 use crate::{FileWrapper, PathAdaptator};
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
@@ -11,7 +12,7 @@ use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
 pub struct ArchivesAdaptator {
-    archives: RefCell<HashMap<PathBuf, ZipArchive<File>>>
+    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<File>>>>
 }
 
 impl ArchivesAdaptator {
@@ -22,23 +23,17 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn _cached_archive(&self, path: &Path) -> Result<Ref<ZipArchive<File>>, Error> {
+    fn _open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<File>>, Error> {
         let path = std::path::absolute(path)?;
 
-        if !self.archives.borrow().contains_key(&path) {
-            let archive = self._open_archive(&path)?;
-            self.archives.borrow_mut().insert(path.clone(), archive);
-        }
+        let mut archives = self.archives.borrow_mut();
+        let pool = archives.entry(path.clone()).or_default();
 
-        Ok(Ref::map(self.archives.borrow(), |archives| archives.get(&path).unwrap()))
-    }
-
-    fn _open_archive(&self, path: &Path) -> Result<ZipArchive<File>, Error> {
-        trace!("open archive {}", path.display());
-        let archive = File::open(path)?;
-        let archive = ZipArchive::new(archive)?;
-
-        Ok(archive)
+        pool.try_borrow_or_build(|| {
+            trace!("open archive {}", path.display());
+            let archive = File::open(path)?;
+            Ok(ZipArchive::new(archive)?)
+        })
     }
 }
 
@@ -56,7 +51,7 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self._cached_archive(archive_path) {
+        match self._open_archive(archive_path) {
             Ok(archive) => {
                 let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
                 inner_path += "/";
@@ -78,7 +73,7 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self._cached_archive(archive_path) {
+        match self._open_archive(archive_path) {
             Ok(archive) => {
                 archive.index_for_path(inner_path).is_some()
             }
@@ -102,20 +97,17 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        let archive = self._cached_archive(archive_path)?;
+        let archive = self._open_archive(archive_path)?;
         let Some(index) = archive.index_for_path(inner_path) else {
             return Err(Error::NotFound("File not found inside archive"))
         };
 
-        Ok(Box::new(ZippedFile {
-            archive: self._open_archive(archive_path)?,
-            file_index: index,
-        }))
+        Ok(Box::new(ZippedFile { archive, file_index: index }))
     }
 }
 
 pub struct ZippedFile {
-    archive: ZipArchive<File>,
+    archive: PoolRef<ZipArchive<File>>,
     file_index: usize,
 }
 
