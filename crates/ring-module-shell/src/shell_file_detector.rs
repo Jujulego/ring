@@ -79,22 +79,16 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        if let Ok(mut file) = self.path_adaptator.open(path) {
-            let reader = BufReader::new(file.as_reader());
-            let shebang = reader.lines()
-                .map_while(Result::ok)
-                .find(|line| line.starts_with("#!"));
+        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
+        let Ok(reader) = file.reader() else { return false };
 
-            if shebang.as_ref().is_some_and(|l| l == "#!/bin/sh") {
-                return true;
-            }
+        let reader = BufReader::new(reader);
+        let shebang = reader.lines()
+            .map_while(Result::ok)
+            .find(|line| line.starts_with("#!"));
 
-            if shebang.as_ref().is_some_and(|l| l == "#!/bin/bash") {
-                return true;
-            }
-        }
-
-        false
+        shebang.as_ref().is_some_and(|l| l == "#!/bin/sh")
+            || shebang.as_ref().is_some_and(|l| l == "#!/bin/bash")
     }
 }
 

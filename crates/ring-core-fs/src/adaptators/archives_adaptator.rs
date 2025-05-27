@@ -112,8 +112,8 @@ pub struct ZippedFile {
 }
 
 impl FileWrapper for ZippedFile {
-    fn as_reader(&mut self) -> Box<dyn Read + '_> {
-        Box::new(self.archive.by_index(self.file_index).unwrap())
+    fn reader(&mut self) -> Result<Box<dyn Read + '_>, Error> {
+        Ok(Box::new(self.archive.by_index(self.file_index)?))
     }
 }
 

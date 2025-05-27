@@ -36,19 +36,16 @@ impl JavascriptFileDetector {
             return true;
         }
 
-        if let Ok(mut file) = self.path_adaptator.open(path) {
-            let reader = BufReader::new(file.as_reader());
-            let shebang = reader.lines()
-                .map_while(Result::ok)
-                .find(|line| line.starts_with("#!"));
+        // Shebangs
+        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
+        let Ok(reader) = file.reader() else { return false };
+        
+        let reader = BufReader::new(reader);
+        let shebang = reader.lines()
+            .map_while(Result::ok)
+            .find(|line| line.starts_with("#!"));
 
-            if shebang.is_some_and(|l| l == "#!/usr/bin/env node") {
-                return true;
-            }
-        }
-
-
-        false
+        shebang.is_some_and(|l| l == "#!/usr/bin/env node")
     }
 }
 

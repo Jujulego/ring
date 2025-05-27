@@ -1,5 +1,5 @@
 use crate::NpmPackage;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_fs::{Error, PathAdaptator};
 use ring_core_units::{DetectUnit, Unit};
@@ -135,19 +135,18 @@ impl NpmPackageDetector {
 
         match self.path_adaptator.open(&manifest_path) {
             Ok(mut file) => {
-                match serde_json::from_reader(file.as_reader()) {
-                    Ok(manifest) => {
-                        let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
+                let reader = file.reader()
+                    .context(format!("Failed to read {}", manifest_path.display()))?;
 
-                        debug!(key = %manifest_path.display(), "npm package cached");
-                        self.cache.borrow_mut().insert(manifest_path, pkg.clone());
+                let manifest = serde_json::from_reader(reader)
+                    .context(format!("Failed to parse {}", manifest_path.display()))?;
 
-                        Ok(pkg)
-                    }
-                    Err(err) => {
-                        Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
-                    }
-                }
+                let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
+
+                debug!(key = %manifest_path.display(), "npm package cached");
+                self.cache.borrow_mut().insert(manifest_path, pkg.clone());
+
+                Ok(pkg)
             },
             Err(Error::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "npm package miss cached");
