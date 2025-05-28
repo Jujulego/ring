@@ -1,6 +1,6 @@
+use crate::{Module, Registry};
 use std::cell::OnceCell;
 use std::rc::Rc;
-use crate::{Module, Registry};
 
 /// Reference to a registry that can be initiated latter
 #[derive(Clone)]

@@ -2,11 +2,10 @@ use crate::javascript_language;
 use ring_core_content::{DetectLanguage, Language};
 use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
-use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JavascriptFileDetector {
@@ -37,20 +36,16 @@ impl JavascriptFileDetector {
             return true;
         }
 
-        trace!("read {}", path.display());
-        if let Ok(file) = File::open(path) {
-            let reader = BufReader::new(file);
-            let shebang = reader.lines()
-                .map_while(Result::ok)
-                .find(|line| line.starts_with("#!"));
+        // Shebangs
+        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
+        let Ok(reader) = file.reader() else { return false };
+        
+        let reader = BufReader::new(reader);
+        let shebang = reader.lines()
+            .map_while(Result::ok)
+            .find(|line| line.starts_with("#!"));
 
-            if shebang.is_some_and(|l| l == "#!/usr/bin/env node") {
-                return true;
-            }
-        }
-
-
-        false
+        shebang.is_some_and(|l| l == "#!/usr/bin/env node")
     }
 }
 
@@ -68,25 +63,11 @@ impl DetectLanguage for JavascriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::PathAdaptator;
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_supported(&self, path: &Path) -> bool;
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-        }
-    }
+    use ring_core_fs::adaptators::FilesystemAdaptator;
 
     #[test]
     fn it_should_detect_javascript_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
+        let detector = JavascriptFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.js")), Some(javascript_language()));
@@ -97,10 +78,7 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_javascript_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
-
-        let detector = JavascriptFileDetector::new(Rc::new(path_adaptator));
+        let detector = JavascriptFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

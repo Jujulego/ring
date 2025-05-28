@@ -1,8 +1,8 @@
 mod language;
 mod path_content;
 
-pub use crate::path_content::PathContent;
 pub use crate::language::Language;
+pub use crate::path_content::PathContent;
 use std::path::Path;
 
 /// Object able to detect language of a given path

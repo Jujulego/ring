@@ -1753,7 +1753,7 @@ dependencies = [
 name = "ring-core-fs"
 version = "0.1.0"
 dependencies = [
- "anyhow",
+ "thiserror",
  "tracing",
  "zip",
 ]
@@ -1793,7 +1793,6 @@ name = "ring-module-javascript"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "mockall",
  "rgb",
  "ring-core-content",
  "ring-core-fs",
@@ -1855,8 +1854,6 @@ dependencies = [
 name = "ring-module-shell"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "mockall",
  "rgb",
  "ring-core-content",
  "ring-core-fs",

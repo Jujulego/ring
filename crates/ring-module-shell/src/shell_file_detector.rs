@@ -2,11 +2,10 @@ use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_fs::PathAdaptator;
 use std::ffi::OsStr;
-use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::rc::Rc;
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 #[derive(Clone)]
 pub struct ShellFileDetector {
@@ -80,23 +79,16 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        trace!("read {}", path.display());
-        if let Ok(file) = File::open(path) {
-            let reader = BufReader::new(file);
-            let shebang = reader.lines()
-                .map_while(Result::ok)
-                .find(|line| line.starts_with("#!"));
+        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
+        let Ok(reader) = file.reader() else { return false };
 
-            if shebang.as_ref().is_some_and(|l| l == "#!/bin/sh") {
-                return true;
-            }
+        let reader = BufReader::new(reader);
+        let shebang = reader.lines()
+            .map_while(Result::ok)
+            .find(|line| line.starts_with("#!"));
 
-            if shebang.as_ref().is_some_and(|l| l == "#!/bin/bash") {
-                return true;
-            }
-        }
-
-        false
+        shebang.as_ref().is_some_and(|l| l == "#!/bin/sh")
+            || shebang.as_ref().is_some_and(|l| l == "#!/bin/bash")
     }
 }
 
@@ -129,25 +121,11 @@ impl QualifyPath for ShellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::PathAdaptator;
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_supported(&self, path: &Path) -> bool;
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-        }
-    }
+    use ring_core_fs::adaptators::FilesystemAdaptator;
 
     #[test]
     fn it_should_detect_shell_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/test")), Some(shell_language()));
         assert_eq!(detector.detect_language(Path::new("assets/test.sh")), Some(shell_language()));
@@ -155,10 +133,7 @@ mod tests {
 
     #[test]
     fn it_should_qualify_file_as_script() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(
             detector.qualify_path(Path::new("assets/test.sh")),
@@ -168,10 +143,7 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_shell_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
-
-        let detector = ShellFileDetector::new(Rc::new(path_adaptator));
+        let detector = ShellFileDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);

@@ -18,7 +18,3 @@ ring-core-tasks = { path = "../ring-core-tasks" }
 ring-core-units = { path = "../ring-core-units" }
 ring-module-json = { path = "../ring-module-json" }
 ring-module-yaml = { path = "../ring-module-yaml" }
-
-[dev-dependencies]
-anyhow = "1.0.98"
-mockall = "0.13.1"

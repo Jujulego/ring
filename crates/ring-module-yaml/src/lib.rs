@@ -4,9 +4,9 @@ mod yaml_file;
 pub use crate::utils::yaml_language;
 pub use crate::yaml_file::YamlFileDetector;
 use ring_core_content::DetectLanguage;
+use ring_core_fs::PathAdaptator;
 use ring_core_modules::Module;
 use std::rc::Rc;
-use ring_core_fs::PathAdaptator;
 
 #[derive(Clone)]
 pub struct YamlModule {

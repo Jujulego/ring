@@ -31,8 +31,8 @@ pub fn shell_language() -> Language {
 
 #[cfg(test)]
 mod tests {
-    use rgb::Rgb;
     use super::*;
+    use rgb::Rgb;
 
     #[test]
     fn is_should_build_a_powershell_language() {

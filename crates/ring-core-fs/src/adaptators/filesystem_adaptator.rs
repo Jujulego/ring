@@ -1,4 +1,7 @@
+use crate::error::Error;
+use crate::file_wrapper::FileWrapper;
 use crate::PathAdaptator;
+use std::fs::File;
 use std::path::Path;
 use tracing::{instrument, trace};
 
@@ -6,11 +9,6 @@ use tracing::{instrument, trace};
 pub struct FilesystemAdaptator;
 
 impl PathAdaptator for FilesystemAdaptator {
-    #[inline]
-    fn is_supported(&self, _: &Path) -> bool {
-        true
-    }
-
     #[inline]
     #[instrument(name="filesystem.is_dir", skip_all, fields(adaptator = "filesystem"))]
     fn is_dir(&self, path: &Path) -> bool {
@@ -23,6 +21,18 @@ impl PathAdaptator for FilesystemAdaptator {
     fn is_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
         path.is_file()
+    }
+
+    #[inline]
+    fn is_supported(&self, _: &Path) -> bool {
+        true
+    }
+
+    #[inline]
+    #[instrument(name="filesystem.open", skip_all, fields(adaptator = "filesystem"))]
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error> {
+        trace!("open {}", path.display());
+        Ok(Box::new(File::open(path)?))
     }
 }
 

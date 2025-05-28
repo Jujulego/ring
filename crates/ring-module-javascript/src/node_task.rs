@@ -1,9 +1,9 @@
 use crate::NpmPackage;
+use rgb::Rgb;
 use ring_core_tasks::{ProcessData, ProcessTask, Task};
 use ring_core_units::Unit;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use rgb::Rgb;
 
 /// A node process
 #[derive(Clone, Debug)]

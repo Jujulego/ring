@@ -1,3 +1,5 @@
+use crate::error::Error;
+use crate::file_wrapper::FileWrapper;
 use crate::{adaptators, PathAdaptator};
 use std::path::Path;
 
@@ -25,12 +27,6 @@ impl FilesystemTools {
 
 impl PathAdaptator for FilesystemTools {
     #[inline]
-    fn is_supported(&self, path: &Path) -> bool {
-        self.adaptators.iter()
-            .any(|adaptator| adaptator.is_supported(path))
-    }
-
-    #[inline]
     fn is_dir(&self, path: &Path) -> bool {
         self.select_adaptator(path).is_dir(path)
     }
@@ -38,6 +34,17 @@ impl PathAdaptator for FilesystemTools {
     #[inline]
     fn is_file(&self, path: &Path) -> bool {
         self.select_adaptator(path).is_file(path)
+    }
+
+    #[inline]
+    fn is_supported(&self, path: &Path) -> bool {
+        self.adaptators.iter()
+            .any(|adaptator| adaptator.is_supported(path))
+    }
+
+    #[inline]
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper + '_>, Error> {
+        self.select_adaptator(path).open(path)
     }
 }
 

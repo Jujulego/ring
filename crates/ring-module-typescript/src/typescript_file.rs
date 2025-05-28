@@ -47,15 +47,16 @@ impl DetectLanguage for TypescriptFileDetector {
 mod tests {
     use super::*;
     use mockall::mock;
-    use ring_core_fs::PathAdaptator;
+    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
 
     mock! {
         TestAdaptator {}
 
         impl PathAdaptator for TestAdaptator {
-            fn is_supported(&self, path: &Path) -> bool;
             fn is_dir(&self, path: &Path) -> bool;
             fn is_file(&self, path: &Path) -> bool;
+            fn is_supported(&self, path: &Path) -> bool;
+            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
         }
     }
 

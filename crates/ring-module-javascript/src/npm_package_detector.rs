@@ -1,18 +1,16 @@
 use crate::NpmPackage;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::{Error, PathAdaptator};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::fs::File;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use tracing::{debug, instrument, trace, warn};
+use tracing::{debug, instrument, warn};
 
 /// Detector for npm packages, and related files
 #[derive(Clone)]
@@ -135,24 +133,22 @@ impl NpmPackageDetector {
             return Ok(crt.clone());
         }
 
-        trace!("read file {}", manifest_path.display());
-        match File::open(&manifest_path) {
-            Ok(ref mut file) => {
-                match serde_json::from_reader(&mut *file) {
-                    Ok(manifest) => {
-                        let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
+        match self.path_adaptator.open(&manifest_path) {
+            Ok(mut file) => {
+                let reader = file.reader()
+                    .context(format!("Failed to read {}", manifest_path.display()))?;
 
-                        debug!(key = %manifest_path.display(), "npm package cached");
-                        self.cache.borrow_mut().insert(manifest_path, pkg.clone());
+                let manifest = serde_json::from_reader(reader)
+                    .context(format!("Failed to parse {}", manifest_path.display()))?;
 
-                        Ok(pkg)
-                    }
-                    Err(err) => {
-                        Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
-                    }
-                }
+                let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
+
+                debug!(key = %manifest_path.display(), "npm package cached");
+                self.cache.borrow_mut().insert(manifest_path, pkg.clone());
+
+                Ok(pkg)
             },
-            Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            Err(Error::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
@@ -247,35 +243,18 @@ impl QualifyPath for NpmPackageDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::PathAdaptator;
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_supported(&self, path: &Path) -> bool;
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-        }
-    }
+    use ring_core_fs::adaptators::FilesystemAdaptator;
 
     #[test]
     fn it_should_detect_manifest_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/package.json")), Some(json_language()));
     }
 
     #[test]
     fn it_should_detect_lockfile_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_language(Path::new("assets/package-lock.json")), Some(json_language()));
         assert_eq!(detector.detect_language(Path::new("assets/pnpm-lock.yaml")), Some(yaml_language()));
@@ -284,20 +263,14 @@ mod tests {
 
     #[test]
     fn it_should_detect_package_unit() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.detect_unit(Path::new("assets")).unwrap().name(), Some("test-assets"));
     }
 
     #[test]
     fn it_should_qualify_npm_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/package.json")), Some((PathContent::Manifest, Path::new("assets/package.json"))));
         assert_eq!(detector.qualify_path(Path::new("assets/package-lock.json")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/package-lock.json"))));
@@ -305,20 +278,14 @@ mod tests {
 
     #[test]
     fn it_should_qualify_pnpm_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/pnpm-lock.yaml")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/pnpm-lock.yaml"))));
     }
 
     #[test]
     fn it_should_qualify_yarn_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = NpmPackageDetector::new(Rc::new(path_adaptator));
+        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
 
         assert_eq!(detector.qualify_path(Path::new("assets/.pnp.cjs")), Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("assets/.pnp.cjs"))));
         assert_eq!(detector.qualify_path(Path::new("assets/.pnp.loader.mjs")), Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("assets/.pnp.loader.mjs"))));

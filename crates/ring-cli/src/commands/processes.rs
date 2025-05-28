@@ -1,6 +1,6 @@
+use crate::commands::tasks;
 use clap::{ArgMatches, Command};
 use ring_core::Core;
-use crate::commands::tasks;
 
 /// Prepare processes command parsing
 pub fn setup() -> Command {

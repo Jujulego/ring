@@ -1,16 +1,18 @@
-use crate::PathAdaptator;
+use crate::error::Error;
+use crate::pool::{Pool, PoolRef};
+use crate::{FileWrapper, PathAdaptator};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
 use zip::ZipArchive;
 
 /// Access files in archives. Supports yarn virtual paths.
 pub struct ArchivesAdaptator {
-    archives: RefCell<HashMap<PathBuf, Rc<RefCell<ZipArchive<File>>>>>
+    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<File>>>>
 }
 
 impl ArchivesAdaptator {
@@ -21,21 +23,17 @@ impl ArchivesAdaptator {
         }
     }
 
-    fn open_archive(&self, path: &Path) -> anyhow::Result<Rc<RefCell<ZipArchive<File>>>> {
+    fn _open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<File>>, Error> {
         let path = std::path::absolute(path)?;
 
-        if let Some(archive) = self.archives.borrow().get(&path) {
-            Ok(archive.clone())
-        } else {
+        let mut archives = self.archives.borrow_mut();
+        let pool = archives.entry(path.clone()).or_default();
+
+        pool.try_borrow_or_build(|| {
             trace!("open archive {}", path.display());
-            let archive = File::open(&path)?;
-            let archive = ZipArchive::new(archive)?;
-            let archive = Rc::new(RefCell::new(archive));
-
-            self.archives.borrow_mut().insert(path, archive.clone());
-
-            Ok(archive)
-        }
+            let archive = File::open(path)?;
+            Ok(ZipArchive::new(archive)?)
+        })
     }
 }
 
@@ -48,24 +46,17 @@ impl Default for ArchivesAdaptator {
 
 impl PathAdaptator for ArchivesAdaptator {
     #[inline]
-    fn is_supported(&self, path: &Path) -> bool {
-        path.ancestors()
-            .any(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some("zip".into()))
-    }
-
-    #[inline]
     #[instrument(name="archives.is_dir", skip_all, fields(adaptator = "archives"))]
     fn is_dir(&self, path: &Path) -> bool {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self.open_archive(archive_path) {
+        match self._open_archive(archive_path) {
             Ok(archive) => {
                 let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
                 inner_path += "/";
 
-                archive.borrow()
-                    .file_names()
+                archive.file_names()
                     .any(|name| name.starts_with(&inner_path))
             }
             Err(err) => {
@@ -82,10 +73,9 @@ impl PathAdaptator for ArchivesAdaptator {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path).unwrap();
 
-        match self.open_archive(archive_path) {
+        match self._open_archive(archive_path) {
             Ok(archive) => {
-                archive.borrow()
-                    .index_for_path(inner_path).is_some()
+                archive.index_for_path(inner_path).is_some()
             }
             Err(err) => {
                 warn!("unable to open archive {}", archive_path.display());
@@ -93,6 +83,39 @@ impl PathAdaptator for ArchivesAdaptator {
                 false
             }
         }
+    }
+
+    #[inline]
+    fn is_supported(&self, path: &Path) -> bool {
+        path.ancestors()
+            .any(|ancestor| ancestor.extension().map(OsStr::to_string_lossy) == Some("zip".into()))
+    }
+
+    #[inline]
+    #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
+    fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error> {
+        let path = parse_yarn_virtual_path(path);
+        let (archive_path, inner_path) = split_archive_path(&path).unwrap();
+
+        let archive = self._open_archive(archive_path)?;
+        let Some(index) = archive.index_for_path(inner_path) else {
+            return Err(Error::NotFound("File not found inside archive"))
+        };
+
+        Ok(Box::new(ZippedFile { archive, file_index: index }))
+    }
+}
+
+pub struct ZippedFile {
+    archive: PoolRef<ZipArchive<File>>,
+    file_index: usize,
+}
+
+impl FileWrapper for ZippedFile {
+    #[instrument(name="archives.reader", skip_all, fields(adaptator = "archives"))]
+    fn reader(&mut self) -> Result<Box<dyn Read + '_>, Error> {
+        trace!("decompress {}", self.archive.name_for_index(self.file_index).unwrap());
+        Ok(Box::new(self.archive.by_index(self.file_index)?))
     }
 }
 
