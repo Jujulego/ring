@@ -23,13 +23,13 @@ impl<T> Pool<T> {
     #[must_use]
     pub fn borrow(&self) -> Option<PoolRef<T>> {
         self.items.borrow_mut().pop_front()
-            .map(|item| PoolRef { 
+            .map(|item| PoolRef {
                 item: Some(item),
                 pool: Rc::downgrade(&self.items)
             })
     }
 
-    /// Borrows an item from the pool. If there is no item available or all items are borrowed, 
+    /// Borrows an item from the pool. If there is no item available or all items are borrowed,
     /// it uses given closure to create one and returns it.
     #[inline]
     #[must_use]
@@ -41,9 +41,9 @@ impl<T> Pool<T> {
     }
 
 
-    /// Borrows an item from the pool. If there is no item available or all items are borrowed, 
+    /// Borrows an item from the pool. If there is no item available or all items are borrowed,
     /// it uses given closure to create one and returns it.
-    /// 
+    ///
     /// Can fail if closure fails.
     pub fn try_borrow_or_build<F, E>(&self, build: F) -> Result<PoolRef<T>, E>
     where
@@ -76,7 +76,7 @@ pub struct PoolRef<T> {
 
 impl<T> PoolRef<T> {
     /// Consume the reference to return the item. The item will no longer be returned to the pool.
-    /// 
+    ///
     /// Can return [`None`] if the reference has already been leaked.
     #[inline]
     #[must_use]
@@ -116,5 +116,60 @@ impl<T> Drop for PoolRef<T> {
         if let Some((pool, item)) = self.pool.upgrade().zip(self.item.take()) {
             pool.borrow_mut().push_back(item);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn borrow_should_return_none_on_empty_pool() {
+        let pool: Pool<&str> = Pool::new();
+        assert!(pool.borrow().is_none());
+    }
+    
+    #[test]
+    fn borrow_or_build_should_use_closure_on_empty_pool() {
+        let pool = Pool::new();
+        
+        assert_eq!(*pool.borrow_or_build(|| "a"), "a");
+        assert_eq!(*pool.borrow_or_build(|| "b"), "a"); // <= returns "a", because reference has been dropped on previous line
+    }
+    
+    #[test]
+    fn try_borrow_or_build_should_use_closure_on_empty_pool() {
+        let pool = Pool::new();
+
+        assert!(pool.try_borrow_or_build(|| Err(())).is_err());
+        assert_eq!(pool.try_borrow_or_build(|| Result::<&str, ()>::Ok("a")).as_deref(), Ok(&"a"));
+        assert_eq!(pool.try_borrow_or_build(|| Result::<&str, ()>::Ok("b")).as_deref(), Ok(&"a")); // <= returns "a", because reference has been dropped on previous line
+        assert_eq!(pool.try_borrow_or_build(|| Err(())).as_deref(), Ok(&"a")); // <= is successful since build was not called, has "a" is available
+    }
+    
+    #[test]
+    fn pool_ref_should_return_item_to_pool_when_dropped() {
+        let pool = Pool::new();
+
+        {
+            let _borrow = pool.borrow_or_build(|| "a");
+            assert!(pool.borrow().is_none());
+        } // <= drop borrow
+        
+        assert_eq!(pool.borrow().as_deref(), Some(&"a"));
+    }
+    
+    #[test]
+    fn leaked_pool_ref_should_not_return_item_to_pool_when_dropped() {
+        let pool = Pool::new();
+
+        {
+            let borrow = pool.borrow_or_build(|| "a");
+            
+            assert_eq!(borrow.leak().as_deref(), Some(&"a"));
+            assert!(pool.borrow().is_none());
+        } // <= drop borrow
+
+        assert!(pool.borrow().is_none());
     }
 }
