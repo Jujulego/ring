@@ -46,37 +46,26 @@ impl DetectLanguage for JsonFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_json_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-        
-        let detector = JsonFileDetector::new(Rc::new(path_adaptator));
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.json", "{}");
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.json")), Some(json_language()));
+        let detector = JsonFileDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(detector.detect_language(Path::new("test.json")), Some(json_language()));
     }
 
     #[test]
     fn it_should_not_detect_json_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
-        let detector = JsonFileDetector::new(Rc::new(path_adaptator));
+        let detector = JsonFileDetector::new(Rc::new(virtual_fs));
 
+        assert_eq!(detector.detect_language(Path::new("do-not-exists")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
