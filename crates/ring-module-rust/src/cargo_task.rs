@@ -65,7 +65,46 @@ impl ProcessTask for CargoTask {
     /// Returns the crate this task is working in
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.cargo_crate.as_ref()
+        self.cargo_crate()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn cargo_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/exe"),
+            vec!["exe".to_string(), "-a".to_string()],
+        );
+
+        let task = CargoTask::new(data, None);
+
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "cargo");
+        assert_eq!(task.color(), Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 }));
+    }
+
+    #[test]
+    fn cargo_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/exe"),
+            vec!["exe".to_string(), "-a".to_string()],
+        );
+
+        let task = CargoTask::new(data, None);
+
+        assert_eq!(task.executable(), Path::new("/test/exe"));
+        assert_eq!(task.args(), &["exe".to_string(), "-a".to_string()]);
+        assert_eq!(task.working_directory(), Path::new("/test"));
+        assert!(task.working_unit().is_none());
     }
 }

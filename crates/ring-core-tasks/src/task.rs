@@ -1,6 +1,4 @@
 use rgb::Rgb;
-use ring_core_units::Unit;
-use std::rc::Rc;
 
 /// Detected process
 pub trait Task {
