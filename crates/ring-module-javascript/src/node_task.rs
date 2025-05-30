@@ -49,13 +49,6 @@ impl Task for NodeTask {
         "node"
     }
 
-    /// Returns the unit node is working in, if any
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_package.as_ref()
-            .map(|pt| pt.clone() as Rc<dyn Unit>)
-    }
-
     #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         Some(Rgb { r: 0x5f, g: 0xa0, b: 0x4e })
@@ -67,12 +60,6 @@ impl ProcessTask for NodeTask {
     #[inline]
     fn executable(&self) -> &Path {
         self.process.exe()
-    }
-
-    /// Returns the directory node is working in
-    #[inline]
-    fn working_directory(&self) -> &Path {
-        self.process.cwd()
     }
 
     /// Returns the command line used
@@ -91,6 +78,19 @@ impl ProcessTask for NodeTask {
     #[inline]
     fn script_unit(&self) -> Option<Rc<dyn Unit>> {
         self.script_package.as_ref()
+            .map(|pt| pt.clone() as Rc<dyn Unit>)
+    }
+
+    /// Returns the directory node is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns the unit node is working in, if any
+    #[inline]
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_package.as_ref()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 }

@@ -57,12 +57,6 @@ impl Task for ShellTask {
     fn kind(&self) -> &str {
         self.shell_kind.into()
     }
-
-    /// Returns detected unit
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_unit.clone()
-    }
 }
 
 impl ProcessTask for ShellTask {
@@ -72,16 +66,22 @@ impl ProcessTask for ShellTask {
         self.process.exe()
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory shell is working in
     #[inline]
     fn working_directory(&self) -> &Path {
         self.process.cwd()
     }
 
-    /// Returns the command line used
+    /// Returns detected unit
     #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_unit.clone()
     }
 }
 

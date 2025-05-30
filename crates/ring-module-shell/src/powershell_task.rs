@@ -33,12 +33,6 @@ impl Task for PowershellTask {
         "powershell"
     }
 
-    /// Returns detected unit
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_unit.clone()
-    }
-
     #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         Some(Rgb { r: 0x42, g: 0x72, b: 0xc9 })
@@ -52,12 +46,6 @@ impl ProcessTask for PowershellTask {
         self.process.exe()
     }
 
-    /// Returns the directory shell is working in
-    #[inline]
-    fn working_directory(&self) -> &Path {
-        self.process.cwd()
-    }
-
     /// Returns the command line used
     #[inline]
     fn args(&self) -> &[String] {
@@ -67,5 +55,17 @@ impl ProcessTask for PowershellTask {
     #[inline]
     fn script(&self) -> Option<&Path> {
         self.script.as_deref()
+    }
+
+    /// Returns the directory shell is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
+    }
+
+    /// Returns detected unit
+    #[inline]
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_unit.clone()
     }
 }

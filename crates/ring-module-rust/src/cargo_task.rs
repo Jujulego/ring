@@ -37,13 +37,6 @@ impl Task for CargoTask {
         "cargo"
     }
 
-    /// Returns the crate this task is working in
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.cargo_crate.as_ref()
-            .map(|pt| pt.clone() as Rc<dyn Unit>)
-    }
-
     #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 })
@@ -57,15 +50,22 @@ impl ProcessTask for CargoTask {
         self.process.exe()
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory cargo is working in
     #[inline]
     fn working_directory(&self) -> &Path {
         self.process.cwd()
     }
 
-    /// Returns the command line used
+    /// Returns the crate this task is working in
     #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.cargo_crate.as_ref()
+            .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 }

@@ -32,12 +32,6 @@ impl Task for RustupTask {
         "rustup"
     }
 
-    /// Returns none, there is no meaning full unit for rustup task.
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        None
-    }
-
     #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 })
@@ -51,15 +45,15 @@ impl ProcessTask for RustupTask {
         self.process.exe()
     }
 
-    /// Returns the directory rustup is working in
-    #[inline]
-    fn working_directory(&self) -> &Path {
-        self.process.cwd()
-    }
-
     /// Returns the command line used
     #[inline]
     fn args(&self) -> &[String] {
         self.process.cmd()
+    }
+
+    /// Returns the directory rustup is working in
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        self.process.cwd()
     }
 }

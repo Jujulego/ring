@@ -31,12 +31,6 @@ impl Task for ProcessTaskData {
     }
 
     #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_unit.as_ref()
-            .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
-    }
-
-    #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         self.color
     }
@@ -46,11 +40,6 @@ impl ProcessTask for ProcessTaskData {
     #[inline]
     fn executable(&self) -> &Path {
         &self.executable
-    }
-
-    #[inline]
-    fn working_directory(&self) -> &Path {
-        &self.working_directory
     }
 
     #[inline]
@@ -66,6 +55,17 @@ impl ProcessTask for ProcessTaskData {
     #[inline]
     fn script_unit(&self) -> Option<Rc<dyn Unit>> {
         self.script_unit.as_ref()
+            .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
+    }
+
+    #[inline]
+    fn working_directory(&self) -> &Path {
+        &self.working_directory
+    }
+
+    #[inline]
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_unit.as_ref()
             .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
     }
 
