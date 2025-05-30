@@ -31,12 +31,6 @@ impl Task for ProcessTaskData {
     }
 
     #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_unit.as_ref()
-            .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
-    }
-
-    #[inline]
     fn color(&self) -> Option<Rgb<u8>> {
         self.color
     }
@@ -46,11 +40,6 @@ impl ProcessTask for ProcessTaskData {
     #[inline]
     fn executable(&self) -> &Path {
         &self.executable
-    }
-
-    #[inline]
-    fn working_directory(&self) -> &Path {
-        &self.working_directory
     }
 
     #[inline]
@@ -70,6 +59,17 @@ impl ProcessTask for ProcessTaskData {
     }
 
     #[inline]
+    fn working_directory(&self) -> &Path {
+        &self.working_directory
+    }
+
+    #[inline]
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_unit.as_ref()
+            .map(|unit| Rc::new(unit.clone()) as Rc<dyn Unit>)
+    }
+
+    #[inline]
     fn inspect(&self) -> ProcessTaskData {
         self.clone()
     }
@@ -84,7 +84,7 @@ mod tests {
         let data = ProcessTaskData {
             id: "id".to_string(),
             kind: "kind".to_string(),
-            args: vec![],
+            args: vec!["a".to_string(), "b".to_string()],
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),
@@ -95,7 +95,6 @@ mod tests {
 
         assert_eq!(data.id(), "id");
         assert_eq!(data.kind(), "kind");
-        assert!(data.working_unit().is_none());
         assert_eq!(data.color(), Some(Rgb { r: 0, g: 0, b: 0 }));
     }
 
@@ -104,7 +103,7 @@ mod tests {
         let data = ProcessTaskData {
             id: "id".to_string(),
             kind: "kind".to_string(),
-            args: vec![],
+            args: vec!["a".to_string(), "b".to_string()],
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),
@@ -114,9 +113,11 @@ mod tests {
         };
 
         assert_eq!(data.executable(), Path::new("/test/exe"));
-        assert_eq!(data.working_directory(), Path::new("/test"));
-        assert!(data.args().is_empty());
+        assert_eq!(data.args(), &["a".to_string(), "b".to_string()]);
         assert_eq!(data.script(), Some(Path::new("/test/script")));
+        assert!(data.script_unit().is_none());
+        assert_eq!(data.working_directory(), Path::new("/test"));
+        assert!(data.working_unit().is_none());
     }
 
     #[test]
@@ -124,7 +125,7 @@ mod tests {
         let data = ProcessTaskData {
             id: "id".to_string(),
             kind: "kind".to_string(),
-            args: vec![],
+            args: vec!["a".to_string(), "b".to_string()],
             color: Some(Rgb { r: 0, g: 0, b: 0 }),
             executable: PathBuf::from("/test/exe"),
             script: Some(PathBuf::from("/test/script")),

@@ -57,12 +57,6 @@ impl Task for ShellTask {
     fn kind(&self) -> &str {
         self.shell_kind.into()
     }
-
-    /// Returns detected unit
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_unit.clone()
-    }
 }
 
 impl ProcessTask for ShellTask {
@@ -72,22 +66,29 @@ impl ProcessTask for ShellTask {
         self.process.exe()
     }
 
+    /// Returns the command line used
+    #[inline]
+    fn args(&self) -> &[String] {
+        self.process.cmd()
+    }
+
     /// Returns the directory shell is working in
     #[inline]
     fn working_directory(&self) -> &Path {
         self.process.cwd()
     }
 
-    /// Returns the command line used
+    /// Returns detected unit
     #[inline]
-    fn args(&self) -> &[String] {
-        self.process.cmd()
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
+        self.working_unit.clone()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::shell_task::ShellKind;
+    use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn it_should_return_shell_kind_as_string() {
@@ -95,5 +96,38 @@ mod tests {
         assert_eq!({ let t: &str = ShellKind::Cmd.into(); t }, "cmd");
         assert_eq!({ let t: &str = ShellKind::Shell.into(); t }, "shell");
         assert_eq!({ let t: &str = ShellKind::Zsh.into(); t }, "zsh");
+    }
+
+    #[test]
+    fn shell_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/sh"),
+            vec!["sh".to_string(), "-a".to_string()],
+        );
+
+        let task = ShellTask::new(data, ShellKind::Shell, None);
+
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "shell");
+        assert_eq!(task.color(), None);
+    }
+
+    #[test]
+    fn shell_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/sh"),
+            vec!["sh".to_string(), "-a".to_string()],
+        );
+
+        let task = ShellTask::new(data, ShellKind::Shell, None);
+
+        assert_eq!(task.executable(), Path::new("/test/sh"));
+        assert_eq!(task.args(), &["sh".to_string(), "-a".to_string()]);
+        assert_eq!(task.working_directory(), Path::new("/test"));
+        assert!(task.working_unit().is_none());
     }
 }

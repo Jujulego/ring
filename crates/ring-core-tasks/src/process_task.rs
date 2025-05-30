@@ -9,9 +9,6 @@ pub trait ProcessTask: Task {
     /// Path to the running executable
     fn executable(&self) -> &Path;
 
-    /// Path to the directory the task is working in
-    fn working_directory(&self) -> &Path;
-
     /// Returns the command line use to invoke the task
     #[inline]
     fn args(&self) -> &[String] {
@@ -27,6 +24,15 @@ pub trait ProcessTask: Task {
     /// Returns the unit containing the script
     #[inline]
     fn script_unit(&self) -> Option<Rc<dyn Unit>> {
+        None
+    }
+
+    /// Path to the directory the task is working in
+    fn working_directory(&self) -> &Path;
+
+    /// Returns the unit the task is working in
+    #[inline]
+    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
         None
     }
 

@@ -1,6 +1,4 @@
 use rgb::Rgb;
-use ring_core_units::Unit;
-use std::rc::Rc;
 
 /// Detected process
 pub trait Task {
@@ -9,12 +7,6 @@ pub trait Task {
 
     /// Returns the task's kind
     fn kind(&self) -> &str;
-
-    /// Returns the unit the task is working in
-    #[inline]
-    fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        None
-    }
 
     /// Returns a color associated with the task
     #[inline]
@@ -52,13 +44,6 @@ mod tests {
         fn color(&self) -> Option<Rgb<u8>> {
             Some(Rgb { r: 0, g: 255, b: 0})
         }
-    }
-
-    #[test]
-    fn working_unit_should_return_none_by_default() {
-        let task = TestTask;
-
-        assert!(task.working_unit().is_none());
     }
 
     #[cfg(feature = "crossterm")]

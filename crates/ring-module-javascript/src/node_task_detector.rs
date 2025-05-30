@@ -44,7 +44,7 @@ impl NodeTaskDetector {
                 .and_then(|script| self.npm_package_detector.load_package_containing(script).transpose())
                 .transpose()?;
 
-            let task = NodeTask::new(data, working_package, script, script_package);
+            let task = NodeTask::new(data, script, script_package, working_package);
 
             return Ok(Some(Rc::new(task)))
         }
