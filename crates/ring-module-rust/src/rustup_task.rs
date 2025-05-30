@@ -55,3 +55,41 @@ impl ProcessTask for RustupTask {
         self.process.cwd()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use super::*;
+    
+    #[test]
+    fn rustup_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/rustup"),
+            vec!["rustup".to_string(), "-a".to_string()],
+        );
+        
+        let task = RustupTask::new(data);
+        
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "rustup");
+        assert_eq!(task.color(), Some(Rgb { r: 0xe3, g: 0x3b, b: 0x26 }));
+    }
+    
+    #[test]
+    fn rustup_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/rustup"),
+            vec!["rustup".to_string(), "-a".to_string()],
+        );
+
+        let task = RustupTask::new(data);
+
+        assert_eq!(task.executable(), Path::new("/test/rustup"));
+        assert_eq!(task.args(), &["rustup".to_string(), "-a".to_string()]);
+        assert_eq!(task.working_directory(), Path::new("/test"));
+    }
+}

@@ -80,8 +80,8 @@ mod tests {
         let data = ProcessData::new(
             "test".to_string(),
             PathBuf::from("/test"),
-            PathBuf::from("/test/exe"),
-            vec!["exe".to_string(), "-a".to_string()],
+            PathBuf::from("/test/cargo"),
+            vec!["cargo".to_string(), "-a".to_string()],
         );
 
         let task = CargoTask::new(data, None);
@@ -96,14 +96,14 @@ mod tests {
         let data = ProcessData::new(
             "test".to_string(),
             PathBuf::from("/test"),
-            PathBuf::from("/test/exe"),
-            vec!["exe".to_string(), "-a".to_string()],
+            PathBuf::from("/test/cargo"),
+            vec!["cargo".to_string(), "-a".to_string()],
         );
 
         let task = CargoTask::new(data, None);
 
-        assert_eq!(task.executable(), Path::new("/test/exe"));
-        assert_eq!(task.args(), &["exe".to_string(), "-a".to_string()]);
+        assert_eq!(task.executable(), Path::new("/test/cargo"));
+        assert_eq!(task.args(), &["cargo".to_string(), "-a".to_string()]);
         assert_eq!(task.working_directory(), Path::new("/test"));
         assert!(task.working_unit().is_none());
     }
