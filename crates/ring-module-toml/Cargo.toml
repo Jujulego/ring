@@ -9,7 +9,3 @@ tracing = "0.1.41"
 ring-core-content = { path = "../ring-core-content" }
 ring-core-fs = { path = "../ring-core-fs" }
 ring-core-modules = { path = "../ring-core-modules" }
-
-[dev-dependencies]
-anyhow = "1.0.98"
-mockall = "0.13.1"

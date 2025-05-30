@@ -46,37 +46,32 @@ impl DetectLanguage for TomlFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_toml_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.toml", "");
 
-        let detector = TomlFileDetector::new(Rc::new(path_adaptator));
+        let detector = TomlFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.toml")), Some(toml_language()));
+        assert!(detector.is_toml_file(Path::new("test.toml")));
+
+        assert_eq!(detector.detect_language(Path::new("test.toml")), Some(toml_language()));
     }
 
     #[test]
     fn it_should_not_detect_toml_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
-        let detector = TomlFileDetector::new(Rc::new(path_adaptator));
+        let detector = TomlFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(!detector.is_toml_file(Path::new("does-not-exists.toml")));
+        assert!(!detector.is_toml_file(Path::new("src/lib.rs")));
+        assert!(!detector.is_toml_file(Path::new("src")));
+
+        assert_eq!(detector.detect_language(Path::new("does-not-exists.toml")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
