@@ -45,39 +45,37 @@ impl DetectLanguage for YamlFileDetector {
 
 #[cfg(test)]
 mod tests {
+    use ring_core_fs::VirtualFilesystem;
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
-
     #[test]
     fn it_should_detect_yaml_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.yaml", "");
+        virtual_fs.add_file("test.yml", "");
 
-        let detector = YamlFileDetector::new(Rc::new(path_adaptator));
+        let detector = YamlFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.yaml")), Some(yaml_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.yml")), Some(yaml_language()));
+        assert!(detector.is_yaml_file(Path::new("test.yaml")));
+        assert!(detector.is_yaml_file(Path::new("test.yml")));
+
+        assert_eq!(detector.detect_language(Path::new("test.yaml")), Some(yaml_language()));
+        assert_eq!(detector.detect_language(Path::new("test.yml")), Some(yaml_language()));
     }
 
     #[test]
     fn it_should_not_detect_yaml_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
-        let detector = YamlFileDetector::new(Rc::new(path_adaptator));
+        let detector = YamlFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(!detector.is_yaml_file(Path::new("does-not-exists.yaml")));
+        assert!(!detector.is_yaml_file(Path::new("does-not-exists.yml")));
+        assert!(!detector.is_yaml_file(Path::new("src/lib.rs")));
+        assert!(!detector.is_yaml_file(Path::new("src")));
+
+        assert_eq!(detector.detect_language(Path::new("does-not-exists.yaml")), None);
+        assert_eq!(detector.detect_language(Path::new("does-not-exists.yml")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
