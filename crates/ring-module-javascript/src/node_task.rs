@@ -9,18 +9,18 @@ use std::rc::Rc;
 #[derive(Clone, Debug)]
 pub struct NodeTask {
     process: ProcessData,
-    working_package: Option<Rc<NpmPackage>>,
     script: Option<PathBuf>,
     script_package: Option<Rc<NpmPackage>>,
+    working_package: Option<Rc<NpmPackage>>,
 }
 
 impl NodeTask {
     /// Create a new node task
     pub fn new(
         process: ProcessData,
-        working_package: Option<Rc<NpmPackage>>,
         script: Option<PathBuf>,
-        script_package: Option<Rc<NpmPackage>>
+        script_package: Option<Rc<NpmPackage>>,
+        working_package: Option<Rc<NpmPackage>>
     ) -> NodeTask {
         NodeTask { process, working_package, script, script_package }
     }
@@ -77,7 +77,7 @@ impl ProcessTask for NodeTask {
     /// Returns the unit containing this task's script
     #[inline]
     fn script_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.script_package.as_ref()
+        self.script_package()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
     }
 
@@ -90,7 +90,48 @@ impl ProcessTask for NodeTask {
     /// Returns the unit node is working in, if any
     #[inline]
     fn working_unit(&self) -> Option<Rc<dyn Unit>> {
-        self.working_package.as_ref()
+        self.working_package()
             .map(|pt| pt.clone() as Rc<dyn Unit>)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn node_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/node"),
+            vec!["node".to_string(), "/test/script.js".to_string()],
+        );
+
+        let task = NodeTask::new(data, Some(PathBuf::from("/test/script.js")), None, None);
+
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "node");
+        assert_eq!(task.color(), Some(Rgb { r: 0x5f, g: 0xa0, b: 0x4e }));
+    }
+
+    #[test]
+    fn node_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/node"),
+            vec!["node".to_string(), "/test/script.js".to_string()],
+        );
+
+        let task = NodeTask::new(data, Some(PathBuf::from("/test/script.js")), None, None);
+
+        assert_eq!(task.executable(), Path::new("/test/node"));
+        assert_eq!(task.args(), &["node".to_string(), "/test/script.js".to_string()]);
+        assert_eq!(task.script(), Some(Path::new("/test/script.js")));
+        assert!(task.script_unit().is_none());
+        assert_eq!(task.working_directory(), Path::new("/test"));
+        assert!(task.working_unit().is_none());
     }
 }
