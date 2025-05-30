@@ -63,3 +63,42 @@ impl ProcessTask for RingTask {
         self.working_unit.clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn ring_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/ring"),
+            vec!["ring".to_string(), "ls".to_string()],
+        );
+
+        let task = RingTask::new(data, None);
+
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "ring");
+        assert_eq!(task.color(), Some(Rgb { r: 0xff, g: 0xd7, b: 0x00 }));
+    }
+
+    #[test]
+    fn ring_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/ring"),
+            vec!["ring".to_string(), "ls".to_string()],
+        );
+
+        let task = RingTask::new(data, None);
+
+        assert_eq!(task.executable(), Path::new("/test/ring"));
+        assert_eq!(task.args(), &["ring".to_string(), "ls".to_string()]);
+        assert_eq!(task.working_directory(), Path::new("/test"));
+        assert!(task.working_unit().is_none());
+    }
+}
