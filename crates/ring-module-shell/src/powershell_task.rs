@@ -69,3 +69,43 @@ impl ProcessTask for PowershellTask {
         self.working_unit.clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn powershell_task_should_be_a_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/powershell"),
+            vec!["powershell".to_string(), "/test/script.ps1".to_string()],
+        );
+
+        let task = PowershellTask::new(data, Some(PathBuf::from("/test/script.ps1")), None);
+
+        assert_eq!(task.id(), "test");
+        assert_eq!(task.kind(), "powershell");
+        assert_eq!(task.color(), Some(Rgb { r: 0x42, g: 0x72, b: 0xc9 }));
+    }
+
+    #[test]
+    fn powershell_task_should_be_a_process_task() {
+        let data = ProcessData::new(
+            "test".to_string(),
+            PathBuf::from("/test"),
+            PathBuf::from("/test/powershell"),
+            vec!["powershell".to_string(), "/test/script.ps1".to_string()],
+        );
+
+        let task = PowershellTask::new(data, Some(PathBuf::from("/test/script.ps1")), None);
+
+        assert_eq!(task.executable(), Path::new("/test/powershell"));
+        assert_eq!(task.args(), &["powershell".to_string(), "/test/script.ps1".to_string()]);
+        assert_eq!(task.script(), Some(Path::new("/test/script.ps1")));
+        assert_eq!(task.working_directory(), Path::new("/test"));
+        assert!(task.working_unit().is_none());
+    }
+}
