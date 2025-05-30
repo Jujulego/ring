@@ -43,7 +43,7 @@ impl JavascriptFileDetector {
         let reader = BufReader::new(reader);
         let shebang = reader.lines()
             .map_while(Result::ok)
-            .find(|line| line.starts_with("#!"));
+            .next();
 
         shebang.is_some_and(|l| l == "#!/usr/bin/env node")
     }
@@ -63,23 +63,42 @@ impl DetectLanguage for JavascriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::adaptators::FilesystemAdaptator;
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
-    fn it_should_detect_javascript_language() {
-        let detector = JavascriptFileDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_javascript_language_using_extensions() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.js", "");
+        virtual_fs.add_file("test.jsx", "");
+        virtual_fs.add_file("test.cjs", "");
+        virtual_fs.add_file("test.mjs", "");
 
-        assert_eq!(detector.detect_language(Path::new("assets/test")), Some(javascript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.js")), Some(javascript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.jsx")), Some(javascript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.cjs")), Some(javascript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.mjs")), Some(javascript_language()));
+        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(detector.detect_language(Path::new("test.js")), Some(javascript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.jsx")), Some(javascript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.cjs")), Some(javascript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.mjs")), Some(javascript_language()));
+    }
+
+    #[test]
+    fn it_should_detect_javascript_language_using_shebang() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test", "#!/usr/bin/env node");
+
+        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(detector.detect_language(Path::new("test")), Some(javascript_language()));
     }
 
     #[test]
     fn it_should_not_detect_javascript_language() {
-        let detector = JavascriptFileDetector::new(Rc::new(FilesystemAdaptator));
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
+        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.js")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
