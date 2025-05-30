@@ -55,6 +55,8 @@ mod tests {
 
         let detector = JsonFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(detector.is_json_file(Path::new("test.json")));
+
         assert_eq!(detector.detect_language(Path::new("test.json")), Some(json_language()));
     }
 
@@ -64,6 +66,10 @@ mod tests {
         virtual_fs.add_file("src/lib.rs", "");
 
         let detector = JsonFileDetector::new(Rc::new(virtual_fs));
+
+        assert!(!detector.is_json_file(Path::new("do-not-exists.json")));
+        assert!(!detector.is_json_file(Path::new("src/lib.rs")));
+        assert!(!detector.is_json_file(Path::new("src")));
 
         assert_eq!(detector.detect_language(Path::new("do-not-exists.json")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);

@@ -75,6 +75,11 @@ mod tests {
 
         let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(detector.is_javascript_file(Path::new("test.js")));
+        assert!(detector.is_javascript_file(Path::new("test.jsx")));
+        assert!(detector.is_javascript_file(Path::new("test.cjs")));
+        assert!(detector.is_javascript_file(Path::new("test.mjs")));
+
         assert_eq!(detector.detect_language(Path::new("test.js")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("test.jsx")), Some(javascript_language()));
         assert_eq!(detector.detect_language(Path::new("test.cjs")), Some(javascript_language()));
@@ -88,6 +93,8 @@ mod tests {
 
         let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(detector.is_javascript_file(Path::new("test")));
+
         assert_eq!(detector.detect_language(Path::new("test")), Some(javascript_language()));
     }
 
@@ -97,6 +104,13 @@ mod tests {
         virtual_fs.add_file("src/lib.rs", "");
 
         let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+
+        assert!(!detector.is_javascript_file(Path::new("do-not-exists.js")));
+        assert!(!detector.is_javascript_file(Path::new("do-not-exists.jsx")));
+        assert!(!detector.is_javascript_file(Path::new("do-not-exists.cjs")));
+        assert!(!detector.is_javascript_file(Path::new("do-not-exists.mjs")));
+        assert!(!detector.is_javascript_file(Path::new("src/lib.rs")));
+        assert!(!detector.is_javascript_file(Path::new("src")));
 
         assert_eq!(detector.detect_language(Path::new("do-not-exists.js")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
