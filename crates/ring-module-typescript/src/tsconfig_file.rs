@@ -31,11 +31,9 @@ impl TsconfigFileDetector {
             return false;
         }
 
-        if let Some(file_name) = path.file_name().and_then(OsStr::to_str) {
+        path.file_name().and_then(OsStr::to_str).is_some_and(|file_name| {
             file_name.starts_with("tsconfig.") && file_name.ends_with(".json")
-        } else {
-            false
-        }
+        })
     }
 }
 
