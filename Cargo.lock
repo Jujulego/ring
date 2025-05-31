@@ -1896,8 +1896,6 @@ dependencies = [
 name = "ring-module-typescript"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "mockall",
  "ring-core-content",
  "ring-core-fs",
  "ring-core-modules",

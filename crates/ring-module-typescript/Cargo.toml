@@ -10,7 +10,3 @@ ring-core-content = { path = "../ring-core-content" }
 ring-core-fs = { path = "../ring-core-fs" }
 ring-core-modules = { path = "../ring-core-modules" }
 ring-module-json = { path = "../ring-module-json" }
-
-[dev-dependencies]
-anyhow = "1.0.98"
-mockall = "0.13.1"

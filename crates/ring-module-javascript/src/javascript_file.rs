@@ -113,6 +113,9 @@ mod tests {
         assert!(!detector.is_javascript_file(Path::new("src")));
 
         assert_eq!(detector.detect_language(Path::new("do-not-exists.js")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.jsx")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.cjs")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.mjs")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
