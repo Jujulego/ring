@@ -22,7 +22,7 @@ impl PowershellFileDetector {
 
     /// Checks if given path is a powershell file
     #[inline]
-    pub fn is_shell_file<P: AsRef<Path>>(&self, path: P) -> bool {
+    pub fn is_powershell_script<P: AsRef<Path>>(&self, path: P) -> bool {
         self._is_script_file(path.as_ref())
     }
 
@@ -56,30 +56,42 @@ impl QualifyPath for PowershellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::adaptators::FilesystemAdaptator;
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
-    fn it_should_detect_powershell_language() {
-        let detector = PowershellFileDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_powershell_script() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.ps1", "");
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.ps1")), Some(powershell_language()));
-    }
+        let detector = PowershellFileDetector::new(Rc::new(virtual_fs));
 
-    #[test]
-    fn it_should_qualify_file_as_script() {
-        let detector = PowershellFileDetector::new(Rc::new(FilesystemAdaptator));
+        assert!(detector.is_powershell_script(Path::new("test.ps1")));
+
+        assert_eq!(detector.detect_language(Path::new("test.ps1")), Some(powershell_language()));
 
         assert_eq!(
-            detector.qualify_path(Path::new("assets/test.ps1")),
-            Some((PathContent::Other("script".to_string(), &PathContent::Source), Path::new("assets/test.ps1")))
+            detector.qualify_path(Path::new("test.ps1")),
+            Some((PathContent::Other("script".to_string(), &PathContent::Source), Path::new("test.ps1")))
         );
     }
 
     #[test]
-    fn it_should_not_detect_powershell_language() {
-        let detector = PowershellFileDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_not_detect_powershell_script() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
+        let detector = PowershellFileDetector::new(Rc::new(virtual_fs));
+        
+        assert!(!detector.is_powershell_script(Path::new("do-not-exists.ps1")));
+        assert!(!detector.is_powershell_script(Path::new("src/lib.rs")));
+        assert!(!detector.is_powershell_script(Path::new("src")));
+        
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.ps1")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
+        
+        assert_eq!(detector.qualify_path(Path::new("do-not-exists.ps1")), None);
+        assert_eq!(detector.qualify_path(Path::new("src/lib.rs")), None);
+        assert_eq!(detector.qualify_path(Path::new("src")), None);
     }
 }
