@@ -369,7 +369,7 @@ mod tests {
     #[test]
     fn it_should_load_package_unit() {
         let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", "{ \"name\": \"test\" }");
+        virtual_fs.add_file("/package.json", r#"{ "name": "test" }"#);
         virtual_fs.add_file("/src/main.js", "");
 
         let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
