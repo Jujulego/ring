@@ -6,6 +6,7 @@ use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
 
+/// Detector for rust files
 #[derive(Clone)]
 pub struct RustFileDetector {
     path_adaptator: Rc<dyn PathAdaptator>,
