@@ -8,7 +8,7 @@ use tracing::{instrument, trace};
 pub struct LocalFilesystem;
 
 impl LocalFilesystem {
-    /// Creates a new instance of local system
+    /// Creates a new instance of local filesystem
     #[inline]
     pub fn new() -> Self {
         Default::default()
