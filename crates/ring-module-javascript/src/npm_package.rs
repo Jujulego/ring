@@ -21,21 +21,25 @@ pub struct NpmPackage {
 
 impl NpmPackage {
     /// Create a new npm package
+    #[inline]
     pub fn new(manifest: PackageManifest, root: PathBuf) -> NpmPackage {
         NpmPackage { manifest, root }
     }
 
     /// Returns loaded package.json manifest
+    #[inline]
     pub fn manifest(&self) -> &PackageManifest {
         &self.manifest
     }
 
     /// Returns package's name read from the manifest, if any.
+    #[inline]
     pub fn name(&self) -> Option<&str> {
         self.manifest.name.as_deref()
     }
 
     /// Returns true if the loaded package is a workspace
+    #[inline]
     pub fn is_workspace(&self) -> bool {
         self.manifest.workspaces.is_empty()
     }
@@ -43,6 +47,7 @@ impl NpmPackage {
 
 impl Unit for NpmPackage {
     /// Returns the detected kind of unit, either `"npm:package"` or `"npm:workspace"`
+    #[inline]
     fn kind(&self) -> &str {
         if self.is_workspace() {
             "npm:package"
@@ -52,18 +57,21 @@ impl Unit for NpmPackage {
     }
 
     /// Returns the given root path
+    #[inline]
     fn root(&self) -> &Path {
         &self.root
     }
 
     /// Returns javascript language object
+    #[inline]
     fn language(&self) -> Option<Language> {
         Some(javascript_language())
     }
 
     /// Returns package name read from the manifest, if any.
+    #[inline]
     fn name(&self) -> Option<&str> {
-        self.manifest.name.as_deref()
+        self.name()
     }
 }
 

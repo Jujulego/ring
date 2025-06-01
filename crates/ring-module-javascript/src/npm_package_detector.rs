@@ -30,14 +30,16 @@ impl NpmPackageDetector {
     }
 
     /// Checks if given path is a npm package manifest
+    #[inline]
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
         self.path_adaptator.is_file(path) && self._is_manifest(path)
     }
 
+    #[inline]
     fn _is_manifest(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some("package.json")
+        path.file_name() == Some(OsStr::new("package.json"))
     }
 
     /// Checks if given path is a package lockfile
@@ -48,66 +50,92 @@ impl NpmPackageDetector {
             && (self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path))
     }
 
+    /// Checks if given path is a npm config file
+    #[inline]
+    pub fn is_npm_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
+        let path = path.as_ref();
+
+        self.path_adaptator.is_file(path) && self._is_npm_configuration(path)
+    }
+
+    #[inline]
     fn _is_npm_configuration(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some(".npmrc")
+        path.file_name() == Some(OsStr::new(".npmrc"))
     }
 
     /// Checks if given path is a npm package lockfile
+    #[inline]
     pub fn is_npm_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_npm_lockfile(path)
+        path.parent().is_some_and(|parent| self.is_package(parent))
+            && self.path_adaptator.is_file(path)
+            && self._is_npm_lockfile(path)
     }
 
+    #[inline]
     fn _is_npm_lockfile(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some("package-lock.json")
+        path.file_name() == Some(OsStr::new("package-lock.json"))
     }
 
     /// Checks if given path is a npm package
+    #[inline]
     pub fn is_package<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
         self.path_adaptator.is_dir(path) && self._is_package(path)
     }
 
+    #[inline]
     fn _is_package(&self, path: &Path) -> bool {
         self.is_manifest(path.join("package.json"))
     }
 
     /// Checks if given path is a pnpm package lockfile
+    #[inline]
     pub fn is_pnpm_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_pnpm_lockfile(path)
+        path.parent().is_some_and(|parent| self.is_package(parent))
+            && self.path_adaptator.is_file(path)
+            && self._is_pnpm_lockfile(path)
     }
 
+    #[inline]
     fn _is_pnpm_lockfile(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some("pnpm-lock.yaml")
+        path.file_name() == Some(OsStr::new("pnpm-lock.yaml"))
     }
 
     /// Checks if given path is a yarn package lockfile
+    #[inline]
     pub fn is_yarn_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_yarn_lockfile(path)
+        path.parent().is_some_and(|parent| self.is_package(parent))
+            && self.path_adaptator.is_file(path)
+            && self._is_yarn_lockfile(path)
     }
 
+    #[inline]
     fn _is_yarn_lockfile(&self, path: &Path) -> bool {
-        path.file_name().and_then(OsStr::to_str) == Some("yarn.lock")
+        path.file_name() == Some(OsStr::new("yarn.lock"))
     }
 
     /// Checks if given path is a yarn configuration file
+    #[inline]
     pub fn is_yarn_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
         self.path_adaptator.is_file(path) && self._is_yarn_configuration(path)
     }
 
+    #[inline]
     fn _is_yarn_configuration(&self, path: &Path) -> bool {
         matches!(path.file_name().and_then(OsStr::to_str), Some(".yarnrc") | Some(".yarnrc.yml"))
     }
 
     /// Load npm package at given path, if any.
+    #[inline]
     pub fn load_package_at<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         self._load_package_at(path.as_ref())
     }
@@ -169,7 +197,7 @@ impl DetectLanguage for NpmPackageDetector {
                 return Some(json_language());
             }
 
-            if self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path) {
+            if self._is_pnpm_lockfile(path) || self._is_yarn_configuration(path) || self._is_yarn_lockfile(path) {
                 return Some(yaml_language());
             }
         }
@@ -243,53 +271,136 @@ impl QualifyPath for NpmPackageDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::adaptators::FilesystemAdaptator;
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
-    fn it_should_detect_manifest_language() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_package_json() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("package.json", "{}");
 
-        assert_eq!(detector.detect_language(Path::new("assets/package.json")), Some(json_language()));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_manifest(Path::new("package.json")));
+        assert_eq!(detector.detect_language(Path::new("package.json")), Some(json_language()));
+        assert_eq!(detector.qualify_path(Path::new("package.json")), Some((PathContent::Manifest, Path::new("package.json"))));
     }
 
     #[test]
-    fn it_should_detect_lockfile_language() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_npm_configuration() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(".npmrc", "{}");
 
-        assert_eq!(detector.detect_language(Path::new("assets/package-lock.json")), Some(json_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/pnpm-lock.yaml")), Some(yaml_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/yarn.lock")), Some(yaml_language()));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_npm_configuration(Path::new(".npmrc")));
+        assert_eq!(detector.detect_language(Path::new(".npmrc")), None);
+        assert_eq!(
+            detector.qualify_path(Path::new(".npmrc")),
+            Some((PathContent::Configuration, Path::new(".npmrc")))
+        );
     }
 
     #[test]
-    fn it_should_detect_package_unit() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_npm_lockfile() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("/package.json", "{}");
+        virtual_fs.add_file("/package-lock.json", "{}");
 
-        assert_eq!(detector.detect_unit(Path::new("assets")).unwrap().name(), Some("test-assets"));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_lockfile(Path::new("/package-lock.json")));
+        assert!(detector.is_npm_lockfile(Path::new("/package-lock.json")));
+        assert_eq!(detector.detect_language(Path::new("/package-lock.json")), Some(json_language()));
+        assert_eq!(
+            detector.qualify_path(Path::new("/package-lock.json")),
+            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("/package-lock.json")))
+        );
     }
 
     #[test]
-    fn it_should_qualify_npm_files() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_pnpm_lockfile() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("/package.json", "{}");
+        virtual_fs.add_file("/pnpm-lock.yaml", "{}");
 
-        assert_eq!(detector.qualify_path(Path::new("assets/package.json")), Some((PathContent::Manifest, Path::new("assets/package.json"))));
-        assert_eq!(detector.qualify_path(Path::new("assets/package-lock.json")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/package-lock.json"))));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_lockfile(Path::new("/pnpm-lock.yaml")));
+        assert!(detector.is_pnpm_lockfile(Path::new("/pnpm-lock.yaml")));
+        assert_eq!(detector.detect_language(Path::new("/pnpm-lock.yaml")), Some(yaml_language()));
+        assert_eq!(
+            detector.qualify_path(Path::new("/pnpm-lock.yaml")),
+            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("/pnpm-lock.yaml")))
+        );
     }
 
     #[test]
-    fn it_should_qualify_pnpm_files() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_yarn_configuration() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(".yarnrc.yml", "{}");
 
-        assert_eq!(detector.qualify_path(Path::new("assets/pnpm-lock.yaml")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/pnpm-lock.yaml"))));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_yarn_configuration(Path::new(".yarnrc.yml")));
+        assert_eq!(detector.detect_language(Path::new(".yarnrc.yml")), Some(yaml_language()));
+        assert_eq!(
+            detector.qualify_path(Path::new(".yarnrc.yml")),
+            Some((PathContent::Configuration, Path::new(".yarnrc.yml")))
+        );
     }
 
     #[test]
-    fn it_should_qualify_yarn_files() {
-        let detector = NpmPackageDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_detect_yarn_lockfile() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("/package.json", "{}");
+        virtual_fs.add_file("/yarn.lock", "{}");
 
-        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.cjs")), Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("assets/.pnp.cjs"))));
-        assert_eq!(detector.qualify_path(Path::new("assets/.pnp.loader.mjs")), Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("assets/.pnp.loader.mjs"))));
-        assert_eq!(detector.qualify_path(Path::new("assets/.yarnrc.yml")), Some((PathContent::Configuration, Path::new("assets/.yarnrc.yml"))));
-        assert_eq!(detector.qualify_path(Path::new("assets/yarn.lock")), Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/yarn.lock"))));
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_lockfile(Path::new("/yarn.lock")));
+        assert!(detector.is_yarn_lockfile(Path::new("/yarn.lock")));
+        assert_eq!(detector.detect_language(Path::new("/yarn.lock")), Some(yaml_language()));
+        assert_eq!(
+            detector.qualify_path(Path::new("/yarn.lock")),
+            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("/yarn.lock")))
+        );
+    }
+
+    #[test]
+    fn it_should_load_package_unit() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("/package.json", "{ \"name\": \"test\" }");
+        virtual_fs.add_file("/src/main.js", "");
+
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert!(detector.is_package(Path::new("/")));
+
+        assert_eq!(detector.load_package_at(Path::new("/")).unwrap().unwrap().name(), Some("test"));
+
+        assert_eq!(detector.load_package_containing(Path::new("/")).unwrap().unwrap().name(), Some("test"));
+        assert_eq!(detector.load_package_containing(Path::new("/src")).unwrap().unwrap().name(), Some("test"));
+        assert_eq!(detector.load_package_containing(Path::new("/src/main.js")).unwrap().unwrap().name(), Some("test"));
+
+        assert_eq!(detector.detect_unit(Path::new("/")).unwrap().name(), Some("test"));
+    }
+
+    #[test]
+    fn it_should_qualify_yarn_pnp_files() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("/package.json", "{}");
+        virtual_fs.add_file("/.pnp.cjs", "{}");
+        virtual_fs.add_file("/.pnp.loader.mjs", "{}");
+
+        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(
+            detector.qualify_path(Path::new("/.pnp.cjs")),
+            Some((PathContent::Other("pnp-cjs".into(), &PathContent::Dependency), Path::new("/.pnp.cjs")))
+        );
+        assert_eq!(
+            detector.qualify_path(Path::new("/.pnp.loader.mjs")),
+            Some((PathContent::Other("pnp-esm".into(), &PathContent::Dependency), Path::new("/.pnp.loader.mjs")))
+        );
     }
 }
