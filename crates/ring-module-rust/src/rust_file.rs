@@ -6,6 +6,7 @@ use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
 
+/// Detector for rust files
 #[derive(Clone)]
 pub struct RustFileDetector {
     path_adaptator: Rc<dyn PathAdaptator>,
@@ -27,7 +28,8 @@ impl RustFileDetector {
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path) && path.extension().and_then(OsStr::to_str) == Some("rs")
+        self.path_adaptator.is_file(path)
+            && path.extension() == Some(OsStr::new("rs"))
     }
 }
 
@@ -45,38 +47,32 @@ impl DetectLanguage for RustFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_rust_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/main.rs", "");
 
-        let detector = RustFileDetector::new(Rc::new(path_adaptator));
+        let detector = RustFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("src/lib.rs")), Some(rust_language()));
+        assert!(detector.is_rust_file(Path::new("src/main.rs")));
+        assert_eq!(detector.detect_language(Path::new("src/main.rs")), Some(rust_language()));
     }
 
     #[test]
     fn it_should_not_detect_rust_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/main.js", "");
 
-        let detector = RustFileDetector::new(Rc::new(path_adaptator));
+        let detector = RustFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("Cargo.toml")), None);
+        assert!(!detector.is_rust_file(Path::new("do-not-exist.rs")));
+        assert!(!detector.is_rust_file(Path::new("src/main.js")));
+        assert!(!detector.is_rust_file(Path::new("src")));
+
+        assert_eq!(detector.detect_language(Path::new("do-not-exist.rs")), None);
+        assert_eq!(detector.detect_language(Path::new("src/main.js")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }
 }

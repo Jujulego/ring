@@ -31,11 +31,9 @@ impl TsconfigFileDetector {
             return false;
         }
 
-        if let Some(file_name) = path.file_name().and_then(OsStr::to_str) {
+        path.file_name().and_then(OsStr::to_str).is_some_and(|file_name| {
             file_name.starts_with("tsconfig.") && file_name.ends_with(".json")
-        } else {
-            false
-        }
+        })
     }
 }
 
@@ -63,40 +61,47 @@ impl QualifyPath for TsconfigFileDetector {
 
 #[cfg(test)]
 mod tests {
+    use ring_core_fs::VirtualFilesystem;
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
-
+    
     #[test]
-    fn it_should_detect_json_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+    fn it_should_detect_tsconfig_file() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("tsconfig.json", "");
+        virtual_fs.add_file("tsconfig.suffix.json", "");
 
-        let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
+        let detector = TsconfigFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("assets/tsconfig.json")), Some(json_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/tsconfig.test.json")), Some(json_language()));
+        assert!(detector.is_tsconfig(Path::new("tsconfig.json")));
+        assert!(detector.is_tsconfig(Path::new("tsconfig.suffix.json")));
+
+        assert_eq!(detector.detect_language(Path::new("tsconfig.json")), Some(json_language()));
+        assert_eq!(detector.detect_language(Path::new("tsconfig.suffix.json")), Some(json_language()));
+
+        assert_eq!(detector.qualify_path(Path::new("tsconfig.json")), Some((PathContent::Configuration, Path::new("tsconfig.json"))));
+        assert_eq!(detector.qualify_path(Path::new("tsconfig.suffix.json")), Some((PathContent::Configuration, Path::new("tsconfig.suffix.json"))));
     }
-
+    
     #[test]
-    fn it_should_qualify_as_config_file() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+    fn it_should_not_detect_tsconfig_file() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
-        let detector = TsconfigFileDetector::new(Rc::new(path_adaptator));
+        let detector = TsconfigFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.json"))));
-        assert_eq!(detector.qualify_path(Path::new("assets/tsconfig.test.json")), Some((PathContent::Configuration, Path::new("assets/tsconfig.test.json"))));
+        assert!(!detector.is_tsconfig(Path::new("tsconfig.json")));
+        assert!(!detector.is_tsconfig(Path::new("tsconfig.do-not-exists.json")));
+        assert!(!detector.is_tsconfig(Path::new("src/lib.rs")));
+        assert!(!detector.is_tsconfig(Path::new("src")));
+        
+        assert_eq!(detector.detect_language(Path::new("tsconfig.json")), None);
+        assert_eq!(detector.detect_language(Path::new("tsconfig.do-not-exists.json")), None);
+        assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
+        assert_eq!(detector.detect_language(Path::new("src")), None);
+
+        assert_eq!(detector.qualify_path(Path::new("tsconfig.json")), None);
+        assert_eq!(detector.qualify_path(Path::new("tsconfig.do-not-exists.json")), None);
+        assert_eq!(detector.qualify_path(Path::new("src/lib.rs")), None);
+        assert_eq!(detector.qualify_path(Path::new("src")), None);
     }
 }

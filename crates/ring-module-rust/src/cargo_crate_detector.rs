@@ -1,13 +1,12 @@
 use crate::cargo_crate::CargoCrate;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::{Error, PathAdaptator};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -45,7 +44,9 @@ impl CargoCrateDetector {
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_lockfile(path)
+        path.parent().is_some_and(|parent| self.is_crate(parent))
+            && self.path_adaptator.is_file(path)
+            && self._is_lockfile(path)
     }
 
     fn _is_lockfile(&self, path: &Path) -> bool {
@@ -60,9 +61,9 @@ impl CargoCrateDetector {
     }
 
     fn _is_cargo_config(&self, path: &Path) -> bool {
-        path.parent().and_then(|p| p.file_name()).and_then(OsStr::to_str) == Some(".cargo")
-            && path.file_stem().and_then(OsStr::to_str) == Some("config")
-            && path.extension().and_then(OsStr::to_str).is_none_or(|ext| ext == "toml")
+        path.parent().and_then(|p| p.file_name()) == Some(OsStr::new(".cargo"))
+            && path.file_stem() == Some(OsStr::new("config"))
+            && path.extension().is_none_or(|ext| ext == OsStr::new("toml"))
     }
 
     /// Checks if given path is a Cargo crate
@@ -99,23 +100,25 @@ impl CargoCrateDetector {
         }
 
         trace!("read file {}", manifest_path.display());
-        match fs::read_to_string(&manifest_path) {
-            Ok(content) => {
-                match toml::from_str(&content) {
-                    Ok(manifest) => {
-                        let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
+        match self.path_adaptator.open(&manifest_path) {
+            Ok(mut file) => {
+                let reader = file.reader()
+                    .context(format!("Failed to read {}", manifest_path.display()))?;
 
-                        debug!(key = %manifest_path.display(), "cargo crate cached");
-                        self.cache.borrow_mut().insert(manifest_path, crt.clone());
+                let content = io::read_to_string(reader)
+                    .context(format!("Failed to read {}", manifest_path.display()))?;
+                
+                let manifest = toml::from_str(&content)
+                    .context(format!("Failed to parse {}", manifest_path.display()))?;
 
-                        Ok(crt)
-                    }
-                    Err(err) => {
-                        Err(anyhow!(err).context(format!("Failed to parse {}", manifest_path.display())))
-                    }
-                }
+                let crt = Some(Rc::new(CargoCrate::new(manifest, path.to_path_buf())));
+
+                debug!(key = %manifest_path.display(), "cargo crate cached");
+                self.cache.borrow_mut().insert(manifest_path, crt.clone());
+
+                Ok(crt)
             }
-            Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            Err(Error::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "cargo crate miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
@@ -205,125 +208,98 @@ impl QualifyPath for CargoCrateDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::adaptators::FilesystemAdaptator;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
-
-    #[test]
-    fn it_should_detect_toml_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
-
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
-
-        assert_eq!(detector.detect_language(Path::new("assets/.cargo/config")), Some(toml_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/.cargo/config.toml")), Some(toml_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/Cargo.toml")), Some(toml_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/Cargo.lock")), Some(toml_language()));
-    }
-
-    #[test]
-    fn it_should_qualify_path_content() {
-        let detector = CargoCrateDetector::new(Rc::new(FilesystemAdaptator));
-
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/.cargo/config")),
-            Some((PathContent::Configuration, Path::new("assets/.cargo/config")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/.cargo/config.toml")),
-            Some((PathContent::Configuration, Path::new("assets/.cargo/config.toml")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/build.rs")),
-            Some((PathContent::Other("build".into(), &PathContent::Configuration), Path::new("assets/build.rs")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/Cargo.toml")),
-            Some((PathContent::Manifest, Path::new("assets/Cargo.toml")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/Cargo.lock")),
-            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("assets/Cargo.lock")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/src/lib.rs")),
-            Some((PathContent::Source, Path::new("assets/src")))
-        );
-        assert_eq!(
-            detector.qualify_path(Path::new("assets/tests/test.rs")),
-            Some((PathContent::Test, Path::new("assets/tests")))
-        );
-    }
+    use indoc::indoc;
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_cargo_manifest() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(Path::new("Cargo.toml"), "");
 
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
 
-        assert!(detector.is_manifest("assets/Cargo.toml"));
+        assert!(detector.is_manifest(Path::new("Cargo.toml")));
+        assert_eq!(detector.detect_language(Path::new("Cargo.toml")), Some(toml_language()));
+        assert_eq!(detector.qualify_path(Path::new("Cargo.toml")), Some((PathContent::Manifest, Path::new("Cargo.toml"))));
     }
 
     #[test]
     fn it_should_detect_cargo_lockfile() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(Path::new("/Cargo.toml"), "");
+        virtual_fs.add_file(Path::new("/Cargo.lock"), "");
 
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
 
-        assert!(detector.is_lockfile("assets/Cargo.lock"));
+        assert!(detector.is_lockfile(Path::new("/Cargo.lock")));
+        assert_eq!(detector.detect_language(Path::new("/Cargo.lock")), Some(toml_language()));
+        assert_eq!(
+            detector.qualify_path(Path::new("/Cargo.lock")),
+            Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), Path::new("/Cargo.lock")))
+        );
     }
 
     #[test]
-    fn it_should_detect_cargo_config_files() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+    fn it_should_detect_cargo_configuration() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(Path::new("/.cargo/config"), "");
+        virtual_fs.add_file(Path::new("/.cargo/config.toml"), "");
 
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
+        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
 
-        assert!(detector.is_cargo_config("assets/.cargo/config"));
-        assert!(detector.is_cargo_config("assets/.cargo/config.toml"));
+        assert!(detector.is_cargo_config("/.cargo/config"));
+        assert!(detector.is_cargo_config("/.cargo/config.toml"));
+
+        assert_eq!(detector.detect_language(Path::new("/.cargo/config")), Some(toml_language()));
+        assert_eq!(detector.detect_language(Path::new("/.cargo/config.toml")), Some(toml_language()));
+
+        assert_eq!(detector.qualify_path(Path::new("/.cargo/config")), Some((PathContent::Configuration, Path::new("/.cargo/config"))));
+        assert_eq!(detector.qualify_path(Path::new("/.cargo/config.toml")), Some((PathContent::Configuration, Path::new("/.cargo/config.toml"))));
     }
 
     #[test]
-    fn it_should_detect_cargo_crate() {
-        let detector = CargoCrateDetector::new(Rc::new(FilesystemAdaptator));
+    fn it_should_qualify_rust_files() {
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(Path::new("/Cargo.toml"), "");
+        virtual_fs.add_file(Path::new("/build.rs"), "");
+        virtual_fs.add_file(Path::new("/src/lib.rs"), "");
+        virtual_fs.add_file(Path::new("/tests/test.rs"), "");
 
-        assert!(detector.is_crate("assets"));
+        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+
+        assert_eq!(
+            detector.qualify_path(Path::new("/build.rs")),
+            Some((PathContent::Other("build".into(), &PathContent::Configuration), Path::new("/build.rs")))
+        );
+        assert_eq!(
+            detector.qualify_path(Path::new("/src/lib.rs")),
+            Some((PathContent::Source, Path::new("/src")))
+        );
+        assert_eq!(
+            detector.qualify_path(Path::new("/tests/test.rs")),
+            Some((PathContent::Test, Path::new("/tests")))
+        );
     }
 
     #[test]
     fn it_should_load_cargo_crate() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file(Path::new("/Cargo.toml"), indoc! {r#"
+            [package]
+            name = "test"
+        "#});
+        virtual_fs.add_file(Path::new("/src/lib.rs"), "");
 
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
-        let crt = detector.load_crate_at("assets").unwrap().unwrap();
+        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(crt.name(), Some("assets"));
-    }
+        assert!(detector.is_crate("/"));
 
-    #[test]
-    fn it_should_load_parent_cargo_crate() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        assert_eq!(detector.load_crate_at("/").unwrap().unwrap().name(), Some("test"));
 
-        let detector = CargoCrateDetector::new(Rc::new(path_adaptator));
-        let crt = detector.load_crate_containing("assets/src").unwrap().unwrap();
+        assert_eq!(detector.load_crate_containing("/").unwrap().unwrap().name(), Some("test"));
+        assert_eq!(detector.load_crate_containing("/src").unwrap().unwrap().name(), Some("test"));
+        assert_eq!(detector.load_crate_containing("/src/lib.rs").unwrap().unwrap().name(), Some("test"));
 
-        assert_eq!(crt.name(), Some("assets"));
+        assert_eq!(detector.detect_unit(Path::new("/")).unwrap().name(), Some("test"));
     }
 }

@@ -46,40 +46,47 @@ impl DetectLanguage for TypescriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::mock;
-    use ring_core_fs::{Error, FileWrapper, PathAdaptator};
-
-    mock! {
-        TestAdaptator {}
-
-        impl PathAdaptator for TestAdaptator {
-            fn is_dir(&self, path: &Path) -> bool;
-            fn is_file(&self, path: &Path) -> bool;
-            fn is_supported(&self, path: &Path) -> bool;
-            fn open(&self, path: &Path) -> Result<Box<dyn FileWrapper>, Error>;
-        }
-    }
+    use ring_core_fs::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_typescript_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(true);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("test.ts", "");
+        virtual_fs.add_file("test.tsx", "");
+        virtual_fs.add_file("test.cts", "");
+        virtual_fs.add_file("test.mts", "");
 
-        let detector = TypescriptFileDetector::new(Rc::new(path_adaptator));
+        let detector = TypescriptFileDetector::new(Rc::new(virtual_fs));
 
-        assert_eq!(detector.detect_language(Path::new("assets/test.ts")), Some(typescript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.cts")), Some(typescript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.mts")), Some(typescript_language()));
-        assert_eq!(detector.detect_language(Path::new("assets/test.tsx")), Some(typescript_language()));
+        assert!(detector.is_typescript_file(Path::new("test.ts")));
+        assert!(detector.is_typescript_file(Path::new("test.cts")));
+        assert!(detector.is_typescript_file(Path::new("test.mts")));
+        assert!(detector.is_typescript_file(Path::new("test.tsx")));
+
+        assert_eq!(detector.detect_language(Path::new("test.ts")), Some(typescript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.cts")), Some(typescript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.mts")), Some(typescript_language()));
+        assert_eq!(detector.detect_language(Path::new("test.tsx")), Some(typescript_language()));
     }
 
     #[test]
     fn it_should_not_detect_typescript_language() {
-        let mut path_adaptator = MockTestAdaptator::new();
-        path_adaptator.expect_is_file().return_const(false);
+        let mut virtual_fs = VirtualFilesystem::new();
+        virtual_fs.add_file("src/lib.rs", "");
 
-        let detector = TypescriptFileDetector::new(Rc::new(path_adaptator));
+        let detector = TypescriptFileDetector::new(Rc::new(virtual_fs));
 
+        assert!(!detector.is_typescript_file(Path::new("do-not-exists.ts")));
+        assert!(!detector.is_typescript_file(Path::new("do-not-exists.tsx")));
+        assert!(!detector.is_typescript_file(Path::new("do-not-exists.cts")));
+        assert!(!detector.is_typescript_file(Path::new("do-not-exists.mts")));
+        assert!(!detector.is_typescript_file(Path::new("src/lib.rs")));
+        assert!(!detector.is_typescript_file(Path::new("src")));
+
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.ts")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.tsx")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.cts")), None);
+        assert_eq!(detector.detect_language(Path::new("do-not-exists.mts")), None);
         assert_eq!(detector.detect_language(Path::new("src/lib.rs")), None);
         assert_eq!(detector.detect_language(Path::new("src")), None);
     }

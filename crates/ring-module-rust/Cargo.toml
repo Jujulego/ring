@@ -19,5 +19,4 @@ ring-core-units = { path = "../ring-core-units" }
 ring-module-toml = { path = "../ring-module-toml" }
 
 [dev-dependencies]
-anyhow = "1.0.98"
-mockall = "0.13.1"
+indoc = "2.0.6"
