@@ -1,5 +1,5 @@
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbstractFilesystem;
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TsconfigFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbstractFilesystem>,
 }
 
 impl TsconfigFileDetector {
     /// Creates a new instance of TsconfigFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         Self {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl TsconfigFileDetector {
     }
 
     fn _is_tsconfig(&self, path: &Path) -> bool {
-        if !self.path_adaptator.is_file(path) {
+        if !self.filesystem.is_file(path) {
             return false;
         }
 
@@ -61,9 +61,9 @@ impl QualifyPath for TsconfigFileDetector {
 
 #[cfg(test)]
 mod tests {
-    use ring_core_fs::VirtualFilesystem;
     use super::*;
-    
+    use ring_core_fs::filesystem::VirtualFilesystem;
+
     #[test]
     fn it_should_detect_tsconfig_file() {
         let mut virtual_fs = VirtualFilesystem::new();

@@ -4,7 +4,7 @@ mod utils;
 pub use crate::json_file::JsonFileDetector;
 pub use crate::utils::json_language;
 use ring_core_content::DetectLanguage;
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbstractFilesystem;
 use ring_core_modules::Module;
 use std::rc::Rc;
 
@@ -16,9 +16,9 @@ pub struct JsonModule {
 impl JsonModule {
     /// Creates a new instance of JsonModule
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         JsonModule {
-            json_file_detector: Rc::new(JsonFileDetector::new(path_adaptator))
+            json_file_detector: Rc::new(JsonFileDetector::new(filesystem))
         }
     }
 

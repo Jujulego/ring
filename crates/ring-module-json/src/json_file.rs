@@ -1,6 +1,6 @@
 use crate::json_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbstractFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JsonFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbstractFilesystem>,
 }
 
 impl JsonFileDetector {
     /// Creates a new instance of JsonFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         Self {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl JsonFileDetector {
     }
 
     fn _is_json_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path) 
+        self.filesystem.is_file(path)
             && path.extension().and_then(OsStr::to_str) == Some("json")
     }
 }
@@ -46,7 +46,7 @@ impl DetectLanguage for JsonFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_json_language() {

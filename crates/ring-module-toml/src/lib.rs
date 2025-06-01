@@ -4,7 +4,7 @@ mod utils;
 pub use crate::toml_file::TomlFileDetector;
 pub use crate::utils::toml_language;
 use ring_core_content::DetectLanguage;
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbstractFilesystem;
 use ring_core_modules::Module;
 use std::rc::Rc;
 
@@ -16,9 +16,9 @@ pub struct TomlModule {
 impl TomlModule {
     /// Creates a new instance of TomlModule
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         TomlModule {
-            toml_file_detector: Rc::new(TomlFileDetector::new(path_adaptator))
+            toml_file_detector: Rc::new(TomlFileDetector::new(filesystem))
         }
     }
 

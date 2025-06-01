@@ -1,6 +1,6 @@
 use crate::toml_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbstractFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TomlFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbstractFilesystem>,
 }
 
 impl TomlFileDetector {
     /// Creates a new instance of TomlFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> TomlFileDetector {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> TomlFileDetector {
         TomlFileDetector {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl TomlFileDetector {
     }
 
     fn _is_toml_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path)
+        self.filesystem.is_file(path)
             && path.extension().and_then(OsStr::to_str) == Some("toml")
     }
 }
@@ -46,7 +46,7 @@ impl DetectLanguage for TomlFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_toml_language() {

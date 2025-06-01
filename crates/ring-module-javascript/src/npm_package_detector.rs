@@ -1,7 +1,8 @@
 use crate::NpmPackage;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::{Error, PathAdaptator};
+use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::Error;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -16,16 +17,16 @@ use tracing::{debug, instrument, warn};
 #[derive(Clone)]
 pub struct NpmPackageDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<NpmPackage>>>>,
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbstractFilesystem>,
 }
 
 impl NpmPackageDetector {
     /// Creates a new instance of NpmPackageDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         NpmPackageDetector {
             cache: RefCell::new(HashMap::new()),
-            path_adaptator,
+            filesystem,
         }
     }
 
@@ -34,7 +35,7 @@ impl NpmPackageDetector {
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_manifest(path)
+        self.filesystem.is_file(path) && self._is_manifest(path)
     }
 
     #[inline]
@@ -46,7 +47,7 @@ impl NpmPackageDetector {
     pub fn is_lockfile<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path)
+        self.filesystem.is_file(path)
             && (self._is_npm_lockfile(path) || self._is_pnpm_lockfile(path) || self._is_yarn_lockfile(path))
     }
 
@@ -55,7 +56,7 @@ impl NpmPackageDetector {
     pub fn is_npm_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_npm_configuration(path)
+        self.filesystem.is_file(path) && self._is_npm_configuration(path)
     }
 
     #[inline]
@@ -69,7 +70,7 @@ impl NpmPackageDetector {
         let path = path.as_ref();
 
         path.parent().is_some_and(|parent| self.is_package(parent))
-            && self.path_adaptator.is_file(path)
+            && self.filesystem.is_file(path)
             && self._is_npm_lockfile(path)
     }
 
@@ -83,7 +84,7 @@ impl NpmPackageDetector {
     pub fn is_package<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_dir(path) && self._is_package(path)
+        self.filesystem.is_dir(path) && self._is_package(path)
     }
 
     #[inline]
@@ -97,7 +98,7 @@ impl NpmPackageDetector {
         let path = path.as_ref();
 
         path.parent().is_some_and(|parent| self.is_package(parent))
-            && self.path_adaptator.is_file(path)
+            && self.filesystem.is_file(path)
             && self._is_pnpm_lockfile(path)
     }
 
@@ -112,7 +113,7 @@ impl NpmPackageDetector {
         let path = path.as_ref();
 
         path.parent().is_some_and(|parent| self.is_package(parent))
-            && self.path_adaptator.is_file(path)
+            && self.filesystem.is_file(path)
             && self._is_yarn_lockfile(path)
     }
 
@@ -126,7 +127,7 @@ impl NpmPackageDetector {
     pub fn is_yarn_configuration<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_yarn_configuration(path)
+        self.filesystem.is_file(path) && self._is_yarn_configuration(path)
     }
 
     #[inline]
@@ -144,7 +145,7 @@ impl NpmPackageDetector {
     pub fn load_package_containing<P: AsRef<Path>>(&self, path: P) -> anyhow::Result<Option<Rc<NpmPackage>>> {
         let mut path = path.as_ref();
 
-        if self.path_adaptator.is_file(path) {
+        if self.filesystem.is_file(path) {
             path = path.parent().unwrap();
         }
 
@@ -161,12 +162,9 @@ impl NpmPackageDetector {
             return Ok(crt.clone());
         }
 
-        match self.path_adaptator.open(&manifest_path) {
-            Ok(mut file) => {
-                let reader = file.reader()
-                    .context(format!("Failed to read {}", manifest_path.display()))?;
-
-                let manifest = serde_json::from_reader(reader)
+        match self.filesystem.open(&manifest_path) {
+            Ok(file) => {
+                let manifest = serde_json::from_reader(file)
                     .context(format!("Failed to parse {}", manifest_path.display()))?;
 
                 let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
@@ -192,7 +190,7 @@ impl NpmPackageDetector {
 impl DetectLanguage for NpmPackageDetector {
     #[instrument(name = "npm-package.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        if self.path_adaptator.is_file(path)  {
+        if self.filesystem.is_file(path)  {
             if self._is_manifest(path) || self._is_npm_lockfile(path) {
                 return Some(json_language());
             }
@@ -227,7 +225,7 @@ impl QualifyPath for NpmPackageDetector {
     #[instrument(name = "npm-package.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of package cases
-        if self.path_adaptator.is_file(path)  {
+        if self.filesystem.is_file(path)  {
             if self._is_manifest(path) {
                 return Some((PathContent::Manifest, path));
             }
@@ -249,7 +247,7 @@ impl QualifyPath for NpmPackageDetector {
                 break;
             }
 
-            if self.path_adaptator.is_file(ancestor)  {
+            if self.filesystem.is_file(ancestor)  {
                 if self._is_npm_lockfile(ancestor) || self._is_pnpm_lockfile(ancestor) || self._is_yarn_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
@@ -271,7 +269,7 @@ impl QualifyPath for NpmPackageDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_package_json() {

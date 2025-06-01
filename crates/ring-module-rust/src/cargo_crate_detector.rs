@@ -1,7 +1,8 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::{Error, PathAdaptator};
+use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::Error;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -16,16 +17,16 @@ use tracing::{debug, instrument, trace, warn};
 #[derive(Clone)]
 pub struct CargoCrateDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbstractFilesystem>,
 }
 
 impl CargoCrateDetector {
     /// Creates a new instance of CargoCrateDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
         CargoCrateDetector {
             cache: RefCell::new(HashMap::new()),
-            path_adaptator,
+            filesystem,
         }
     }
 
@@ -33,7 +34,7 @@ impl CargoCrateDetector {
     pub fn is_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_manifest(path)
+        self.filesystem.is_file(path) && self._is_manifest(path)
     }
 
     fn _is_manifest(&self, path: &Path) -> bool {
@@ -45,7 +46,7 @@ impl CargoCrateDetector {
         let path = path.as_ref();
 
         path.parent().is_some_and(|parent| self.is_crate(parent))
-            && self.path_adaptator.is_file(path)
+            && self.filesystem.is_file(path)
             && self._is_lockfile(path)
     }
 
@@ -57,7 +58,7 @@ impl CargoCrateDetector {
     pub fn is_cargo_config<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_file(path) && self._is_cargo_config(path)
+        self.filesystem.is_file(path) && self._is_cargo_config(path)
     }
 
     fn _is_cargo_config(&self, path: &Path) -> bool {
@@ -70,7 +71,7 @@ impl CargoCrateDetector {
     pub fn is_crate<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
 
-        self.path_adaptator.is_dir(path) && self._is_crate(path)
+        self.filesystem.is_dir(path) && self._is_crate(path)
     }
 
     fn _is_crate(&self, path: &Path) -> bool {
@@ -100,12 +101,9 @@ impl CargoCrateDetector {
         }
 
         trace!("read file {}", manifest_path.display());
-        match self.path_adaptator.open(&manifest_path) {
-            Ok(mut file) => {
-                let reader = file.reader()
-                    .context(format!("Failed to read {}", manifest_path.display()))?;
-
-                let content = io::read_to_string(reader)
+        match self.filesystem.open(&manifest_path) {
+            Ok(file) => {
+                let content = io::read_to_string(file)
                     .context(format!("Failed to read {}", manifest_path.display()))?;
                 
                 let manifest = toml::from_str(&content)
@@ -134,7 +132,7 @@ impl CargoCrateDetector {
 impl DetectLanguage for CargoCrateDetector {
     #[instrument(name = "cargo-crate.detect-language", skip_all)]
     fn detect_language(&self, path: &Path) -> Option<Language> {
-        let is_file = self.path_adaptator.is_file(path);
+        let is_file = self.filesystem.is_file(path);
         
         if is_file && (self._is_manifest(path) || self._is_lockfile(path) || self._is_cargo_config(path)) {
             Some(toml_language())
@@ -165,7 +163,7 @@ impl QualifyPath for CargoCrateDetector {
     #[instrument(name = "cargo-crate.qualify-path", skip_all)]
     fn qualify_path<'a>(&self, path: &'a Path) -> Option<(PathContent, &'a Path)> {
         // Out of crate cases
-        if self.path_adaptator.is_file(path) {
+        if self.filesystem.is_file(path) {
             if self._is_manifest(path) { // manifest defines the folder as a crate
                 return Some((PathContent::Manifest, path));
             } else if self._is_cargo_config(path) {
@@ -183,7 +181,7 @@ impl QualifyPath for CargoCrateDetector {
                 break;
             }
 
-            if self.path_adaptator.is_file(ancestor) {
+            if self.filesystem.is_file(ancestor) {
                 if self._is_lockfile(ancestor) {
                     return Some((PathContent::Other("lockfile".to_string(), &PathContent::Dependency), ancestor));
                 }
@@ -209,7 +207,7 @@ impl QualifyPath for CargoCrateDetector {
 mod tests {
     use super::*;
     use indoc::indoc;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_cargo_manifest() {
