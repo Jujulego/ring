@@ -38,7 +38,7 @@ impl ShellFileDetector {
         let reader = BufReader::new(reader);
         let shebang = reader.lines()
             .map_while(Result::ok)
-            .find(|line| line.starts_with("#!"));
+            .next();
 
         shebang.as_ref().is_some_and(|l| l == "#!/bin/sh")
             || shebang.as_ref().is_some_and(|l| l == "#!/bin/bash")
