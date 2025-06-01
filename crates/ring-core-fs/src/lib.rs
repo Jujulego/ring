@@ -4,6 +4,8 @@ mod file_wrapper;
 mod filesystem_tools;
 mod path_adaptator;
 mod virtual_filesystem;
+mod traits;
+mod filesystem;
 
 pub use crate::error::Error;
 pub use crate::file_wrapper::FileWrapper;
