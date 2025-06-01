@@ -35,6 +35,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-content/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-module-ring/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-fs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ring-core-utils/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.yarn" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

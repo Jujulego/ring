@@ -1,6 +1,6 @@
 use crate::error::Error;
-use crate::pool::{Pool, PoolRef};
 use crate::{FileWrapper, PathAdaptator};
+use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
