@@ -2,7 +2,7 @@ use crate::traits::Filesystem;
 use crate::Error;
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::io::{IoSliceMut, Read};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
 /// Virtual filesystem that lives inside memory
@@ -45,16 +45,20 @@ impl Filesystem for VirtualFilesystem {
     type File = VirtualFile;
 
     fn is_dir(&self, path: &Path) -> bool {
-        self.content.get(path).is_some_and(|c| c.is_dir())
+        let path = Path::new("/").join(path);
+        self.content.get(&path).is_some_and(|c| c.is_dir())
     }
 
     fn is_file(&self, path: &Path) -> bool {
-        self.content.get(path).is_some_and(|c| c.is_file())
+        let path = Path::new("/").join(path);
+        self.content.get(&path).is_some_and(|c| c.is_file())
     }
 
     fn open(&self, path: &Path) -> Result<Self::File, Error> {
-        match self.content.get(path) {
-            Some(VirtualContent::File(content)) => Ok(VirtualFile { content: content.clone() }),
+        let path = Path::new("/").join(path);
+
+        match self.content.get(&path) {
+            Some(VirtualContent::File(content)) => Ok(VirtualFile::new(content.clone())),
             Some(_) | None => Err(Error::NotFound("File not found or is not a file"))
         }
     }
@@ -82,31 +86,21 @@ impl VirtualContent {
 /// Virtual file
 pub struct VirtualFile {
     content: String,
+    cursor: usize,
+}
+
+impl VirtualFile {
+    pub fn new(content: String) -> Self {
+        Self { content, cursor: 0 }
+    }
 }
 
 impl Read for VirtualFile {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        self.content.as_bytes().read(buf)
-    }
+        let mut bytes = &self.content.as_bytes()[self.cursor..];
 
-    #[inline]
-    fn read_vectored(&mut self, bufs: &mut [IoSliceMut<'_>]) -> std::io::Result<usize> {
-        self.content.as_bytes().read_vectored(bufs)
-    }
-
-    #[inline]
-    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> std::io::Result<usize> {
-        self.content.as_bytes().read_to_end(buf)
-    }
-
-    #[inline]
-    fn read_to_string(&mut self, buf: &mut String) -> std::io::Result<usize> {
-        self.content.as_bytes().read_to_string(buf)
-    }
-
-    #[inline]
-    fn read_exact(&mut self, buf: &mut [u8]) -> std::io::Result<()> {
-        self.content.as_bytes().read_exact(buf)
+        bytes.read(buf)
+            .inspect(|size| self.cursor += *size)
     }
 }
