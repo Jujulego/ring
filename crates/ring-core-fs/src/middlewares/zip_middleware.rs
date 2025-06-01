@@ -1,12 +1,14 @@
 use crate::traits::{Filesystem, FilesystemMiddleware};
 use crate::Error;
 use ring_core_utils::{Pool, PoolRef};
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
+use zip::read::ZipFile;
 use zip::ZipArchive;
 
 /// Allow access to file stored in zip archives.
@@ -104,35 +106,34 @@ where F: Filesystem,
             return Some(Err(Error::NotFound("File not found inside archive")));
         };
 
-        Some(Ok(ZippedFile { archive, file_index }))
+        Some(Ok(ZippedFile::new(archive, file_index)))
     }
 }
 
 /// Zipped file
-pub struct ZippedFile<F: std::io::Read + std::io::Seek> {
+pub struct ZippedFile<F> {
     archive: PoolRef<ZipArchive<F>>,
     file_index: usize,
+    cursor: u64,
 }
 
-impl<F: std::io::Read + std::io::Seek> std::io::Read for ZippedFile<F> {
-    #[inline]
+impl<F> ZippedFile<F> {
+    pub fn new(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
+        Self {
+            archive,
+            file_index,
+            cursor: 0,
+        }
+    }
+}
+
+impl<F: Read + Seek> Read for ZippedFile<F> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        self.archive.by_index(self.file_index)?.read(buf)
-    }
+       let mut file = self.archive.by_index_seek(self.file_index)?;
 
-    #[inline]
-    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> std::io::Result<usize> {
-        self.archive.by_index(self.file_index)?.read_to_end(buf)
-    }
-
-    #[inline]
-    fn read_to_string(&mut self, buf: &mut String) -> std::io::Result<usize> {
-        self.archive.by_index(self.file_index)?.read_to_string(buf)
-    }
-
-    #[inline]
-    fn read_exact(&mut self, buf: &mut [u8]) -> std::io::Result<()> {
-        self.archive.by_index(self.file_index)?.read_exact(buf)
+        file.seek(SeekFrom::Start(self.cursor))?;
+        file.read(buf)
+            .inspect(|size| self.cursor += *size as u64)
     }
 }
 
