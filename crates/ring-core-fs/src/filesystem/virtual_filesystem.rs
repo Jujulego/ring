@@ -1,4 +1,4 @@
-use crate::traits::Filesystem;
+use crate::traits::{AbstractReader, Filesystem};
 use crate::Error;
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -86,21 +86,16 @@ impl VirtualContent {
 /// Virtual file
 pub struct VirtualFile {
     content: String,
-    cursor: usize,
 }
 
 impl VirtualFile {
     pub fn new(content: String) -> Self {
-        Self { content, cursor: 0 }
+        Self { content }
     }
 }
 
-impl Read for VirtualFile {
-    #[inline]
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let mut bytes = &self.content.as_bytes()[self.cursor..];
-
-        bytes.read(buf)
-            .inspect(|size| self.cursor += *size)
+impl AbstractReader for VirtualFile {
+    fn as_reader(&mut self) -> Box<dyn Read + '_> {
+        Box::new(self.content.as_bytes())
     }
 }

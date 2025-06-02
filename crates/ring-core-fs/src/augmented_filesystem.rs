@@ -1,8 +1,7 @@
 use crate::filesystem::LocalFilesystem;
 use crate::middlewares::ZipMiddleware;
-use crate::traits::{AbstractFilesystem, AbstractFilesystemMiddleware};
+use crate::traits::{AbstractFilesystem, AbstractFilesystemMiddleware, AbstractReader};
 use crate::Error;
-use std::io::Read;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -35,7 +34,7 @@ impl AbstractFilesystem for AugmentedFilesystem {
             .unwrap_or_else(|| self.filesystem.is_file(path))
     }
 
-    fn open(&self, path: &Path) -> Result<Box<dyn Read + '_>, Error> {
+    fn open(&self, path: &Path) -> Result<Box<dyn AbstractReader + '_>, Error> {
         self.middlewares.iter()
             .find_map(|m| m.open(path))
             .unwrap_or_else(|| self.filesystem.open(path))

@@ -1,4 +1,4 @@
-use crate::traits::FilesystemMiddleware;
+use crate::traits::{AbstractReader, FilesystemMiddleware};
 use crate::Error;
 use std::path::Path;
 
@@ -17,7 +17,7 @@ pub trait AbstractFilesystemMiddleware {
 
     /// Opens given file
     #[inline]
-    fn open(&self, _path: &Path) -> Option<Result<Box<dyn std::io::Read + '_>, Error>> {
+    fn open(&self, _path: &Path) -> Option<Result<Box<dyn AbstractReader + '_>, Error>> {
         None
     }
 }
@@ -25,7 +25,7 @@ pub trait AbstractFilesystemMiddleware {
 impl<M> AbstractFilesystemMiddleware for M
 where
     M: FilesystemMiddleware,
-    M::File: std::io::Read
+    M::File: AbstractReader
 {
     fn is_dir(&self, path: &Path) -> Option<bool> {
         self.is_dir(path)
@@ -35,8 +35,8 @@ where
         self.is_file(path)
     }
 
-    fn open(&self, path: &Path) -> Option<Result<Box<dyn std::io::Read + '_>, Error>> {
+    fn open(&self, path: &Path) -> Option<Result<Box<dyn AbstractReader + '_>, Error>> {
         self.open(path)
-            .map(|res| res.map(|x| Box::new(x) as Box<dyn std::io::Read + '_>))
+            .map(|res| res.map(|x| Box::new(x) as Box<dyn AbstractReader>))
     }
 }

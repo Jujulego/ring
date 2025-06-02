@@ -163,8 +163,8 @@ impl NpmPackageDetector {
         }
 
         match self.filesystem.open(&manifest_path) {
-            Ok(file) => {
-                let manifest = serde_json::from_reader(file)
+            Ok(mut file) => {
+                let manifest = serde_json::from_reader(file.as_reader())
                     .context(format!("Failed to parse {}", manifest_path.display()))?;
 
                 let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));

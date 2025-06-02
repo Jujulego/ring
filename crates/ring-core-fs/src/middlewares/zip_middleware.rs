@@ -1,14 +1,13 @@
-use crate::traits::{Filesystem, FilesystemMiddleware};
+use crate::traits::{AbstractReader, Filesystem, FilesystemMiddleware};
 use crate::Error;
 use ring_core_utils::{Pool, PoolRef};
-use std::cell::{OnceCell, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
-use zip::read::ZipFile;
 use zip::ZipArchive;
 
 /// Allow access to file stored in zip archives.
@@ -31,7 +30,7 @@ impl<F: Filesystem> ZipMiddleware<F> {
 
 impl<F> ZipMiddleware<F>
 where F: Filesystem,
-      F::File: std::io::Read + std::io::Seek
+      F::File: Read + Seek
 {
     pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<F::File>>, Error> {
         let mut archives = self.archives.borrow_mut();
@@ -47,7 +46,7 @@ where F: Filesystem,
 
 impl<F> FilesystemMiddleware for ZipMiddleware<F>
 where F: Filesystem,
-      F::File: std::io::Read + std::io::Seek
+      F::File: Read + Seek
 {
     type File = ZippedFile<F::File>;
 
@@ -102,11 +101,11 @@ where F: Filesystem,
             }
         };
 
-        let Some(file_index) = archive.index_for_path(inner_path) else {
+        let Some(index) = archive.index_for_path(inner_path) else {
             return Some(Err(Error::NotFound("File not found inside archive")));
         };
 
-        Some(Ok(ZippedFile::new(archive, file_index)))
+        Some(Ok(ZippedFile::new(archive, index)))
     }
 }
 
@@ -114,7 +113,6 @@ where F: Filesystem,
 pub struct ZippedFile<F> {
     archive: PoolRef<ZipArchive<F>>,
     file_index: usize,
-    cursor: u64,
 }
 
 impl<F> ZippedFile<F> {
@@ -122,18 +120,13 @@ impl<F> ZippedFile<F> {
         Self {
             archive,
             file_index,
-            cursor: 0,
         }
     }
 }
 
-impl<F: Read + Seek> Read for ZippedFile<F> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-       let mut file = self.archive.by_index_seek(self.file_index)?;
-
-        file.seek(SeekFrom::Start(self.cursor))?;
-        file.read(buf)
-            .inspect(|size| self.cursor += *size as u64)
+impl<F: Read + Seek> AbstractReader for ZippedFile<F> {
+    fn as_reader(&mut self) -> Box<dyn Read + '_> {
+        Box::new(self.archive.by_index(self.file_index).unwrap())
     }
 }
 

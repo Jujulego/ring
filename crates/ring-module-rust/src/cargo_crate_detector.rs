@@ -102,8 +102,8 @@ impl CargoCrateDetector {
 
         trace!("read file {}", manifest_path.display());
         match self.filesystem.open(&manifest_path) {
-            Ok(file) => {
-                let content = io::read_to_string(file)
+            Ok(mut file) => {
+                let content = io::read_to_string(file.as_reader())
                     .context(format!("Failed to read {}", manifest_path.display()))?;
                 
                 let manifest = toml::from_str(&content)

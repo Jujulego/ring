@@ -32,9 +32,9 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        let Ok(file) = self.filesystem.open(path) else { return false };
+        let Ok(mut file) = self.filesystem.open(path) else { return false };
 
-        let reader = BufReader::new(file);
+        let reader = BufReader::new(file.as_reader());
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();
