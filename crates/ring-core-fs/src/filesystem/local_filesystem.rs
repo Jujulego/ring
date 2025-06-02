@@ -44,10 +44,11 @@ impl Filesystem for LocalFilesystem {
 
 #[cfg(test)]
 mod tests {
+    use crate::traits::AbsReader;
     use super::*;
 
     #[test]
-    fn is_file_should_detect_directories() {
+    fn is_dir_should_detect_directories() {
         assert!(LocalFilesystem.is_dir(Path::new("assets")));
 
         assert!(!LocalFilesystem.is_dir(Path::new("assets/foo.txt")));
@@ -60,5 +61,12 @@ mod tests {
 
         assert!(!LocalFilesystem.is_file(Path::new("assets")));
         assert!(!LocalFilesystem.is_file(Path::new("assets/do-no-exists")));
+    }
+
+    #[test]
+    fn open_should_allow_read() {
+        let mut file = LocalFilesystem.open(Path::new("assets/foo.txt")).unwrap();
+        
+        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
     }
 }
