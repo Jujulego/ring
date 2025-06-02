@@ -1,7 +1,7 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use ring_core_fs::Error;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
@@ -17,13 +17,13 @@ use tracing::{debug, instrument, trace, warn};
 #[derive(Clone)]
 pub struct CargoCrateDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl CargoCrateDetector {
     /// Creates a new instance of CargoCrateDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         CargoCrateDetector {
             cache: RefCell::new(HashMap::new()),
             filesystem,
@@ -101,9 +101,9 @@ impl CargoCrateDetector {
         }
 
         trace!("read file {}", manifest_path.display());
-        match self.filesystem.open(&manifest_path) {
+        match self.filesystem.abs_open(&manifest_path) {
             Ok(mut file) => {
-                let content = io::read_to_string(file.as_reader())
+                let content = io::read_to_string(file.abs_reader())
                     .context(format!("Failed to read {}", manifest_path.display()))?;
                 
                 let manifest = toml::from_str(&content)

@@ -1,11 +1,15 @@
-mod abstract_filesystem;
-mod abstract_filesystem_middleware;
+mod abs_filesystem;
+mod abs_maybe_filesystem;
+mod abs_reader;
+mod file_metadata;
 mod filesystem;
-mod filesystem_middleware;
-mod abstract_reader;
+mod maybe_file_metadata;
+mod maybe_filesystem;
 
-pub use abstract_filesystem::AbstractFilesystem;
-pub use abstract_filesystem_middleware::AbstractFilesystemMiddleware;
-pub use abstract_reader::AbstractReader;
+pub use abs_filesystem::AbsFilesystem;
+pub use abs_maybe_filesystem::AbsMaybeFilesystem;
+pub use abs_reader::AbsReader;
+pub use file_metadata::FileMetadata;
 pub use filesystem::Filesystem;
-pub use filesystem_middleware::FilesystemMiddleware;
+pub use maybe_file_metadata::MaybeFileMetadata;
+pub use maybe_filesystem::MaybeFilesystem;

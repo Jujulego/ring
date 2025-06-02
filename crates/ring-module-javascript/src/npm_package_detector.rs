@@ -1,7 +1,7 @@
 use crate::NpmPackage;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use ring_core_fs::Error;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
@@ -17,13 +17,13 @@ use tracing::{debug, instrument, warn};
 #[derive(Clone)]
 pub struct NpmPackageDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<NpmPackage>>>>,
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl NpmPackageDetector {
     /// Creates a new instance of NpmPackageDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         NpmPackageDetector {
             cache: RefCell::new(HashMap::new()),
             filesystem,
@@ -162,9 +162,9 @@ impl NpmPackageDetector {
             return Ok(crt.clone());
         }
 
-        match self.filesystem.open(&manifest_path) {
+        match self.filesystem.abs_open(&manifest_path) {
             Ok(mut file) => {
-                let manifest = serde_json::from_reader(file.as_reader())
+                let manifest = serde_json::from_reader(file.abs_reader())
                     .context(format!("Failed to parse {}", manifest_path.display()))?;
 
                 let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));

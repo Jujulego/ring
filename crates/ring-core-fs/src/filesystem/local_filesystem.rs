@@ -1,4 +1,4 @@
-use crate::traits::Filesystem;
+use crate::traits::{FileMetadata, Filesystem};
 use crate::Error;
 use std::path::Path;
 use tracing::{instrument, trace};
@@ -15,22 +15,24 @@ impl LocalFilesystem {
     }
 }
 
-impl Filesystem for LocalFilesystem {
-    type File = std::fs::File;
-
+impl FileMetadata for LocalFilesystem {
     #[inline]
-    #[instrument(name="filesystem.is_dir", skip_all, fields(adaptator = "filesystem"))]
+    #[instrument(name = "filesystem.is_dir", skip_all, fields(adaptator = "filesystem"))]
     fn is_dir(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
         path.is_dir()
     }
 
     #[inline]
-    #[instrument(name="filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
+    #[instrument(name = "filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
     fn is_file(&self, path: &Path) -> bool {
         trace!("stat {}", path.display());
         path.is_file()
     }
+}
+
+impl Filesystem for LocalFilesystem {
+    type File = std::fs::File;
 
     #[inline]
     #[instrument(name="filesystem.open", skip_all, fields(adaptator = "filesystem"))]

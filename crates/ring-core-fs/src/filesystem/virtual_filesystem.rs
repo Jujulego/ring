@@ -1,4 +1,4 @@
-use crate::traits::{AbstractReader, Filesystem};
+use crate::traits::{AbsReader, FileMetadata, Filesystem};
 use crate::Error;
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -41,9 +41,7 @@ impl VirtualFilesystem {
     }
 }
 
-impl Filesystem for VirtualFilesystem {
-    type File = VirtualFile;
-
+impl FileMetadata for VirtualFilesystem {
     fn is_dir(&self, path: &Path) -> bool {
         let path = Path::new("/").join(path);
         self.content.get(&path).is_some_and(|c| c.is_dir())
@@ -53,6 +51,10 @@ impl Filesystem for VirtualFilesystem {
         let path = Path::new("/").join(path);
         self.content.get(&path).is_some_and(|c| c.is_file())
     }
+}
+
+impl Filesystem for VirtualFilesystem {
+    type File = VirtualFile;
 
     fn open(&self, path: &Path) -> Result<Self::File, Error> {
         let path = Path::new("/").join(path);
@@ -94,8 +96,8 @@ impl VirtualFile {
     }
 }
 
-impl AbstractReader for VirtualFile {
-    fn as_reader(&mut self) -> Box<dyn Read + '_> {
+impl AbsReader for VirtualFile {
+    fn abs_reader(&mut self) -> Box<dyn Read + '_> {
         Box::new(self.content.as_bytes())
     }
 }

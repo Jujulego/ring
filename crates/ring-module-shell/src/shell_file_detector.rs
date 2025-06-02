@@ -1,6 +1,6 @@
 use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -9,13 +9,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct ShellFileDetector {
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl ShellFileDetector {
     /// Creates a new instance of ShellFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
             filesystem
         }
@@ -32,9 +32,9 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.filesystem.open(path) else { return false };
+        let Ok(mut file) = self.filesystem.abs_open(path) else { return false };
 
-        let reader = BufReader::new(file.as_reader());
+        let reader = BufReader::new(file.abs_reader());
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();

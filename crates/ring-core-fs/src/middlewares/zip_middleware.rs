@@ -1,4 +1,4 @@
-use crate::traits::{AbstractReader, Filesystem, FilesystemMiddleware};
+use crate::traits::{AbsReader, Filesystem, MaybeFileMetadata, MaybeFilesystem};
 use crate::Error;
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
@@ -44,18 +44,16 @@ where F: Filesystem,
     }
 }
 
-impl<F> FilesystemMiddleware for ZipMiddleware<F>
+impl<F> MaybeFileMetadata for ZipMiddleware<F>
 where F: Filesystem,
       F::File: Read + Seek
 {
-    type File = ZippedFile<F::File>;
-
-    #[instrument(name="archives.is_dir", skip_all, fields(adaptator = "archives"))]
-    fn is_dir(&self, path: &Path) -> Option<bool> {
+    #[instrument(name = "archives.is_dir", skip_all, fields(adaptator = "archives"))]
+    fn maybe_is_dir(&self, path: &Path) -> Option<bool> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
-        let archive = match self.open_archive(&archive_path) {
+        let archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
             Err(err) => {
                 warn!("unable to open archive {}", archive_path.display());
@@ -70,12 +68,12 @@ where F: Filesystem,
         Some(archive.file_names().any(|name| name.starts_with(&inner_path)))
     }
 
-    #[instrument(name="archives.is_file", skip_all, fields(adaptator = "archives"))]
-    fn is_file(&self, path: &Path) -> Option<bool> {
+    #[instrument(name = "archives.is_file", skip_all, fields(adaptator = "archives"))]
+    fn maybe_is_file(&self, path: &Path) -> Option<bool> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
-        let archive = match self.open_archive(&archive_path) {
+        let archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
             Err(err) => {
                 warn!("unable to open archive {}", archive_path.display());
@@ -86,6 +84,13 @@ where F: Filesystem,
 
         Some(archive.index_for_path(inner_path).is_some())
     }
+}
+
+impl<F> MaybeFilesystem for ZipMiddleware<F>
+where F: Filesystem,
+      F::File: Read + Seek
+{
+    type File = ZippedFile<F::File>;
 
     #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
     fn open(&self, path: &Path) -> Option<Result<Self::File, Error>> {
@@ -124,8 +129,8 @@ impl<F> ZippedFile<F> {
     }
 }
 
-impl<F: Read + Seek> AbstractReader for ZippedFile<F> {
-    fn as_reader(&mut self) -> Box<dyn Read + '_> {
+impl<F: Read + Seek> AbsReader for ZippedFile<F> {
+    fn abs_reader(&mut self) -> Box<dyn Read + '_> {
         Box::new(self.archive.by_index(self.file_index).unwrap())
     }
 }

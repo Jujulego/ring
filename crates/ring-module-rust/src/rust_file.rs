@@ -1,6 +1,6 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -9,13 +9,13 @@ use tracing::instrument;
 /// Detector for rust files
 #[derive(Clone)]
 pub struct RustFileDetector {
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl RustFileDetector {
     /// Creates a new instance of RustFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
             filesystem,
         }

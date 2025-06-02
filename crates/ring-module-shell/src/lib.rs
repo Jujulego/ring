@@ -16,7 +16,7 @@ use ring_core_content::{DetectLanguage, QualifyPath};
 use ring_core_modules::{Module, RegistryRef};
 use ring_core_tasks::DetectProcessTask;
 use std::rc::Rc;
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 
 #[derive(Clone)]
 pub struct ShellModule {
@@ -29,7 +29,7 @@ pub struct ShellModule {
 impl ShellModule {
     /// Creates a new instance of ShellModule
     #[inline]
-    pub fn new(registry: Rc<RegistryRef>, filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(registry: Rc<RegistryRef>, filesystem: Rc<dyn AbsFilesystem>) -> Self {
         ShellModule {
             powershell_file_detector: Rc::new(PowershellFileDetector::new(filesystem.clone())),
             powershell_task_detector: Rc::new(PowershellTaskDetector::new(registry.clone())),

@@ -1,6 +1,6 @@
 use crate::typescript_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TypescriptFileDetector {
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl TypescriptFileDetector {
     /// Creates a new instance of TypescriptFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
             filesystem
         }

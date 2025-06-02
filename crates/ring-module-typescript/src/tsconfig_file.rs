@@ -1,5 +1,5 @@
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TsconfigFileDetector {
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl TsconfigFileDetector {
     /// Creates a new instance of TsconfigFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
             filesystem
         }

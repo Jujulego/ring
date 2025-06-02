@@ -1,6 +1,6 @@
 use crate::toml_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbstractFilesystem;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TomlFileDetector {
-    filesystem: Rc<dyn AbstractFilesystem>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl TomlFileDetector {
     /// Creates a new instance of TomlFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbstractFilesystem>) -> TomlFileDetector {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> TomlFileDetector {
         TomlFileDetector {
             filesystem
         }

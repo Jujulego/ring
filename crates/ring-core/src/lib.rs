@@ -2,6 +2,7 @@ mod task_cache;
 
 pub use crate::task_cache::TaskCache;
 pub use ring_core_content::*;
+use ring_core_fs::filesystem::LocalFilesystem;
 use ring_core_fs::AugmentedFilesystem;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
@@ -10,7 +11,7 @@ use std::rc::Rc;
 
 /// Holds and manages all modules references
 pub struct Core {
-    filesystem: Rc<AugmentedFilesystem>,
+    filesystem: Rc<AugmentedFilesystem<LocalFilesystem>>,
     modules: Vec<Box<dyn Module>>,
 }
 
@@ -44,13 +45,15 @@ impl Core {
 
         core
     }
-    
-    pub fn filesystem_tools(&self) -> Rc<AugmentedFilesystem> {
+
+    #[inline]
+    pub fn filesystem_tools(&self) -> Rc<AugmentedFilesystem<LocalFilesystem>> {
         self.filesystem.clone()
     }
 }
 
 impl Registry for Core {
+    #[inline]
     fn modules(&self) -> &[Box<dyn Module>] {
         &self.modules
     }
