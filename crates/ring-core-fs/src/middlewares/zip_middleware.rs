@@ -172,3 +172,61 @@ pub fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
 
     base.join(rest)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::filesystem::LocalFilesystem;
+    use super::*;
+
+    #[test]
+    fn is_dir_should_detect_directory_in_archive() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+
+        assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules")), Some(true));
+        assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets")), None);
+    }
+
+    #[test]
+    fn is_file_should_detect_file_in_archive() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+
+        assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(true));
+        assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/foo.txt")), None);
+    }
+
+    #[test]
+    fn open_should_allow_read() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+        let mut file = zip_middleware.open(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
+
+        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+
+        assert!(zip_middleware.open(Path::new("assets/foo.txt")).is_none());
+    }
+    
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_parse_yarn_virtual_path() {
+        let virtual_path = Path::new(r"C:\Users\toto\project\.yarn\__virtual__\cool-virtual-hash\2\AppData\Local\Yarn\Berry\cache\cool-hash.zip\node_modules\cool\cool.js");
+
+        assert_eq!(
+            parse_yarn_virtual_path(virtual_path),
+            Path::new(r"C:\Users\toto\AppData\Local\Yarn\Berry\cache\cool-hash.zip\node_modules\cool\cool.js")
+        );
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn test_parse_yarn_virtual_path() {
+        let virtual_path = Path::new("/home/toto/project/.yarn/__virtual__/cool-virtual-hash/2/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js");
+
+        assert_eq!(
+            parse_yarn_virtual_path(virtual_path),
+            Path::new("/home/toto/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js")
+        );
+    }
+}
