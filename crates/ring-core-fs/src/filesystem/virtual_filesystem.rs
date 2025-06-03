@@ -42,11 +42,13 @@ impl VirtualFilesystem {
 }
 
 impl FileMetadata for VirtualFilesystem {
+    #[inline]
     fn is_dir(&self, path: &Path) -> bool {
         let path = Path::new("/").join(path);
         self.content.get(&path).is_some_and(|c| c.is_dir())
     }
 
+    #[inline]
     fn is_file(&self, path: &Path) -> bool {
         let path = Path::new("/").join(path);
         self.content.get(&path).is_some_and(|c| c.is_file())
@@ -91,13 +93,45 @@ pub struct VirtualFile {
 }
 
 impl VirtualFile {
+    #[inline]
     pub fn new(content: String) -> Self {
         Self { content }
     }
 }
 
 impl AbsReader for VirtualFile {
+    #[inline]
     fn abs_reader(&mut self) -> Box<dyn Read + '_> {
         Box::new(self.content.as_bytes())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_file_should_add_file_and_parent_directories() {
+        let mut virtual_fs = VirtualFilesystem::new();
+
+        virtual_fs.add_file("/foo/bar/baz", "baz");
+
+        assert!(virtual_fs.is_dir(Path::new("/")));
+        assert!(virtual_fs.is_dir(Path::new("/foo")));
+        assert!(virtual_fs.is_dir(Path::new("/foo/bar")));
+        assert!(virtual_fs.is_file(Path::new("/foo/bar/baz")));
+    }
+
+    #[test]
+    fn open_should_allow_to_read_given_content() {
+        let mut virtual_fs = VirtualFilesystem::new();
+
+        virtual_fs.add_file("/foo/bar/baz", "baz");
+        let mut file = virtual_fs.open(Path::new("/foo/bar/baz")).unwrap();
+
+        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), "baz");
+
+        assert!(matches!(virtual_fs.open(Path::new("/foo/toto")), Err(Error::NotFound("File not found or is not a file"))));
+        assert!(matches!(virtual_fs.open(Path::new("/foo/bar")), Err(Error::NotFound("File not found or is not a file"))));
     }
 }
