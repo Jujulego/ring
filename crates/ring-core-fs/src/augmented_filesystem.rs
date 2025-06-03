@@ -58,3 +58,43 @@ impl<F: AbsFilesystem> AbsFilesystem for AugmentedFilesystem<F> {
             .unwrap_or_else(|| self.filesystem.abs_open(path))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_dir_should_detect_directory_in_and_out_archives() {
+        let filesystem = AugmentedFilesystem::local_filesystem();
+
+        assert!(filesystem.is_dir(Path::new("assets")));
+        assert!(!filesystem.is_dir(Path::new("assets/foo.txt")));
+
+        assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/do-not-exists")));
+        assert!(filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules")));
+        assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+    }
+
+    #[test]
+    fn is_file_should_detect_file_in_and_out_archives() {
+        let filesystem = AugmentedFilesystem::local_filesystem();
+
+        assert!(!filesystem.is_file(Path::new("assets")));
+        assert!(filesystem.is_file(Path::new("assets/foo.txt")));
+
+        assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")));
+        assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules")));
+        assert!(filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+    }
+
+    #[test]
+    fn open_should_allow_read_file_in_and_out_archives() {
+        let filesystem = AugmentedFilesystem::local_filesystem();
+
+        let mut file = filesystem.abs_open(Path::new("assets/foo.txt")).unwrap();
+        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+
+        let mut file = filesystem.abs_open(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap();
+        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+    }
+}

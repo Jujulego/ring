@@ -175,8 +175,8 @@ pub fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::filesystem::LocalFilesystem;
     use super::*;
+    use crate::filesystem::LocalFilesystem;
 
     #[test]
     fn is_dir_should_detect_directory_in_archive() {
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read() {
+    fn open_should_allow_read_file_in_archive() {
         let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
         let mut file = zip_middleware.open(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
 
@@ -207,7 +207,7 @@ mod tests {
 
         assert!(zip_middleware.open(Path::new("assets/foo.txt")).is_none());
     }
-    
+
     #[cfg(target_os = "windows")]
     #[test]
     fn test_parse_yarn_virtual_path() {

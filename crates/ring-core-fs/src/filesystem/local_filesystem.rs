@@ -44,8 +44,8 @@ impl Filesystem for LocalFilesystem {
 
 #[cfg(test)]
 mod tests {
-    use crate::traits::AbsReader;
     use super::*;
+    use crate::traits::AbsReader;
 
     #[test]
     fn is_dir_should_detect_directories() {
@@ -64,7 +64,7 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read() {
+    fn open_should_allow_read_file() {
         let mut file = LocalFilesystem.open(Path::new("assets/foo.txt")).unwrap();
         
         assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
