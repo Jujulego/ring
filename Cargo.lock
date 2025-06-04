@@ -1715,6 +1715,7 @@ dependencies = [
 name = "ring-core-fs"
 version = "0.1.0"
 dependencies = [
+ "ring-core-utils",
  "thiserror",
  "tracing",
  "zip",
@@ -1749,6 +1750,10 @@ dependencies = [
  "ring-core-content",
  "serde",
 ]
+
+[[package]]
+name = "ring-core-utils"
+version = "0.1.0"
 
 [[package]]
 name = "ring-module-javascript"

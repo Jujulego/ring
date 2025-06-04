@@ -1,6 +1,6 @@
 use crate::javascript_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -9,15 +9,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JavascriptFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl JavascriptFileDetector {
     /// Creates a new instance of JavascriptFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
-            path_adaptator,
+            filesystem,
         }
     }
 
@@ -28,7 +28,7 @@ impl JavascriptFileDetector {
     }
 
     fn _is_javascript_file(&self, path: &Path) -> bool {
-        if !self.path_adaptator.is_file(path) {
+        if !self.filesystem.is_file(path) {
             return false;
         }
 
@@ -37,10 +37,9 @@ impl JavascriptFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
-        let Ok(reader) = file.reader() else { return false };
-        
-        let reader = BufReader::new(reader);
+        let Ok(mut file) = self.filesystem.abs_open(path) else { return false };
+
+        let reader = BufReader::new(file.abs_reader());
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();
@@ -63,7 +62,7 @@ impl DetectLanguage for JavascriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_javascript_language_using_extensions() {

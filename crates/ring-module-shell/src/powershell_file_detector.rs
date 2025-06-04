@@ -1,6 +1,6 @@
 use crate::powershell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct PowershellFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl PowershellFileDetector {
     /// Creates a new instance of PowershellFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl PowershellFileDetector {
     }
 
     fn _is_script_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path) && path.extension().and_then(OsStr::to_str) == Some("ps1")
+        self.filesystem.is_file(path) && path.extension().and_then(OsStr::to_str) == Some("ps1")
     }
 }
 
@@ -56,7 +56,7 @@ impl QualifyPath for PowershellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_powershell_script() {

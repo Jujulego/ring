@@ -13,7 +13,7 @@ pub use crate::rust_file::RustFileDetector;
 pub use crate::rustup_task_detector::RustupTaskDetector;
 pub use crate::utils::rust_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use ring_core_modules::Module;
 use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
@@ -30,13 +30,13 @@ pub struct RustModule {
 impl RustModule {
     /// Creates a new instance of RustModule
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
-        let cargo_crate_detector = Rc::new(CargoCrateDetector::new(path_adaptator.clone()));
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+        let cargo_crate_detector = Rc::new(CargoCrateDetector::new(filesystem.clone()));
 
         RustModule {
             cargo_crate_detector: cargo_crate_detector.clone(),
             cargo_task_detector: Rc::new(CargoTaskDetector::new(cargo_crate_detector)),
-            rust_file_detector: Rc::new(RustFileDetector::new(path_adaptator)),
+            rust_file_detector: Rc::new(RustFileDetector::new(filesystem)),
             rustup_task_detector: Rc::new(RustupTaskDetector::new()),
         }
     }

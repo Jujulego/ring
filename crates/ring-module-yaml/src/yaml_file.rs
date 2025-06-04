@@ -1,6 +1,6 @@
 use crate::yaml_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct YamlFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl YamlFileDetector {
     /// Creates a new instance of YamlFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> YamlFileDetector {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> YamlFileDetector {
         YamlFileDetector {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl YamlFileDetector {
     }
 
     fn _is_yaml_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path)
+        self.filesystem.is_file(path)
             && matches!(path.extension().and_then(OsStr::to_str), Some("yaml") | Some("yml"))
     }
 }
@@ -45,8 +45,9 @@ impl DetectLanguage for YamlFileDetector {
 
 #[cfg(test)]
 mod tests {
-    use ring_core_fs::VirtualFilesystem;
     use super::*;
+    use ring_core_fs::filesystem::VirtualFilesystem;
+    
     #[test]
     fn it_should_detect_yaml_language() {
         let mut virtual_fs = VirtualFilesystem::new();

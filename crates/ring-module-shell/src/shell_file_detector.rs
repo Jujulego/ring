@@ -1,6 +1,6 @@
 use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -9,15 +9,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct ShellFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl ShellFileDetector {
     /// Creates a new instance of ShellFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -32,13 +32,12 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.path_adaptator.open(path) else { return false };
-        let Ok(reader) = file.reader() else { return false };
+        let Ok(mut file) = self.filesystem.abs_open(path) else { return false };
 
-        let reader = BufReader::new(reader);
+        let reader = BufReader::new(file.abs_reader());
         let shebang = reader.lines()
             .map_while(Result::ok)
-            .find(|line| line.starts_with("#!"));
+            .next();
 
         shebang.as_ref().is_some_and(|l| l == "#!/bin/sh")
             || shebang.as_ref().is_some_and(|l| l == "#!/bin/bash")
@@ -74,7 +73,7 @@ impl ShellFileDetector {
     }
 
     fn _is_shell_script(&self, path: &Path) -> bool {
-        if !self.path_adaptator.is_file(path) {
+        if !self.filesystem.is_file(path) {
             return false;
         }
 
@@ -122,7 +121,7 @@ impl QualifyPath for ShellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_shell_script_using_extension() {

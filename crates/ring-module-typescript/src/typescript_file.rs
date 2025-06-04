@@ -1,6 +1,6 @@
 use crate::typescript_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,15 +8,15 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TypescriptFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl TypescriptFileDetector {
     /// Creates a new instance of TypescriptFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
-            path_adaptator
+            filesystem
         }
     }
 
@@ -27,7 +27,7 @@ impl TypescriptFileDetector {
     }
 
     fn _is_typescript_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path)
+        self.filesystem.is_file(path)
             && matches!(path.extension().and_then(OsStr::to_str), Some("ts") | Some("cts") | Some("mts") | Some("tsx"))
     }
 }
@@ -46,7 +46,7 @@ impl DetectLanguage for TypescriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_typescript_language() {

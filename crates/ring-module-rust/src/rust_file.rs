@@ -1,6 +1,6 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -9,15 +9,15 @@ use tracing::instrument;
 /// Detector for rust files
 #[derive(Clone)]
 pub struct RustFileDetector {
-    path_adaptator: Rc<dyn PathAdaptator>,
+    filesystem: Rc<dyn AbsFilesystem>,
 }
 
 impl RustFileDetector {
     /// Creates a new instance of RustFileDetector
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
         Self {
-            path_adaptator,
+            filesystem,
         }
     }
 
@@ -28,7 +28,7 @@ impl RustFileDetector {
     }
     
     fn _is_rust_file(&self, path: &Path) -> bool {
-        self.path_adaptator.is_file(path)
+        self.filesystem.is_file(path)
             && path.extension() == Some(OsStr::new("rs"))
     }
 }
@@ -47,7 +47,7 @@ impl DetectLanguage for RustFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::VirtualFilesystem;
+    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_rust_language() {

@@ -11,7 +11,7 @@ pub use crate::npm_package::{NpmPackage, PackageManifest};
 pub use crate::npm_package_detector::NpmPackageDetector;
 pub use crate::utils::javascript_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
-use ring_core_fs::PathAdaptator;
+use ring_core_fs::traits::AbsFilesystem;
 use ring_core_modules::Module;
 use ring_core_tasks::DetectProcessTask;
 use ring_core_units::DetectUnit;
@@ -27,11 +27,11 @@ pub struct JavascriptModule {
 impl JavascriptModule {
     /// Creates a new instance of JavascriptModule
     #[inline]
-    pub fn new(path_adaptator: Rc<dyn PathAdaptator>) -> Self {
-        let npm_package_detector = Rc::new(NpmPackageDetector::new(path_adaptator.clone()));
+    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+        let npm_package_detector = Rc::new(NpmPackageDetector::new(filesystem.clone()));
         
         JavascriptModule {
-            javascript_file_detector: Rc::new(JavascriptFileDetector::new(path_adaptator)),
+            javascript_file_detector: Rc::new(JavascriptFileDetector::new(filesystem)),
             node_task_detector: Rc::new(NodeTaskDetector::new(npm_package_detector.clone())),
             npm_package_detector,
         }
