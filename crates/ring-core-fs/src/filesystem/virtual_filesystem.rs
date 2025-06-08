@@ -1,4 +1,4 @@
-use crate::traits::{AbsReader, FileMetadata, Filesystem};
+use crate::traits::{AbsReader, LocationMetadata, Filesystem};
 use crate::{Error, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -41,7 +41,7 @@ impl VirtualFilesystem {
     }
 }
 
-impl FileMetadata for VirtualFilesystem {
+impl LocationMetadata for VirtualFilesystem {
     fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
         let path = Path::new("/").join(path);
 

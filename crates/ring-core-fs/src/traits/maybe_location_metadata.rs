@@ -1,7 +1,7 @@
 use crate::{Error, LocationType};
 use std::path::Path;
 
-pub trait MaybeFileMetadata {
+pub trait MaybeLocationMetadata {
     /// Detects location type
     fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, Error>>;
 

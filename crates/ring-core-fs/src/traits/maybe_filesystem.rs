@@ -1,8 +1,8 @@
-use crate::traits::MaybeFileMetadata;
+use crate::traits::MaybeLocationMetadata;
 use crate::Error;
 use std::path::Path;
 
-pub trait MaybeFilesystem: MaybeFileMetadata {
+pub trait MaybeFilesystem: MaybeLocationMetadata {
     type File;
 
     /// Opens given file

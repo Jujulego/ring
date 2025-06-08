@@ -1,4 +1,4 @@
-use crate::traits::{AbsReader, Filesystem, MaybeFileMetadata, MaybeFilesystem};
+use crate::traits::{AbsReader, Filesystem, MaybeLocationMetadata, MaybeFilesystem};
 use crate::{Error, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
@@ -48,7 +48,7 @@ where F: Filesystem,
     }
 }
 
-impl<F> MaybeFileMetadata for ZipMiddleware<F>
+impl<F> MaybeLocationMetadata for ZipMiddleware<F>
 where F: Filesystem,
       F::File: Read + Seek
 {
@@ -62,11 +62,12 @@ where F: Filesystem,
             Err(err) => return Some(Err(err))
         };
 
-        if archive.index_for_path(inner_path).is_some() {
+        let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
+        
+        if archive.index_for_name(&inner_path).is_some() {
             return Some(Ok(LocationType::File));
         }
 
-        let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
         inner_path += "/";
 
         if archive.file_names().any(|name| name.starts_with(&inner_path)) {

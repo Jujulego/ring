@@ -1,4 +1,4 @@
-use crate::traits::{FileMetadata, Filesystem};
+use crate::traits::{LocationMetadata, Filesystem};
 use crate::{Error, LocationType};
 use std::path::Path;
 use tracing::{instrument, trace};
@@ -15,7 +15,7 @@ impl LocalFilesystem {
     }
 }
 
-impl FileMetadata for LocalFilesystem {
+impl LocationMetadata for LocalFilesystem {
     #[inline]
     #[instrument(name = "filesystem.location_type", skip_all, fields(adaptator = "filesystem"))]
     fn location_type(&self, path: &Path) -> Result<LocationType, Error> {

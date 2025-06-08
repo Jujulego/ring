@@ -1,7 +1,7 @@
 use crate::{Error, LocationType};
 use std::path::Path;
 
-pub trait FileMetadata {
+pub trait LocationMetadata {
     /// Detects location type
     fn location_type(&self, path: &Path) -> Result<LocationType, Error>;
 

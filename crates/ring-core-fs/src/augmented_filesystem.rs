@@ -1,6 +1,6 @@
 use crate::filesystem::LocalFilesystem;
 use crate::middlewares::ZipMiddleware;
-use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, FileMetadata};
+use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, LocationMetadata};
 use crate::{Error, LocationType};
 use std::path::Path;
 use std::rc::Rc;
@@ -34,7 +34,7 @@ impl AugmentedFilesystem<LocalFilesystem> {
     }
 }
 
-impl<F: FileMetadata> FileMetadata for AugmentedFilesystem<F> {
+impl<F: LocationMetadata> LocationMetadata for AugmentedFilesystem<F> {
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
         self.middlewares.iter()
