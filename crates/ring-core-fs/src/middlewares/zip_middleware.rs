@@ -173,6 +173,16 @@ mod tests {
     use crate::filesystem::LocalFilesystem;
 
     #[test]
+    fn location_type_should_detect_files_and_directories_in_archive() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+
+        assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(Ok(LocationType::File))));
+        assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules")), Some(Ok(LocationType::Directory))));
+        assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(Err(Error::NotFound(_)))));
+        assert!(zip_middleware.maybe_location_type(Path::new("assets")).is_none());
+    }
+
+    #[test]
     fn is_dir_should_detect_directory_in_archive() {
         let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
 
@@ -190,6 +200,16 @@ mod tests {
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(false));
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/foo.txt")), None);
+    }
+
+    #[test]
+    fn is_symlink_should_detect_nothing_in_archive() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+
+        assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(false));
+        assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/foo.txt")), None);
     }
 
     #[test]
