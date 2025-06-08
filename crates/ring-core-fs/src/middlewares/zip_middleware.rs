@@ -1,5 +1,5 @@
 use crate::traits::{AbsReader, Filesystem, MaybeFileMetadata, MaybeFilesystem};
-use crate::Error;
+use crate::{Error, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -34,13 +34,17 @@ where F: Filesystem,
 {
     pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<F::File>>, Error> {
         let mut archives = self.archives.borrow_mut();
-        let pool = archives.entry(std::path::absolute(path)?).or_default();
 
-        pool.try_borrow_or_build(|| {
-            trace!("open archive {}", path.display());
-            let archive = self.filesystem.open(path)?;
-            Ok(ZipArchive::new(archive)?)
-        })
+        archives.entry(std::path::absolute(path)?).or_default()
+            .try_borrow_or_build(|| {
+                trace!("open archive {}", path.display());
+                let archive = self.filesystem.open(path)?;
+                Ok(ZipArchive::new(archive)?)
+            })
+            .inspect_err(|err| {
+                warn!("unable to open archive {}", path.display());
+                debug!("error caused by: {err}");
+            })
     }
 }
 
@@ -48,41 +52,34 @@ impl<F> MaybeFileMetadata for ZipMiddleware<F>
 where F: Filesystem,
       F::File: Read + Seek
 {
-    #[instrument(name = "archives.is_dir", skip_all, fields(adaptator = "archives"))]
-    fn maybe_is_dir(&self, path: &Path) -> Option<bool> {
+    #[instrument(name = "archives.location_type", skip_all, fields(adaptator = "archives"))]
+    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, Error>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
         let archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
-            Err(err) => {
-                warn!("unable to open archive {}", archive_path.display());
-                debug!("error caused by: {err}");
-                return Some(false);
-            }
+            Err(err) => return Some(Err(err))
         };
+
+        if archive.index_for_path(inner_path).is_some() {
+            return Some(Ok(LocationType::File));
+        }
 
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
         inner_path += "/";
 
-        Some(archive.file_names().any(|name| name.starts_with(&inner_path)))
+        if archive.file_names().any(|name| name.starts_with(&inner_path)) {
+            Some(Ok(LocationType::Directory))
+        } else {
+            Some(Err(Error::NotFound("Location not found in archive")))
+        }
     }
 
-    #[instrument(name = "archives.is_file", skip_all, fields(adaptator = "archives"))]
-    fn maybe_is_file(&self, path: &Path) -> Option<bool> {
+    #[instrument(name = "archives.is_symlink", skip_all, fields(adaptator = "archives"))]
+    fn maybe_is_symlink(&self, path: &Path) -> Option<bool> {
         let path = parse_yarn_virtual_path(path);
-        let (archive_path, inner_path) = split_archive_path(&path)?;
-
-        let archive = match self.open_archive(archive_path) {
-            Ok(archive) => archive,
-            Err(err) => {
-                warn!("unable to open archive {}", archive_path.display());
-                debug!("error caused by: {err}");
-                return Some(false);
-            }
-        };
-
-        Some(archive.index_for_path(inner_path).is_some())
+        split_archive_path(&path).map(|_| false)
     }
 }
 
@@ -99,11 +96,7 @@ where F: Filesystem,
 
         let archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
-            Err(err) => {
-                warn!("unable to open archive {}", archive_path.display());
-                debug!("error caused by: {err}");
-                return Some(Err(err));
-            }
+            Err(err) => return Some(Err(err))
         };
 
         let Some(index) = archive.index_for_path(inner_path) else {

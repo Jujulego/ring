@@ -1,17 +1,28 @@
+use crate::{Error, LocationType};
 use std::path::Path;
 
 pub trait MaybeFileMetadata {
+    /// Detects location type
+    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, Error>>;
+
     /// Tests if given path exists and is a directory
     #[inline]
-    #[allow(unused_variables)]
     fn maybe_is_dir(&self, path: &Path) -> Option<bool> {
-        None
+        self.maybe_location_type(path)
+            .map(|res| res.is_ok_and(|t| t == LocationType::Directory))
     }
 
     /// Tests if given path exists and is a file
     #[inline]
-    #[allow(unused_variables)]
     fn maybe_is_file(&self, path: &Path) -> Option<bool> {
-        None
+        self.maybe_location_type(path)
+            .map(|res| res.is_ok_and(|t| t == LocationType::File))
+    }
+
+    /// Tests if given path exists and is a symlink
+    #[inline]
+    fn maybe_is_symlink(&self, path: &Path) -> Option<bool> {
+        self.maybe_location_type(path)
+            .map(|res| res.is_ok_and(|t| t == LocationType::Symlink))
     }
 }

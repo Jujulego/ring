@@ -1,5 +1,5 @@
 use crate::traits::{FileMetadata, Filesystem};
-use crate::Error;
+use crate::{Error, LocationType};
 use std::path::Path;
 use tracing::{instrument, trace};
 
@@ -17,17 +17,9 @@ impl LocalFilesystem {
 
 impl FileMetadata for LocalFilesystem {
     #[inline]
-    #[instrument(name = "filesystem.is_dir", skip_all, fields(adaptator = "filesystem"))]
-    fn is_dir(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        path.is_dir()
-    }
-
-    #[inline]
-    #[instrument(name = "filesystem.is_file", skip_all, fields(adaptator = "filesystem"))]
-    fn is_file(&self, path: &Path) -> bool {
-        trace!("stat {}", path.display());
-        path.is_file()
+    #[instrument(name = "filesystem.location_type", skip_all, fields(adaptator = "filesystem"))]
+    fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
+        Ok(path.metadata()?.file_type().into())
     }
 }
 
