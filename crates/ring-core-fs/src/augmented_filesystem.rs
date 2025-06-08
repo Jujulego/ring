@@ -87,6 +87,8 @@ mod tests {
         assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/do-not-exists")));
         assert!(filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules")));
         assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+        
+        assert!(matches!(filesystem.location_type(Path::new("assets")), Ok(LocationType::Directory)));
     }
 
     #[test]
@@ -99,6 +101,8 @@ mod tests {
         assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")));
         assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules")));
         assert!(filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+
+        assert!(matches!(filesystem.location_type(Path::new("assets/foo.txt")), Ok(LocationType::File)));
     }
 
     #[test]
