@@ -1,5 +1,4 @@
 mod augmented_filesystem;
-pub mod filesystem;
 mod error;
 mod location_type;
 pub mod middlewares;

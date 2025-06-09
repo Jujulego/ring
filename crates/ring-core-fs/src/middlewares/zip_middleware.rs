@@ -1,4 +1,4 @@
-use crate::traits::{AbsReader, Filesystem, MaybeLocationMetadata, MaybeFilesystem};
+use crate::traits::{FsMiddleware, Location, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
@@ -7,52 +7,51 @@ use std::ffi::OsStr;
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use tracing::{debug, instrument, trace, warn};
+use tracing::{debug, trace, warn};
 use zip::ZipArchive;
+
+pub trait ZipOrigin {
+    type File: Read + Seek;
+    
+    fn open_zip(&self, path: &Path) -> Result<Self::File, FsError>;
+}
 
 /// Allow access to file stored in zip archives.
 /// Supports yarn virtual paths.
-#[derive(Debug)]
-pub struct ZipMiddleware<F: Filesystem> {
-    filesystem: Rc<F>,
-    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<F::File>>>>
+pub struct ZipMiddleware<P: ZipOrigin> {
+    protocol: Rc<P>,
+    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<P::File>>>>,
 }
 
-impl<F: Filesystem> ZipMiddleware<F> {
+impl<P: ZipOrigin> ZipMiddleware<P> {
     #[inline]
-    pub fn new(filesystem: Rc<F>) -> Self {
+    pub fn new(protocol: Rc<P>) -> Self {
         Self {
-            filesystem,
+            protocol,
             archives: RefCell::new(HashMap::new()),
         }
     }
 }
 
-impl<F> ZipMiddleware<F>
-where F: Filesystem,
-      F::File: Read + Seek
-{
-    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<F::File>>, FsError> {
+impl<P: ZipOrigin> ZipMiddleware<P> {
+    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<P::File>>, FsError> {
         let mut archives = self.archives.borrow_mut();
 
         archives.entry(std::path::absolute(path)?).or_default()
             .try_borrow_or_build(|| {
                 trace!("open archive {}", path.display());
-                let archive = self.filesystem.open(path)?;
-                Ok(ZipArchive::new(archive)?)
+                let file = self.protocol.open_zip(&path)?;
+
+                Ok(ZipArchive::new(file)?)
             })
-            .inspect_err(|err| {
+            .inspect_err(move |err| {
                 warn!("unable to open archive {}", path.display());
                 debug!("error caused by: {err}");
             })
     }
 }
 
-impl<F> MaybeLocationMetadata for ZipMiddleware<F>
-where F: Filesystem,
-      F::File: Read + Seek
-{
-    #[instrument(name = "archives.location_type", skip_all, fields(adaptator = "archives"))]
+impl<P: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<P> {
     fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
@@ -63,7 +62,7 @@ where F: Filesystem,
         };
 
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
-        
+
         if archive.index_for_name(&inner_path).is_some() {
             return Some(Ok(LocationType::File));
         }
@@ -77,21 +76,14 @@ where F: Filesystem,
         }
     }
 
-    #[instrument(name = "archives.is_symlink", skip_all, fields(adaptator = "archives"))]
     fn maybe_is_symlink(&self, path: &Path) -> Option<bool> {
         let path = parse_yarn_virtual_path(path);
         split_archive_path(&path).map(|_| false)
     }
 }
 
-impl<F> MaybeFilesystem for ZipMiddleware<F>
-where F: Filesystem,
-      F::File: Read + Seek
-{
-    type File = ZippedFile<F::File>;
-
-    #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
-    fn open(&self, path: &Path) -> Option<Result<Self::File, FsError>> {
+impl<P: ZipOrigin> FsMiddleware for ZipMiddleware<P> {
+    fn maybe_locate_path(&self, path: &Path) -> Option<Result<Box<dyn Location + '_>, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
@@ -100,32 +92,53 @@ where F: Filesystem,
             Err(err) => return Some(Err(err))
         };
 
-        let Some(index) = archive.index_for_path(inner_path) else {
-            return Some(Err(FsError::NotFound("File not found inside archive")));
-        };
+        let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
-        Some(Ok(ZippedFile::new(archive, index)))
-    }
-}
+        if let Some(file_index) = archive.index_for_name(&inner_path) {
+            return Some(Ok(Box::new(ZippedLocation::new_file(archive, file_index))));
+        }
 
-/// Zipped file
-pub struct ZippedFile<F> {
-    archive: PoolRef<ZipArchive<F>>,
-    file_index: usize,
-}
+        inner_path += "/";
 
-impl<F> ZippedFile<F> {
-    pub fn new(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
-        Self {
-            archive,
-            file_index,
+        if archive.file_names().any(|name| name.starts_with(&inner_path)) {
+            Some(Ok(Box::new(ZippedLocation::new_directory(archive))))
+        } else {
+            Some(Err(FsError::NotFound("Location not found in archive")))
         }
     }
 }
 
-impl<F: Read + Seek> AbsReader for ZippedFile<F> {
-    fn abs_reader(&mut self) -> Box<dyn Read + '_> {
-        Box::new(self.archive.by_index(self.file_index).unwrap())
+/// Zipped location
+pub struct ZippedLocation<F> {
+    archive: PoolRef<ZipArchive<F>>,
+    file_index: Option<usize>,
+}
+
+impl<F> ZippedLocation<F> {
+    pub fn new_directory(archive: PoolRef<ZipArchive<F>>) -> Self {
+        Self {
+            archive,
+            file_index: None,
+        }
+    }
+
+    pub fn new_file(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
+        Self {
+            archive,
+            file_index: Some(file_index),
+        }
+    }
+}
+
+impl<F: Read + Seek> Location for ZippedLocation<F> {
+    fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
+        if let Some(file_index) = self.file_index {
+            self.archive.by_index(file_index)
+                .map(|file| Box::new(file) as _)
+                .map_err(FsError::from)
+        } else {
+            Err(FsError::NotAFile("Zipped location is not a file"))
+        }
     }
 }
 
@@ -170,11 +183,11 @@ pub fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::filesystem::LocalFilesystem;
+    use crate::protocols::LocalProtocol;
 
     #[test]
     fn location_type_should_detect_files_and_directories_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
 
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(Ok(LocationType::File))));
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules")), Some(Ok(LocationType::Directory))));
@@ -184,7 +197,7 @@ mod tests {
 
     #[test]
     fn is_dir_should_detect_directory_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
 
         assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
         assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules")), Some(true));
@@ -194,7 +207,7 @@ mod tests {
 
     #[test]
     fn is_file_should_detect_file_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
 
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(true));
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
@@ -204,7 +217,7 @@ mod tests {
 
     #[test]
     fn is_symlink_should_detect_nothing_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
 
         assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
         assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
@@ -214,12 +227,12 @@ mod tests {
 
     #[test]
     fn open_should_allow_read_file_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalFilesystem));
-        let mut file = zip_middleware.open(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
+        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let mut file = zip_middleware.maybe_locate_path(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
 
-        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+        assert_eq!(std::io::read_to_string(file.read().unwrap()).unwrap(), String::from("bar"));
 
-        assert!(zip_middleware.open(Path::new("assets/foo.txt")).is_none());
+        assert!(zip_middleware.maybe_locate_path(Path::new("assets/foo.txt")).is_none());
     }
 
     #[cfg(target_os = "windows")]

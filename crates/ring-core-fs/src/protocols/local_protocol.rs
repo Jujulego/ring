@@ -1,4 +1,4 @@
-use crate::middlewares::zip_middleware_2::ZipOrigin;
+use crate::middlewares::ZipOrigin;
 use crate::traits::{FsProtocol, Location, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::path::Path;
