@@ -1,12 +1,12 @@
 use crate::javascript_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
 use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
-use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
 
 #[derive(Clone)]
 pub struct JavascriptFileDetector {
@@ -62,8 +62,8 @@ impl DetectLanguage for JavascriptFileDetector {
 
 #[cfg(test)]
 mod tests {
-    use ring_core_fs::protocols::MemoryProtocol;
     use super::*;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_javascript_language_using_extensions() {
