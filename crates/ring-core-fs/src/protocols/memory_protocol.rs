@@ -1,4 +1,4 @@
-use crate::traits::{Location, FsProtocol, LocationMetadata};
+use crate::traits::{Location, FilesystemProtocol, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -7,11 +7,11 @@ use std::path::{Path, PathBuf};
 
 /// Virtual filesystem that lives inside memory
 #[derive(Debug, Default)]
-pub struct VirtualProtocol {
+pub struct MemoryProtocol {
     content: HashMap<PathBuf, VirtualContent>,
 }
 
-impl VirtualProtocol {
+impl MemoryProtocol {
     /// Creates a new instance of virtual filesystem
     #[inline]
     pub fn new() -> Self {
@@ -20,8 +20,9 @@ impl VirtualProtocol {
 
     /// Create a new virtual file
     #[inline]
-    pub fn add_file<P: AsRef<Path>, S: Display>(&mut self, path: P, content: S) {
+    pub fn with_file<P: AsRef<Path>, S: Display>(mut self, path: P, content: S) -> Self {
         self._add_file(Path::new("/").join(path), content.to_string());
+        self
     }
 
     fn _add_file(&mut self, path: PathBuf, content: String) {
@@ -41,7 +42,7 @@ impl VirtualProtocol {
     }
 }
 
-impl LocationMetadata for VirtualProtocol {
+impl LocationMetadata for MemoryProtocol {
     fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
         let path = Path::new("/").join(path);
 
@@ -57,7 +58,7 @@ impl LocationMetadata for VirtualProtocol {
     }
 }
 
-impl FsProtocol for VirtualProtocol {
+impl FilesystemProtocol for MemoryProtocol {
     #[inline]
     fn locate_path(&self, path: &Path) -> Result<Box<dyn Location>, FsError> {
         let path = Path::new("/").join(path);
@@ -102,33 +103,32 @@ mod tests {
 
     #[test]
     fn add_file_should_add_file_and_parent_directories() {
-        let mut virtual_fs = VirtualProtocol::new();
+        let memory = MemoryProtocol::new()
+            .with_file("/foo/bar/baz", "baz");
 
-        virtual_fs.add_file("/foo/bar/baz", "baz");
-
-        assert!(virtual_fs.is_dir(Path::new("/")));
-        assert!(virtual_fs.is_dir(Path::new("/foo")));
-        assert!(virtual_fs.is_dir(Path::new("/foo/bar")));
-        assert!(virtual_fs.is_file(Path::new("/foo/bar/baz")));
+        assert!(memory.is_dir(Path::new("/")));
+        assert!(memory.is_dir(Path::new("/foo")));
+        assert!(memory.is_dir(Path::new("/foo/bar")));
+        assert!(memory.is_file(Path::new("/foo/bar/baz")));
     }
 
     #[test]
     fn open_should_allow_to_read_given_content() {
-        let mut virtual_fs = VirtualProtocol::new();
-        virtual_fs.add_file("/foo/bar/baz", "baz");
+        let memory = MemoryProtocol::new()
+            .with_file("/foo/bar/baz", "baz");
 
         // Existing file
-        let mut location = (&virtual_fs).locate_path(Path::new("/foo/bar/baz")).unwrap();
+        let mut location = memory.locate_path(Path::new("/foo/bar/baz")).unwrap();
         let file = location.read().unwrap();
 
         assert_eq!(std::io::read_to_string(file).unwrap(), "baz");
 
         // Existing directory
-        let mut location = (&virtual_fs).locate_path(Path::new("/foo/bar")).unwrap();
+        let mut location = memory.locate_path(Path::new("/foo/bar")).unwrap();
 
         assert!(matches!(location.read(), Err(FsError::NotAFile(_))));
 
         // Not existing path
-        assert!(matches!((&virtual_fs).locate_path(Path::new("/foo/toto")), Err(FsError::NotFound(_))));
+        assert!(matches!(memory.locate_path(Path::new("/foo/toto")), Err(FsError::NotFound(_))));
     }
 }

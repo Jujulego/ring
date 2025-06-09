@@ -1,4 +1,4 @@
-use crate::traits::{FsMiddleware, Location, MaybeLocationMetadata};
+use crate::traits::{FilesystemMiddleware, Location, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
@@ -82,7 +82,7 @@ impl<P: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<P> {
     }
 }
 
-impl<P: ZipOrigin> FsMiddleware for ZipMiddleware<P> {
+impl<P: ZipOrigin> FilesystemMiddleware for ZipMiddleware<P> {
     fn maybe_locate_path(&self, path: &Path) -> Option<Result<Box<dyn Location + '_>, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;

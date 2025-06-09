@@ -2,8 +2,7 @@ mod task_cache;
 
 pub use crate::task_cache::TaskCache;
 pub use ring_core_content::*;
-use ring_core_fs::filesystem::LocalFilesystem;
-use ring_core_fs::AugmentedFilesystem;
+pub use ring_core_fs::Filesystem;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
 pub use ring_core_units::*;
@@ -11,7 +10,7 @@ use std::rc::Rc;
 
 /// Holds and manages all modules references
 pub struct Core {
-    filesystem: Rc<AugmentedFilesystem<LocalFilesystem>>,
+    filesystem: Rc<Filesystem>,
     modules: Vec<Box<dyn Module>>,
 }
 
@@ -19,7 +18,7 @@ impl Core {
     /// Initiate all modules
     pub fn new() -> Rc<Self> {
         let registry = Rc::new(RegistryRef::new());
-        let filesystem = Rc::new(AugmentedFilesystem::local_filesystem());
+        let filesystem = Rc::new(Filesystem::local());
 
         let modules: Vec<Box<dyn Module>> = vec![
             #[cfg(feature = "javascript")]
@@ -47,7 +46,7 @@ impl Core {
     }
 
     #[inline]
-    pub fn filesystem_tools(&self) -> Rc<AugmentedFilesystem<LocalFilesystem>> {
+    pub fn filesystem_tools(&self) -> Rc<Filesystem> {
         self.filesystem.clone()
     }
 }

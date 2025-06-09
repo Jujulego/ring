@@ -1,75 +1,77 @@
-use crate::filesystem::LocalFilesystem;
 use crate::middlewares::ZipMiddleware;
-use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, LocationMetadata};
+use crate::protocols::{LocalProtocol, MemoryProtocol};
+use crate::traits::{FilesystemMiddleware, FilesystemProtocol, Location, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::path::Path;
 use std::rc::Rc;
 
-/// Combine a filesystem with some middlewares
-pub struct AugmentedFilesystem<F> {
-    filesystem: Rc<F>,
-    middlewares: Vec<Box<dyn AbsMaybeFilesystem>>,
+/// Combine a protocol with compatible middlewares
+pub struct Filesystem {
+    protocol: Rc<dyn FilesystemProtocol>,
+    middlewares: Vec<Box<dyn FilesystemMiddleware>>,
 }
 
-impl<F> AugmentedFilesystem<F> {
-    /// Returns filesystem instance
-    #[inline]
-    pub fn filesystem(&self) -> &Rc<F> {
-        &self.filesystem
-    }
-}
-
-impl AugmentedFilesystem<LocalFilesystem> {
-    /// Creates an [`AugmentedFilesystem`] based on [`LocalFilesystem`].
+impl Filesystem {
+    /// Creates an [`Filesystem`] based on [`LocalProtocol`].
     ///
     /// Includes following middlewares:
     /// - [`ZipMiddleware`]
-    pub fn local_filesystem() -> Self {
-        let filesystem = Rc::new(LocalFilesystem::new());
+    pub fn local() -> Self {
+        let protocol = Rc::new(LocalProtocol::new());
 
         Self {
-            filesystem: filesystem.clone(),
-            middlewares: vec![Box::new(ZipMiddleware::new(filesystem))]
+            protocol: protocol.clone(),
+            middlewares: vec![Box::new(ZipMiddleware::new(protocol))]
+        }
+    }
+
+    /// Creates an [`Filesystem`] based on [`MemoryProtocol`].
+    pub fn memory(protocol: MemoryProtocol) -> Self {
+        let protocol = Rc::new(protocol);
+
+        Self {
+            protocol: protocol.clone(),
+            middlewares: vec![]
         }
     }
 }
 
-impl<F: LocationMetadata> LocationMetadata for AugmentedFilesystem<F> {
+impl LocationMetadata for Filesystem {
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
         self.middlewares.iter()
             .find_map(|m| m.maybe_location_type(path))
-            .unwrap_or_else(|| self.filesystem.location_type(path))
+            .unwrap_or_else(|| self.protocol.location_type(path))
     }
 
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn is_dir(&self, path: &Path) -> bool {
         self.middlewares.iter()
             .find_map(|m| m.maybe_is_dir(path))
-            .unwrap_or_else(|| self.filesystem.is_dir(path))
+            .unwrap_or_else(|| self.protocol.is_dir(path))
     }
 
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn is_file(&self, path: &Path) -> bool {
         self.middlewares.iter()
             .find_map(|m| m.maybe_is_file(path))
-            .unwrap_or_else(|| self.filesystem.is_file(path))
+            .unwrap_or_else(|| self.protocol.is_file(path))
     }
 
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn is_symlink(&self, path: &Path) -> bool {
         self.middlewares.iter()
             .find_map(|m| m.maybe_is_symlink(path))
-            .unwrap_or_else(|| self.filesystem.is_symlink(path))
+            .unwrap_or_else(|| self.protocol.is_symlink(path))
     }
 }
 
-impl<F: AbsFilesystem> AbsFilesystem for AugmentedFilesystem<F> {
+impl FilesystemProtocol for Filesystem {
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
-    fn abs_open(&self, path: &Path) -> Result<Box<dyn AbsReader + '_>, FsError> {
+    fn locate_path(&self, path: &Path) -> Result<Box<dyn Location + '_>, FsError> {
         self.middlewares.iter()
-            .find_map(|m| m.abs_maybe_open(path))
-            .unwrap_or_else(|| self.filesystem.abs_open(path))
+            .find_map(|m| m.maybe_locate_path(path))
+            .unwrap_or_else(|| self.protocol.locate_path(path))
     }
 }
 
@@ -79,7 +81,7 @@ mod tests {
 
     #[test]
     fn is_dir_should_detect_directory_in_and_out_archives() {
-        let filesystem = AugmentedFilesystem::local_filesystem();
+        let filesystem = Filesystem::local();
 
         assert!(filesystem.is_dir(Path::new("assets")));
         assert!(!filesystem.is_dir(Path::new("assets/foo.txt")));
@@ -93,7 +95,7 @@ mod tests {
 
     #[test]
     fn is_file_should_detect_file_in_and_out_archives() {
-        let filesystem = AugmentedFilesystem::local_filesystem();
+        let filesystem = Filesystem::local();
 
         assert!(!filesystem.is_file(Path::new("assets")));
         assert!(filesystem.is_file(Path::new("assets/foo.txt")));
@@ -107,12 +109,16 @@ mod tests {
 
     #[test]
     fn open_should_allow_read_file_in_and_out_archives() {
-        let filesystem = AugmentedFilesystem::local_filesystem();
+        let filesystem = Filesystem::local();
 
-        let mut file = filesystem.abs_open(Path::new("assets/foo.txt")).unwrap();
-        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+        let mut location = filesystem.locate_path(Path::new("assets/foo.txt")).unwrap();
+        let file = location.read().unwrap();
 
-        let mut file = filesystem.abs_open(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap();
-        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), String::from("bar"));
+        assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));
+
+        let mut location = filesystem.locate_path(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap();
+        let file = location.read().unwrap();
+
+        assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));
     }
 }

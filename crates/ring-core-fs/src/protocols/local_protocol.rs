@@ -1,5 +1,5 @@
 use crate::middlewares::ZipOrigin;
-use crate::traits::{FsProtocol, Location, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::path::Path;
 use tracing::trace;
@@ -23,7 +23,7 @@ impl LocationMetadata for LocalProtocol {
     }
 }
 
-impl FsProtocol for LocalProtocol {
+impl FilesystemProtocol for LocalProtocol {
     #[inline]
     fn locate_path(&self, path: &Path) -> Result<Box<dyn Location>, FsError> {
         trace!("canonicalize {}", path.display());
