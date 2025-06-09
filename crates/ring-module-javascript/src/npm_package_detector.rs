@@ -2,7 +2,7 @@ use crate::NpmPackage;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_fs::traits::AbsFilesystem;
-use ring_core_fs::Error;
+use ring_core_fs::FsError;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -174,7 +174,7 @@ impl NpmPackageDetector {
 
                 Ok(pkg)
             },
-            Err(Error::NotFound(_)) => {
+            Err(FsError::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 

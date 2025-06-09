@@ -1,17 +1,16 @@
-use crate::traits::{AbsReader, LocationMetadata, Filesystem, FsLocation};
+use crate::traits::{FsLocation, FsProtocol, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 
 /// Virtual filesystem that lives inside memory
 #[derive(Debug, Default)]
-pub struct VirtualFilesystem {
+pub struct VirtualProtocol {
     content: HashMap<PathBuf, VirtualContent>,
 }
 
-impl VirtualFilesystem {
+impl VirtualProtocol {
     /// Creates a new instance of virtual filesystem
     #[inline]
     pub fn new() -> Self {
@@ -41,7 +40,7 @@ impl VirtualFilesystem {
     }
 }
 
-impl LocationMetadata for VirtualFilesystem {
+impl LocationMetadata for VirtualProtocol {
     fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
         let path = Path::new("/").join(path);
 
@@ -57,15 +56,16 @@ impl LocationMetadata for VirtualFilesystem {
     }
 }
 
-impl Filesystem for VirtualFilesystem {
-    type File = VirtualFile;
+impl<'a> FsProtocol for &'a VirtualProtocol {
+    type Location = &'a VirtualContent;
 
-    fn open(&self, path: &Path) -> Result<Self::File, FsError> {
+    #[inline]
+    fn locate_path(&self, path: &Path) -> Result<Self::Location, FsError> {
         let path = Path::new("/").join(path);
 
         match self.content.get(&path) {
-            Some(VirtualContent::File(content)) => Ok(VirtualFile::new(content.clone())),
-            Some(_) | None => Err(FsError::NotFound("File not found or is not a file"))
+            Some(content) => Ok(content),
+            None => Err(FsError::NotFound("File not found or is not a file"))
         }
     }
 }
@@ -87,22 +87,14 @@ impl From<&VirtualContent> for LocationType {
     }
 }
 
-/// Virtual file
-pub struct VirtualFile {
-    content: String,
-}
+impl<'a> FsLocation for &'a VirtualContent {
+    type Reader = &'a [u8];
 
-impl VirtualFile {
-    #[inline]
-    pub fn new(content: String) -> Self {
-        Self { content }
-    }
-}
-
-impl AbsReader for VirtualFile {
-    #[inline]
-    fn abs_reader(&mut self) -> Box<dyn Read + '_> {
-        Box::new(self.content.as_bytes())
+    fn read(self) -> Result<Self::Reader, FsError> {
+        match self {
+            VirtualContent::File(content) => Ok(content.as_bytes()),
+            VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
+        }
     }
 }
 
@@ -112,7 +104,7 @@ mod tests {
 
     #[test]
     fn add_file_should_add_file_and_parent_directories() {
-        let mut virtual_fs = VirtualFilesystem::new();
+        let mut virtual_fs = VirtualProtocol::new();
 
         virtual_fs.add_file("/foo/bar/baz", "baz");
 
@@ -124,14 +116,21 @@ mod tests {
 
     #[test]
     fn open_should_allow_to_read_given_content() {
-        let mut virtual_fs = VirtualFilesystem::new();
-
+        let mut virtual_fs = VirtualProtocol::new();
         virtual_fs.add_file("/foo/bar/baz", "baz");
-        let mut file = virtual_fs.open(Path::new("/foo/bar/baz")).unwrap();
 
-        assert_eq!(std::io::read_to_string(file.abs_reader()).unwrap(), "baz");
+        // Existing file
+        let location = (&virtual_fs).locate_path(Path::new("/foo/bar/baz")).unwrap();
+        let file = location.read().unwrap();
 
-        assert!(matches!(virtual_fs.open(Path::new("/foo/toto")), Err(FsError::NotFound("File not found or is not a file"))));
-        assert!(matches!(virtual_fs.open(Path::new("/foo/bar")), Err(FsError::NotFound("File not found or is not a file"))));
+        assert_eq!(std::io::read_to_string(file).unwrap(), "baz");
+
+        // Existing directory
+        let location = (&virtual_fs).locate_path(Path::new("/foo/bar")).unwrap();
+
+        assert!(matches!(location.read(), Err(FsError::NotAFile(_))));
+
+        // Not existing path
+        assert!(matches!((&virtual_fs).locate_path(Path::new("/foo/toto")), Err(FsError::NotFound(_))));
     }
 }

@@ -1,9 +1,9 @@
-use crate::{Error, LocationType};
+use crate::{FsError, LocationType};
 use std::path::Path;
 
 pub trait LocationMetadata {
     /// Detects location type
-    fn location_type(&self, path: &Path) -> Result<LocationType, Error>;
+    fn location_type(&self, path: &Path) -> Result<LocationType, FsError>;
 
     /// Tests if given path exists and is a directory
     #[inline]

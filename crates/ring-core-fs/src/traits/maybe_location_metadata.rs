@@ -1,9 +1,9 @@
-use crate::{Error, LocationType};
+use crate::{FsError, LocationType};
 use std::path::Path;
 
 pub trait MaybeLocationMetadata {
     /// Detects location type
-    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, Error>>;
+    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, FsError>>;
 
     /// Tests if given path exists and is a directory
     #[inline]

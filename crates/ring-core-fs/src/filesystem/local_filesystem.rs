@@ -1,6 +1,6 @@
-use crate::traits::{LocationMetadata, Filesystem};
-use crate::{Error, LocationType};
-use std::path::Path;
+use crate::traits::{LocationMetadata, Filesystem, FsProtocol};
+use crate::{FsError, LocationType};
+use std::path::{Path, PathBuf};
 use tracing::{instrument, trace};
 
 /// Interacts with local filesystem
@@ -18,7 +18,7 @@ impl LocalFilesystem {
 impl LocationMetadata for LocalFilesystem {
     #[inline]
     #[instrument(name = "filesystem.location_type", skip_all, fields(adaptator = "filesystem"))]
-    fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
+    fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
         Ok(path.metadata()?.file_type().into())
     }
 }
@@ -28,9 +28,9 @@ impl Filesystem for LocalFilesystem {
 
     #[inline]
     #[instrument(name="filesystem.open", skip_all, fields(adaptator = "filesystem"))]
-    fn open(&self, path: &Path) -> Result<Self::File, Error> {
+    fn open(&self, path: &Path) -> Result<Self::File, FsError> {
         trace!("open {}", path.display());
-        std::fs::File::open(path).map_err(Error::from)
+        std::fs::File::open(path).map_err(FsError::from)
     }
 }
 

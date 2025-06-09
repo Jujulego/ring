@@ -1,5 +1,5 @@
 use crate::traits::{AbsReader, Filesystem, MaybeLocationMetadata, MaybeFilesystem};
-use crate::{Error, LocationType};
+use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -32,7 +32,7 @@ impl<F> ZipMiddleware<F>
 where F: Filesystem,
       F::File: Read + Seek
 {
-    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<F::File>>, Error> {
+    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<F::File>>, FsError> {
         let mut archives = self.archives.borrow_mut();
 
         archives.entry(std::path::absolute(path)?).or_default()
@@ -53,7 +53,7 @@ where F: Filesystem,
       F::File: Read + Seek
 {
     #[instrument(name = "archives.location_type", skip_all, fields(adaptator = "archives"))]
-    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, Error>> {
+    fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
@@ -73,7 +73,7 @@ where F: Filesystem,
         if archive.file_names().any(|name| name.starts_with(&inner_path)) {
             Some(Ok(LocationType::Directory))
         } else {
-            Some(Err(Error::NotFound("Location not found in archive")))
+            Some(Err(FsError::NotFound("Location not found in archive")))
         }
     }
 
@@ -91,7 +91,7 @@ where F: Filesystem,
     type File = ZippedFile<F::File>;
 
     #[instrument(name="archives.open", skip_all, fields(adaptator = "archives"))]
-    fn open(&self, path: &Path) -> Option<Result<Self::File, Error>> {
+    fn open(&self, path: &Path) -> Option<Result<Self::File, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
@@ -101,7 +101,7 @@ where F: Filesystem,
         };
 
         let Some(index) = archive.index_for_path(inner_path) else {
-            return Some(Err(Error::NotFound("File not found inside archive")));
+            return Some(Err(FsError::NotFound("File not found inside archive")));
         };
 
         Some(Ok(ZippedFile::new(archive, index)))
@@ -178,7 +178,7 @@ mod tests {
 
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(Ok(LocationType::File))));
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules")), Some(Ok(LocationType::Directory))));
-        assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(Err(Error::NotFound(_)))));
+        assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/do-not-exists")), Some(Err(FsError::NotFound(_)))));
         assert!(zip_middleware.maybe_location_type(Path::new("assets")).is_none());
     }
 

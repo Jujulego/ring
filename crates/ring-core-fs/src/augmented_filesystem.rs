@@ -1,7 +1,7 @@
 use crate::filesystem::LocalFilesystem;
 use crate::middlewares::ZipMiddleware;
 use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, LocationMetadata};
-use crate::{Error, LocationType};
+use crate::{FsError, LocationType};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -36,7 +36,7 @@ impl AugmentedFilesystem<LocalFilesystem> {
 
 impl<F: LocationMetadata> LocationMetadata for AugmentedFilesystem<F> {
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
-    fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
+    fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
         self.middlewares.iter()
             .find_map(|m| m.maybe_location_type(path))
             .unwrap_or_else(|| self.filesystem.location_type(path))
@@ -66,7 +66,7 @@ impl<F: LocationMetadata> LocationMetadata for AugmentedFilesystem<F> {
 
 impl<F: AbsFilesystem> AbsFilesystem for AugmentedFilesystem<F> {
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
-    fn abs_open(&self, path: &Path) -> Result<Box<dyn AbsReader + '_>, Error> {
+    fn abs_open(&self, path: &Path) -> Result<Box<dyn AbsReader + '_>, FsError> {
         self.middlewares.iter()
             .find_map(|m| m.abs_maybe_open(path))
             .unwrap_or_else(|| self.filesystem.abs_open(path))

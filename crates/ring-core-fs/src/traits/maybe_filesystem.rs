@@ -1,5 +1,5 @@
 use crate::traits::MaybeLocationMetadata;
-use crate::Error;
+use crate::FsError;
 use std::path::Path;
 
 pub trait MaybeFilesystem: MaybeLocationMetadata {
@@ -8,7 +8,7 @@ pub trait MaybeFilesystem: MaybeLocationMetadata {
     /// Opens given file
     #[inline]
     #[allow(unused_variables)]
-    fn open(&self, path: &Path) -> Option<Result<Self::File, Error>> {
+    fn open(&self, path: &Path) -> Option<Result<Self::File, FsError>> {
         None
     }
 }

@@ -2,7 +2,7 @@ use crate::cargo_crate::CargoCrate;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
 use ring_core_fs::traits::AbsFilesystem;
-use ring_core_fs::Error;
+use ring_core_fs::FsError;
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -116,7 +116,7 @@ impl CargoCrateDetector {
 
                 Ok(crt)
             }
-            Err(Error::NotFound(_)) => {
+            Err(FsError::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "cargo crate miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
