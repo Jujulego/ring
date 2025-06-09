@@ -1,4 +1,4 @@
-use crate::traits::{AbsReader, LocationMetadata, Filesystem, FsLocation};
+use crate::traits::{AbsReader, LocationMetadata, Filesystem, Location};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;

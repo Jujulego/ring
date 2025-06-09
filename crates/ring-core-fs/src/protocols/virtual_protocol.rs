@@ -1,4 +1,4 @@
-use crate::traits::{FsLocation, FsProtocol, LocationMetadata};
+use crate::traits::{Location, FsProtocol, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -87,7 +87,7 @@ impl From<&VirtualContent> for LocationType {
     }
 }
 
-impl<'a> FsLocation for &'a VirtualContent {
+impl<'a> Location for &'a VirtualContent {
     type Reader = &'a [u8];
 
     fn read(self) -> Result<Self::Reader, FsError> {

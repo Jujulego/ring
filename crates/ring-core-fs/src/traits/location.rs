@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 use crate::FsError;
 
-pub trait FsLocation {
+pub trait Location {
     type Reader: std::io::Read;
     
     fn read(self) -> Result<Self::Reader, FsError>;
 }
 
-impl FsLocation for PathBuf {
+impl Location for PathBuf {
     type Reader = std::fs::File;
     
     #[inline]

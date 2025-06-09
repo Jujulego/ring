@@ -1,4 +1,4 @@
-use crate::traits::{FsLocation, FsProtocol, FsReader, MaybeLocationMetadata};
+use crate::traits::{Location, FsProtocol, FsReader, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
@@ -104,7 +104,7 @@ impl<F> ZippedLocation<F> {
     }
 }
 
-impl<'a, F> FsLocation for &'a mut ZippedLocation<F>
+impl<'a, F> Location for &'a mut ZippedLocation<F>
 where F: std::io::Read + std::io::Seek,
 {
     type Reader = ZipFile<'a, F>;

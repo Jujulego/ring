@@ -1,4 +1,4 @@
-use crate::traits::{LocationMetadata, Filesystem, FsProtocol};
+use crate::traits::{Filesystem, FsProtocol, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::path::{Path, PathBuf};
 use tracing::{instrument, trace};
@@ -35,7 +35,7 @@ impl FsProtocol for LocalProtocol {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::{AbsReader, FsLocation};
+    use crate::traits::Location;
 
     #[test]
     fn is_dir_should_detect_directories() {
