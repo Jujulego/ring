@@ -1,3 +1,5 @@
+mod io;
 mod pool;
 
-pub use pool::{Pool, PoolRef};
+pub use io::*;
+pub use pool::*;

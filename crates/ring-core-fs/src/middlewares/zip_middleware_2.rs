@@ -1,9 +1,10 @@
 use crate::traits::{FsMiddleware, FsProtocol, FsReader, Location, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
-use ring_core_utils::{Pool, PoolRef};
+use ring_core_utils::{Pool, PoolRef, ReadSeek};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, trace, warn};
@@ -114,20 +115,20 @@ where P: FsProtocol,
 }
 
 /// Zipped location
-pub struct ZippedLocation<F> {
-    archive: PoolRef<ZipArchive<F>>,
+pub struct ZippedLocation {
+    archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>,
     file_index: Option<usize>,
 }
 
-impl<F> ZippedLocation<F> {
-    pub fn new_directory(archive: PoolRef<ZipArchive<F>>) -> Self {
+impl ZippedLocation {
+    pub fn new_directory(archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>) -> Self {
         Self {
             archive,
             file_index: None,
         }
     }
 
-    pub fn new_file(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
+    pub fn new_file(archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>, file_index: usize) -> Self {
         Self {
             archive,
             file_index: Some(file_index),
@@ -135,18 +136,25 @@ impl<F> ZippedLocation<F> {
     }
 }
 
-impl<'a, F> Location for &'a mut ZippedLocation<F>
-where F: std::io::Read + std::io::Seek,
-{
-    type Reader = ZipFile<'a, F>;
-
-    fn read(self) -> Result<Self::Reader, FsError> {
+impl Location for ZippedLocation {
+    fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         if let Some(file_index) = self.file_index {
-            self.archive.by_index(file_index).map_err(FsError::from)
+            self.archive.by_index(file_index)
+                .map(|file| Box::new(file) as _)
+                .map_err(FsError::from)
         } else {
             Err(FsError::NotAFile("Zipped location is not a file"))
         }
     }
+
+    fn read_seek(&mut self) -> Result<Box<dyn ReadSeek + '_>, FsError> {
+        if let Some(file_index) = self.file_index {
+            self.archive.by_index_seek(file_index)
+                .map(|file| Box::new(file) as _)
+                .map_err(FsError::from)
+        } else {
+            Err(FsError::NotAFile("Zipped location is not a file"))
+        }    }
 }
 
 /// Splits an archive path in two, the path to the archive and the path in the archive to the file

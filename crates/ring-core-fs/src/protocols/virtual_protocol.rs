@@ -2,7 +2,9 @@ use crate::traits::{Location, FsProtocol, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
+use std::io::Read;
 use std::path::{Path, PathBuf};
+use ring_core_utils::ReadSeek;
 
 /// Virtual filesystem that lives inside memory
 #[derive(Debug, Default)]
@@ -87,14 +89,18 @@ impl From<&VirtualContent> for LocationType {
     }
 }
 
-impl<'a> Location for &'a VirtualContent {
-    type Reader = &'a [u8];
-
-    fn read(self) -> Result<Self::Reader, FsError> {
+impl Location for VirtualContent {
+    #[inline]
+    fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         match self {
-            VirtualContent::File(content) => Ok(content.as_bytes()),
+            VirtualContent::File(content) => Ok(Box::new(content.as_bytes()) as _),
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
+    }
+
+    #[inline]
+    fn read_seek(&mut self) -> Result<Box<dyn ReadSeek + '_>, FsError> {
+        todo!()
     }
 }
 
