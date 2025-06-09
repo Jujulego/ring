@@ -1,23 +1,29 @@
-use crate::traits::{FsMiddleware, FsProtocol, FsReader, Location, MaybeLocationMetadata};
+use crate::traits::{FsMiddleware, Location, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
-use ring_core_utils::{Pool, PoolRef, ReadSeek};
+use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::io::Read;
+use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, trace, warn};
-use zip::read::ZipFile;
 use zip::ZipArchive;
+
+pub trait ZipOrigin {
+    type File: Read + Seek;
+    
+    fn open_zip(&self, path: &Path) -> Result<Self::File, FsError>;
+}
 
 /// Allow access to file stored in zip archives.
 /// Supports yarn virtual paths.
-pub struct ZipMiddleware<P: FsProtocol> {
+pub struct ZipMiddleware<P: ZipOrigin> {
     protocol: Rc<P>,
-    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<FsReader<P>>>>>
+    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<P::File>>>>,
 }
-impl<P: FsProtocol> ZipMiddleware<P> {
+
+impl<P: ZipOrigin> ZipMiddleware<P> {
     #[inline]
     pub fn new(protocol: Rc<P>) -> Self {
         Self {
@@ -27,32 +33,25 @@ impl<P: FsProtocol> ZipMiddleware<P> {
     }
 }
 
-impl<P> ZipMiddleware<P>
-where P: FsProtocol,
-      FsReader<P>: std::io::Read + std::io::Seek
-{
-    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<FsReader<P>>>, FsError> {
+impl<P: ZipOrigin> ZipMiddleware<P> {
+    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<P::File>>, FsError> {
         let mut archives = self.archives.borrow_mut();
 
         archives.entry(std::path::absolute(path)?).or_default()
             .try_borrow_or_build(|| {
                 trace!("open archive {}", path.display());
-                let mut archive = self.protocol.locate_path(path)?;
-                let file = archive.read()?;
+                let file = self.protocol.open_zip(&path)?;
 
                 Ok(ZipArchive::new(file)?)
             })
-            .inspect_err(|err| {
+            .inspect_err(move |err| {
                 warn!("unable to open archive {}", path.display());
                 debug!("error caused by: {err}");
             })
     }
 }
 
-impl<P> MaybeLocationMetadata for ZipMiddleware<P>
-where P: FsProtocol,
-      FsReader<P>: std::io::Read + std::io::Seek
-{
+impl<P: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<P> {
     fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
@@ -83,13 +82,8 @@ where P: FsProtocol,
     }
 }
 
-impl<P> FsMiddleware for ZipMiddleware<P>
-where P: FsProtocol,
-      FsReader<P>: std::io::Read + std::io::Seek
-{
-    type Location = ZippedLocation<FsReader<P>>;
-
-    fn maybe_locate_path(&self, path: &Path) -> Option<Result<Self::Location, FsError>> {
+impl<P: ZipOrigin> FsMiddleware for ZipMiddleware<P> {
+    fn maybe_locate_path(&self, path: &Path) -> Option<Result<Box<dyn Location + '_>, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
@@ -101,13 +95,13 @@ where P: FsProtocol,
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
         if let Some(file_index) = archive.index_for_name(&inner_path) {
-            return Some(Ok(ZippedLocation::new_file(archive, file_index)));
+            return Some(Ok(Box::new(ZippedLocation::new_file(archive, file_index))));
         }
 
         inner_path += "/";
 
         if archive.file_names().any(|name| name.starts_with(&inner_path)) {
-            Some(Ok(ZippedLocation::new_directory(archive)))
+            Some(Ok(Box::new(ZippedLocation::new_directory(archive))))
         } else {
             Some(Err(FsError::NotFound("Location not found in archive")))
         }
@@ -115,20 +109,20 @@ where P: FsProtocol,
 }
 
 /// Zipped location
-pub struct ZippedLocation {
-    archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>,
+pub struct ZippedLocation<F> {
+    archive: PoolRef<ZipArchive<F>>,
     file_index: Option<usize>,
 }
 
-impl ZippedLocation {
-    pub fn new_directory(archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>) -> Self {
+impl<F> ZippedLocation<F> {
+    pub fn new_directory(archive: PoolRef<ZipArchive<F>>) -> Self {
         Self {
             archive,
             file_index: None,
         }
     }
 
-    pub fn new_file(archive: PoolRef<ZipArchive<Box<dyn ReadSeek>>>, file_index: usize) -> Self {
+    pub fn new_file(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
         Self {
             archive,
             file_index: Some(file_index),
@@ -136,7 +130,7 @@ impl ZippedLocation {
     }
 }
 
-impl Location for ZippedLocation {
+impl<F: Read + Seek> Location for ZippedLocation<F> {
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         if let Some(file_index) = self.file_index {
             self.archive.by_index(file_index)
@@ -146,15 +140,6 @@ impl Location for ZippedLocation {
             Err(FsError::NotAFile("Zipped location is not a file"))
         }
     }
-
-    fn read_seek(&mut self) -> Result<Box<dyn ReadSeek + '_>, FsError> {
-        if let Some(file_index) = self.file_index {
-            self.archive.by_index_seek(file_index)
-                .map(|file| Box::new(file) as _)
-                .map_err(FsError::from)
-        } else {
-            Err(FsError::NotAFile("Zipped location is not a file"))
-        }    }
 }
 
 /// Splits an archive path in two, the path to the archive and the path in the archive to the file

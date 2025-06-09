@@ -1,6 +1,7 @@
-use crate::traits::{FsProtocol, LocationMetadata};
+use crate::middlewares::zip_middleware_2::ZipOrigin;
+use crate::traits::{FsProtocol, Location, LocationMetadata};
 use crate::{FsError, LocationType};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::trace;
 
 /// Interacts with local filesystem
@@ -23,19 +24,27 @@ impl LocationMetadata for LocalProtocol {
 }
 
 impl FsProtocol for LocalProtocol {
-    type Location = PathBuf;
+    #[inline]
+    fn locate_path(&self, path: &Path) -> Result<Box<dyn Location>, FsError> {
+        trace!("canonicalize {}", path.display());
+        path.canonicalize()
+            .map(|p| Box::new(p) as _)
+            .map_err(FsError::from)
+    }
+}
+
+impl ZipOrigin for LocalProtocol {
+    type File = std::fs::File;
 
     #[inline]
-    fn locate_path(&self, path: &Path) -> Result<Self::Location, FsError> {
-        trace!("canonicalize {}", path.display());
-        path.canonicalize().map_err(FsError::from)
+    fn open_zip(&self, path: &Path) -> Result<Self::File, FsError> {
+        std::fs::File::open(path).map_err(FsError::from)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::Location;
 
     #[test]
     fn is_dir_should_detect_directories() {
@@ -55,7 +64,7 @@ mod tests {
 
     #[test]
     fn open_should_allow_read_file() {
-        let location = LocalProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
+        let mut location = LocalProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
         let file = location.read().unwrap();
         
         assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));

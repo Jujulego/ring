@@ -1,6 +1,6 @@
-use crate::traits::{LocationMetadata, Filesystem, FsProtocol};
+use crate::traits::{Filesystem, LocationMetadata};
 use crate::{FsError, LocationType};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::{instrument, trace};
 
 /// Interacts with local filesystem

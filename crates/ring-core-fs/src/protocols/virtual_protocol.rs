@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use ring_core_utils::ReadSeek;
 
 /// Virtual filesystem that lives inside memory
 #[derive(Debug, Default)]
@@ -58,15 +57,13 @@ impl LocationMetadata for VirtualProtocol {
     }
 }
 
-impl<'a> FsProtocol for &'a VirtualProtocol {
-    type Location = &'a VirtualContent;
-
+impl FsProtocol for VirtualProtocol {
     #[inline]
-    fn locate_path(&self, path: &Path) -> Result<Self::Location, FsError> {
+    fn locate_path(&self, path: &Path) -> Result<Box<dyn Location>, FsError> {
         let path = Path::new("/").join(path);
 
         match self.content.get(&path) {
-            Some(content) => Ok(content),
+            Some(content) => Ok(Box::new(content.clone()) as _),
             None => Err(FsError::NotFound("File not found or is not a file"))
         }
     }
@@ -97,11 +94,6 @@ impl Location for VirtualContent {
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
     }
-
-    #[inline]
-    fn read_seek(&mut self) -> Result<Box<dyn ReadSeek + '_>, FsError> {
-        todo!()
-    }
 }
 
 #[cfg(test)]
@@ -126,13 +118,13 @@ mod tests {
         virtual_fs.add_file("/foo/bar/baz", "baz");
 
         // Existing file
-        let location = (&virtual_fs).locate_path(Path::new("/foo/bar/baz")).unwrap();
+        let mut location = (&virtual_fs).locate_path(Path::new("/foo/bar/baz")).unwrap();
         let file = location.read().unwrap();
 
         assert_eq!(std::io::read_to_string(file).unwrap(), "baz");
 
         // Existing directory
-        let location = (&virtual_fs).locate_path(Path::new("/foo/bar")).unwrap();
+        let mut location = (&virtual_fs).locate_path(Path::new("/foo/bar")).unwrap();
 
         assert!(matches!(location.read(), Err(FsError::NotAFile(_))));
 
