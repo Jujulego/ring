@@ -1,8 +1,8 @@
-use crate::traits::{AbsReader, MaybeFileMetadata, MaybeFilesystem};
+use crate::traits::{AbsReader, MaybeLocationMetadata, MaybeFilesystem};
 use crate::Error;
 use std::path::Path;
 
-pub trait AbsMaybeFilesystem: MaybeFileMetadata {
+pub trait AbsMaybeFilesystem: MaybeLocationMetadata {
     /// Opens given file
     #[inline]
     #[allow(unused_variables)]

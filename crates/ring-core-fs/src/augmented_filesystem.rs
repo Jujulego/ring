@@ -1,7 +1,7 @@
 use crate::filesystem::LocalFilesystem;
 use crate::middlewares::ZipMiddleware;
-use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, FileMetadata};
-use crate::Error;
+use crate::traits::{AbsFilesystem, AbsMaybeFilesystem, AbsReader, LocationMetadata};
+use crate::{Error, LocationType};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -34,7 +34,14 @@ impl AugmentedFilesystem<LocalFilesystem> {
     }
 }
 
-impl<F: FileMetadata> FileMetadata for AugmentedFilesystem<F> {
+impl<F: LocationMetadata> LocationMetadata for AugmentedFilesystem<F> {
+    /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
+    fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
+        self.middlewares.iter()
+            .find_map(|m| m.maybe_location_type(path))
+            .unwrap_or_else(|| self.filesystem.location_type(path))
+    }
+
     /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
     fn is_dir(&self, path: &Path) -> bool {
         self.middlewares.iter()
@@ -47,6 +54,13 @@ impl<F: FileMetadata> FileMetadata for AugmentedFilesystem<F> {
         self.middlewares.iter()
             .find_map(|m| m.maybe_is_file(path))
             .unwrap_or_else(|| self.filesystem.is_file(path))
+    }
+
+    /// Try each middleware in order, ending with filesystem if every middleware returned [`None`]
+    fn is_symlink(&self, path: &Path) -> bool {
+        self.middlewares.iter()
+            .find_map(|m| m.maybe_is_symlink(path))
+            .unwrap_or_else(|| self.filesystem.is_symlink(path))
     }
 }
 
@@ -73,6 +87,8 @@ mod tests {
         assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/do-not-exists")));
         assert!(filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules")));
         assert!(!filesystem.is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+        
+        assert!(matches!(filesystem.location_type(Path::new("assets")), Ok(LocationType::Directory)));
     }
 
     #[test]
@@ -85,6 +101,8 @@ mod tests {
         assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/do-not-exists")));
         assert!(!filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules")));
         assert!(filesystem.is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")));
+
+        assert!(matches!(filesystem.location_type(Path::new("assets/foo.txt")), Ok(LocationType::File)));
     }
 
     #[test]

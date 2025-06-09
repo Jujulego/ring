@@ -1,5 +1,5 @@
-use crate::traits::{AbsReader, FileMetadata, Filesystem};
-use crate::Error;
+use crate::traits::{AbsReader, LocationMetadata, Filesystem};
+use crate::{Error, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::Read;
@@ -41,17 +41,19 @@ impl VirtualFilesystem {
     }
 }
 
-impl FileMetadata for VirtualFilesystem {
-    #[inline]
-    fn is_dir(&self, path: &Path) -> bool {
+impl LocationMetadata for VirtualFilesystem {
+    fn location_type(&self, path: &Path) -> Result<LocationType, Error> {
         let path = Path::new("/").join(path);
-        self.content.get(&path).is_some_and(|c| c.is_dir())
+
+        match self.content.get(&path) {
+            Some(content) => Ok(content.into()),
+            None => Err(Error::NotFound("Location not found"))
+        }
     }
 
     #[inline]
-    fn is_file(&self, path: &Path) -> bool {
-        let path = Path::new("/").join(path);
-        self.content.get(&path).is_some_and(|c| c.is_file())
+    fn is_symlink(&self, _path: &Path) -> bool {
+        false
     }
 }
 
@@ -75,15 +77,13 @@ enum VirtualContent {
     File(String),
 }
 
-impl VirtualContent {
+impl From<&VirtualContent> for LocationType {
     #[inline]
-    fn is_dir(&self) -> bool {
-        matches!(self, VirtualContent::Directory)
-    }
-
-    #[inline]
-    fn is_file(&self) -> bool {
-        matches!(self, VirtualContent::File(_))
+    fn from(content: &VirtualContent) -> Self {
+        match content {
+            VirtualContent::Directory => LocationType::Directory,
+            VirtualContent::File(_) => LocationType::File,
+        }
     }
 }
 

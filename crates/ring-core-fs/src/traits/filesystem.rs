@@ -1,8 +1,8 @@
-use crate::traits::file_metadata::FileMetadata;
+use crate::traits::location_metadata::LocationMetadata;
 use crate::Error;
 use std::path::Path;
 
-pub trait Filesystem: FileMetadata {
+pub trait Filesystem: LocationMetadata {
     type File;
 
     /// Opens given file
