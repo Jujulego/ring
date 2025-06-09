@@ -38,9 +38,10 @@ impl JavascriptFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.filesystem.locate_path(path) else { return false };
+        let Ok(mut location) = self.filesystem.locate_path(path) else { return false };
+        let Ok(file) = location.read() else { return false };
 
-        let reader = BufReader::new(file.read());
+        let reader = BufReader::new(file);
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();
