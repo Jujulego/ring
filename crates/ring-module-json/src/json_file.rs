@@ -1,6 +1,7 @@
 use crate::json_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::traits::LocationMetadata;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +9,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JsonFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl JsonFileDetector {
     /// Creates a new instance of JsonFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem
         }
@@ -46,14 +47,16 @@ impl DetectLanguage for JsonFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_json_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.json", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.json", "{}")
+        );
 
-        let detector = JsonFileDetector::new(Rc::new(virtual_fs));
+        let detector = JsonFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_json_file(Path::new("test.json")));
 
@@ -62,10 +65,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_json_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = JsonFileDetector::new(Rc::new(virtual_fs));
+        let detector = JsonFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_json_file(Path::new("do-not-exists.json")));
         assert!(!detector.is_json_file(Path::new("src/lib.rs")));
