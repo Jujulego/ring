@@ -4,7 +4,7 @@ mod yaml_file;
 pub use crate::utils::yaml_language;
 pub use crate::yaml_file::YamlFileDetector;
 use ring_core_content::DetectLanguage;
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use ring_core_modules::Module;
 use std::rc::Rc;
 
@@ -16,7 +16,7 @@ pub struct YamlModule {
 impl YamlModule {
     /// Creates a new instance of YamlModule
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         YamlModule {
             yaml_file_detector: Rc::new(YamlFileDetector::new(filesystem)),
         }
