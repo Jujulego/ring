@@ -39,14 +39,14 @@ impl<P: ZipOrigin> ZipMiddleware<P> {
 
         archives.entry(std::path::absolute(path)?).or_default()
             .try_borrow_or_build(|| {
-                trace!("open archive {}", path.display());
+                trace!(middleware = "zip", "open archive {}", path.display());
                 let file = self.protocol.open_zip(path)?;
 
                 Ok(ZipArchive::new(file)?)
             })
             .inspect_err(move |err| {
-                warn!("unable to open archive {}", path.display());
-                debug!("error caused by: {err}");
+                warn!(middleware = "zip", "Unable to open archive {}", path.display());
+                debug!(middleware = "zip", "error caused by: {err}");
             })
     }
 }
@@ -183,11 +183,11 @@ pub fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::protocols::LocalProtocol;
+    use crate::protocols::FileProtocol;
 
     #[test]
     fn location_type_should_detect_files_and_directories_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(Ok(LocationType::File))));
         assert!(matches!(zip_middleware.maybe_location_type(Path::new("assets/yarn-archive.zip/node_modules")), Some(Ok(LocationType::Directory))));
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn is_dir_should_detect_directory_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
         assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
         assert_eq!(zip_middleware.maybe_is_dir(Path::new("assets/yarn-archive.zip/node_modules")), Some(true));
@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     fn is_file_should_detect_file_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(true));
         assert_eq!(zip_middleware.maybe_is_file(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
@@ -217,7 +217,7 @@ mod tests {
 
     #[test]
     fn is_symlink_should_detect_nothing_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
         assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")), Some(false));
         assert_eq!(zip_middleware.maybe_is_symlink(Path::new("assets/yarn-archive.zip/node_modules")), Some(false));
@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     fn open_should_allow_read_file_in_archive() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(LocalProtocol));
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
         let mut file = zip_middleware.maybe_locate_path(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
 
         assert_eq!(std::io::read_to_string(file.read().unwrap()).unwrap(), String::from("bar"));

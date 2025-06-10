@@ -1,6 +1,7 @@
 use crate::FsError;
 use std::io::{BufReader, Read};
 use std::path::PathBuf;
+use tracing::trace;
 
 pub trait Location {
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError>;
@@ -20,6 +21,7 @@ pub trait Location {
 impl Location for PathBuf {
     #[inline]
     fn read(&mut self) -> Result<Box<dyn Read>, FsError> {
+        trace!(protocol = "file", "open {}", self.display());
         std::fs::File::open(self)
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)

@@ -1,5 +1,5 @@
-mod local_protocol;
+mod file_protocol;
 mod memory_protocol;
 
-pub use local_protocol::LocalProtocol;
+pub use file_protocol::FileProtocol;
 pub use memory_protocol::{MemoryProtocol, VirtualContent};

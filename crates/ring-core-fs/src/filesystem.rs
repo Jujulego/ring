@@ -1,5 +1,5 @@
 use crate::middlewares::ZipMiddleware;
-use crate::protocols::{LocalProtocol, MemoryProtocol};
+use crate::protocols::{FileProtocol, MemoryProtocol};
 use crate::traits::{FilesystemMiddleware, FilesystemProtocol, Location};
 use crate::{FsError, LocationType};
 use std::path::Path;
@@ -13,12 +13,12 @@ pub struct Filesystem {
 }
 
 impl Filesystem {
-    /// Creates an [`Filesystem`] based on [`LocalProtocol`].
+    /// Creates an [`Filesystem`] based on [`FileProtocol`].
     ///
     /// Includes following middlewares:
     /// - [`ZipMiddleware`]
     pub fn local() -> Self {
-        let protocol = Rc::new(LocalProtocol::new());
+        let protocol = Rc::new(FileProtocol::new());
 
         Self {
             protocol: protocol.clone(),
