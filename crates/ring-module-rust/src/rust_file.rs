@@ -1,11 +1,11 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
+use ring_core_fs::traits::LocationMetadata;
 use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
-use ring_core_fs::traits::LocationMetadata;
 
 /// Detector for rust files
 #[derive(Clone)]
@@ -47,8 +47,8 @@ impl DetectLanguage for RustFileDetector {
 
 #[cfg(test)]
 mod tests {
-    use ring_core_fs::protocols::MemoryProtocol;
     use super::*;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_rust_language() {

@@ -1,6 +1,7 @@
 use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -9,13 +10,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct ShellFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl ShellFileDetector {
     /// Creates a new instance of ShellFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem
         }
@@ -32,9 +33,10 @@ impl ShellFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.filesystem.abs_open(path) else { return false };
+        let Ok(mut location) = self.filesystem.locate_path(path) else { return false };
+        let Ok(file) = location.read() else { return false };
 
-        let reader = BufReader::new(file.abs_reader());
+        let reader = BufReader::new(file);
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();
@@ -121,18 +123,20 @@ impl QualifyPath for ShellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_shell_script_using_extension() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.bash", "");
-        virtual_fs.add_file("test.bsh", "");
-        virtual_fs.add_file("test.csh", "");
-        virtual_fs.add_file("test.sh", "");
-        virtual_fs.add_file("test.zsh", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.bash", "")
+                .with_file("test.bsh", "")
+                .with_file("test.csh", "")
+                .with_file("test.sh", "")
+                .with_file("test.zsh", "")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_shell_script(Path::new("test.bash")));
         assert!(detector.is_shell_script(Path::new("test.bsh")));
@@ -157,10 +161,12 @@ mod tests {
 
     #[test]
     fn it_should_detect_shell_script_using_bash_shebang() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test", "#!/bin/bash");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test", "#!/bin/bash")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_shell_script(Path::new("test")));
         assert_eq!(detector.detect_language(Path::new("test")), Some(shell_language()));
@@ -173,10 +179,12 @@ mod tests {
 
     #[test]
     fn it_should_detect_shell_script_using_shell_shebang() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test", "#!/bin/sh");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test", "#!/bin/sh")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_shell_script(Path::new("test")));
         assert_eq!(detector.detect_language(Path::new("test")), Some(shell_language()));
@@ -189,13 +197,15 @@ mod tests {
 
     #[test]
     fn it_should_detect_shell_config_files() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(".bashrc", "");
-        virtual_fs.add_file(".bash_aliases", "");
-        virtual_fs.add_file(".bash_profile", "");
-        virtual_fs.add_file(".zshrc", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file(".bashrc", "")
+                .with_file(".bash_aliases", "")
+                .with_file(".bash_profile", "")
+                .with_file(".zshrc", "")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_shell_script(Path::new(".bashrc")));
         assert!(detector.is_shell_script(Path::new(".bash_aliases")));
@@ -215,11 +225,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_shell_history_files() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(".bash_history", "");
-        virtual_fs.add_file(".zsh_history", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file(".bash_history", "")
+                .with_file(".zsh_history", "")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_shell_script(Path::new(".bash_history")));
         assert!(!detector.is_shell_script(Path::new(".zsh_history")));
@@ -235,10 +247,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_shell_script() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = ShellFileDetector::new(Rc::new(virtual_fs));
+        let detector = ShellFileDetector::new(Rc::new(filesystem));
 
         assert_eq!(detector.detect_language(Path::new("do-not-exists.bash")), None);
         assert_eq!(detector.detect_language(Path::new("do-not-exists.bsh")), None);
