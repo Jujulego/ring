@@ -1,6 +1,7 @@
 use crate::typescript_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::traits::LocationMetadata;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +9,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TypescriptFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl TypescriptFileDetector {
     /// Creates a new instance of TypescriptFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem
         }
@@ -46,17 +47,19 @@ impl DetectLanguage for TypescriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_typescript_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.ts", "");
-        virtual_fs.add_file("test.tsx", "");
-        virtual_fs.add_file("test.cts", "");
-        virtual_fs.add_file("test.mts", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.ts", "")
+                .with_file("test.tsx", "")
+                .with_file("test.cts", "")
+                .with_file("test.mts", "")
+        );
 
-        let detector = TypescriptFileDetector::new(Rc::new(virtual_fs));
+        let detector = TypescriptFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_typescript_file(Path::new("test.ts")));
         assert!(detector.is_typescript_file(Path::new("test.cts")));
@@ -71,10 +74,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_typescript_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = TypescriptFileDetector::new(Rc::new(virtual_fs));
+        let detector = TypescriptFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_typescript_file(Path::new("do-not-exists.ts")));
         assert!(!detector.is_typescript_file(Path::new("do-not-exists.tsx")));

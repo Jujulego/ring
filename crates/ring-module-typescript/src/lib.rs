@@ -6,7 +6,7 @@ pub use crate::tsconfig_file::TsconfigFileDetector;
 pub use crate::typescript_file::TypescriptFileDetector;
 pub use crate::utils::typescript_language;
 use ring_core_content::{DetectLanguage, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use ring_core_modules::Module;
 use std::rc::Rc;
 
@@ -19,7 +19,7 @@ pub struct TypescriptModule {
 impl TypescriptModule {
     /// Creates a new instance of TypescriptModule
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         TypescriptModule {
             tsconfig_file_detector: Rc::new(TsconfigFileDetector::new(filesystem.clone())),
             typescript_file_detector: Rc::new(TypescriptFileDetector::new(filesystem)),
