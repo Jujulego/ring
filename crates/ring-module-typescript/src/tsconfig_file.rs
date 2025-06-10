@@ -1,5 +1,4 @@
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::LocationMetadata;
 use ring_core_fs::Filesystem;
 use ring_module_json::json_language;
 use std::ffi::OsStr;

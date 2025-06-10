@@ -1,7 +1,6 @@
 use crate::NpmPackage;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
 use ring_core_fs::{Filesystem, FsError};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;

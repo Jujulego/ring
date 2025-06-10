@@ -1,9 +1,8 @@
 use crate::shell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
 use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
@@ -34,9 +33,8 @@ impl ShellFileDetector {
 
         // Shebangs
         let Ok(mut location) = self.filesystem.locate_path(path) else { return false };
-        let Ok(file) = location.read() else { return false };
+        let Ok(reader) = location.buf_read() else { return false };
 
-        let reader = BufReader::new(file);
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();

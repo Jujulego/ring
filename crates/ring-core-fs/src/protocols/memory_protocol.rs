@@ -1,4 +1,4 @@
-use crate::traits::{Location, FilesystemProtocol, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;

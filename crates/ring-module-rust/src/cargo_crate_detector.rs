@@ -1,14 +1,12 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
 use ring_core_fs::{Filesystem, FsError};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, instrument, trace, warn};
@@ -103,8 +101,7 @@ impl CargoCrateDetector {
         trace!("read file {}", manifest_path.display());
         match self.filesystem.locate_path(&manifest_path) {
             Ok(mut location) => {
-                let content = location.read()
-                    .and_then(|file| io::read_to_string(file).map_err(FsError::from))
+                let content = location.read_to_string()
                     .context(format!("Could not read {}", manifest_path.display()))?;
 
                 let manifest = toml::from_str(&content)

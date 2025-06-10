@@ -1,6 +1,5 @@
 use crate::powershell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::LocationMetadata;
 use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;

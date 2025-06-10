@@ -1,6 +1,5 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::LocationMetadata;
 use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;

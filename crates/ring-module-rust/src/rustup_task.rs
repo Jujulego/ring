@@ -58,9 +58,9 @@ impl ProcessTask for RustupTask {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use super::*;
-    
+    use std::path::PathBuf;
+
     #[test]
     fn rustup_task_should_be_a_task() {
         let data = ProcessData::new(

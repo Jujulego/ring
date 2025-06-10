@@ -40,7 +40,7 @@ impl<P: ZipOrigin> ZipMiddleware<P> {
         archives.entry(std::path::absolute(path)?).or_default()
             .try_borrow_or_build(|| {
                 trace!("open archive {}", path.display());
-                let file = self.protocol.open_zip(&path)?;
+                let file = self.protocol.open_zip(path)?;
 
                 Ok(ZipArchive::new(file)?)
             })
