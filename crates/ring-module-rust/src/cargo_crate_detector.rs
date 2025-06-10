@@ -1,8 +1,8 @@
 use crate::cargo_crate::CargoCrate;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
-use ring_core_fs::FsError;
+use ring_core_fs::traits::{FilesystemProtocol, LocationMetadata};
+use ring_core_fs::{Filesystem, FsError};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_toml::toml_language;
 use std::cell::RefCell;
@@ -17,13 +17,13 @@ use tracing::{debug, instrument, trace, warn};
 #[derive(Clone)]
 pub struct CargoCrateDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<CargoCrate>>>>,
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl CargoCrateDetector {
     /// Creates a new instance of CargoCrateDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         CargoCrateDetector {
             cache: RefCell::new(HashMap::new()),
             filesystem,
@@ -101,11 +101,12 @@ impl CargoCrateDetector {
         }
 
         trace!("read file {}", manifest_path.display());
-        match self.filesystem.abs_open(&manifest_path) {
-            Ok(mut file) => {
-                let content = io::read_to_string(file.abs_reader())
-                    .context(format!("Failed to read {}", manifest_path.display()))?;
-                
+        match self.filesystem.locate_path(&manifest_path) {
+            Ok(mut location) => {
+                let content = location.read()
+                    .and_then(|file| io::read_to_string(file).map_err(FsError::from))
+                    .context(format!("Could not read {}", manifest_path.display()))?;
+
                 let manifest = toml::from_str(&content)
                     .context(format!("Failed to parse {}", manifest_path.display()))?;
 
@@ -207,14 +208,16 @@ impl QualifyPath for CargoCrateDetector {
 mod tests {
     use super::*;
     use indoc::indoc;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_cargo_manifest() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(Path::new("Cargo.toml"), "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("Cargo.toml", "")
+        );
 
-        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+        let detector = CargoCrateDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_manifest(Path::new("Cargo.toml")));
         assert_eq!(detector.detect_language(Path::new("Cargo.toml")), Some(toml_language()));
@@ -223,11 +226,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_cargo_lockfile() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(Path::new("/Cargo.toml"), "");
-        virtual_fs.add_file(Path::new("/Cargo.lock"), "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/Cargo.toml", "")
+                .with_file("/Cargo.lock", "")
+        );
 
-        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+        let detector = CargoCrateDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_lockfile(Path::new("/Cargo.lock")));
         assert_eq!(detector.detect_language(Path::new("/Cargo.lock")), Some(toml_language()));
@@ -239,11 +244,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_cargo_configuration() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(Path::new("/.cargo/config"), "");
-        virtual_fs.add_file(Path::new("/.cargo/config.toml"), "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/.cargo/config", "")
+                .with_file("/.cargo/config.toml", "")
+        );
 
-        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+        let detector = CargoCrateDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_cargo_config("/.cargo/config"));
         assert!(detector.is_cargo_config("/.cargo/config.toml"));
@@ -257,13 +264,15 @@ mod tests {
 
     #[test]
     fn it_should_qualify_rust_files() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(Path::new("/Cargo.toml"), "");
-        virtual_fs.add_file(Path::new("/build.rs"), "");
-        virtual_fs.add_file(Path::new("/src/lib.rs"), "");
-        virtual_fs.add_file(Path::new("/tests/test.rs"), "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/Cargo.toml", "")
+                .with_file("/build.rs", "")
+                .with_file("/src/lib.rs", "")
+                .with_file("/tests/test.rs", "")
+        );
 
-        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+        let detector = CargoCrateDetector::new(Rc::new(filesystem));
 
         assert_eq!(
             detector.qualify_path(Path::new("/build.rs")),
@@ -281,14 +290,16 @@ mod tests {
 
     #[test]
     fn it_should_load_cargo_crate() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(Path::new("/Cargo.toml"), indoc! {r#"
-            [package]
-            name = "test"
-        "#});
-        virtual_fs.add_file(Path::new("/src/lib.rs"), "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/Cargo.toml", indoc! {r#"
+                    [package]
+                    name = "test"
+                "#})
+                .with_file("/src/lib.rs", "")
+        );
 
-        let detector = CargoCrateDetector::new(Rc::new(virtual_fs));
+        let detector = CargoCrateDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_crate("/"));
 

@@ -1,21 +1,22 @@
 use crate::rust_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
+use ring_core_fs::traits::LocationMetadata;
 
 /// Detector for rust files
 #[derive(Clone)]
 pub struct RustFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl RustFileDetector {
     /// Creates a new instance of RustFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem,
         }
@@ -46,15 +47,17 @@ impl DetectLanguage for RustFileDetector {
 
 #[cfg(test)]
 mod tests {
+    use ring_core_fs::protocols::MemoryProtocol;
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
 
     #[test]
     fn it_should_detect_rust_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/main.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/src/main.rs", "")
+        );
 
-        let detector = RustFileDetector::new(Rc::new(virtual_fs));
+        let detector = RustFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_rust_file(Path::new("src/main.rs")));
         assert_eq!(detector.detect_language(Path::new("src/main.rs")), Some(rust_language()));
@@ -62,10 +65,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_rust_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/main.js", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/src/main.js", "")
+        );
 
-        let detector = RustFileDetector::new(Rc::new(virtual_fs));
+        let detector = RustFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_rust_file(Path::new("do-not-exist.rs")));
         assert!(!detector.is_rust_file(Path::new("src/main.js")));
