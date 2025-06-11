@@ -119,9 +119,8 @@ mod tests {
 
         // Existing file
         let mut location = memory.locate_path(Path::new("/foo/bar/baz")).unwrap();
-        let file = location.read().unwrap();
 
-        assert_eq!(std::io::read_to_string(file).unwrap(), "baz");
+        assert_eq!(location.read_to_string().unwrap(), "baz");
 
         // Existing directory
         let mut location = memory.locate_path(Path::new("/foo/bar")).unwrap();

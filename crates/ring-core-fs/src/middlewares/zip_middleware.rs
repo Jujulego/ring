@@ -228,10 +228,21 @@ mod tests {
     #[test]
     fn open_should_allow_read_file_in_archive() {
         let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
+
+        // Existing file in an archive
         let mut file = zip_middleware.maybe_locate_path(Path::new("assets/yarn-archive.zip/node_modules/foo.txt")).unwrap().unwrap();
 
-        assert_eq!(std::io::read_to_string(file.read().unwrap()).unwrap(), String::from("bar"));
+        assert_eq!(file.read_to_string().unwrap(), String::from("bar"));
 
+        // Existing folder in an archive
+        let mut file = zip_middleware.maybe_locate_path(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap();
+
+        assert!(matches!(file.read_to_string(), Err(FsError::NotAFile(_))));
+
+        // Not existing path
+        assert!(matches!(zip_middleware.maybe_locate_path(Path::new("assets/yarn-archive.zip/does-not-exists")).unwrap(), Err(FsError::NotFound(_))));
+
+        // Existing file out of an archive
         assert!(zip_middleware.maybe_locate_path(Path::new("assets/foo.txt")).is_none());
     }
 

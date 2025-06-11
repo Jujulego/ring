@@ -114,13 +114,11 @@ mod tests {
         let filesystem = Filesystem::local();
 
         let mut location = filesystem.locate_path("assets/foo.txt").unwrap();
-        let file = location.read().unwrap();
 
-        assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));
+        assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
 
         let mut location = filesystem.locate_path("assets/yarn-archive.zip/node_modules/foo.txt").unwrap();
-        let file = location.read().unwrap();
 
-        assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));
+        assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
     }
 }

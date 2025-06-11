@@ -67,8 +67,7 @@ mod tests {
     #[test]
     fn open_should_allow_read_file() {
         let mut location = FileProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
-        let file = location.read().unwrap();
         
-        assert_eq!(std::io::read_to_string(file).unwrap(), String::from("bar"));
+        assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
     }
 }
