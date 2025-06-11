@@ -1,3 +1,3 @@
 mod zip_middleware;
 
-pub use zip_middleware::ZipMiddleware;
+pub use zip_middleware::*;

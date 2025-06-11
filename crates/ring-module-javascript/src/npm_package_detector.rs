@@ -1,8 +1,7 @@
 use crate::NpmPackage;
 use anyhow::{anyhow, Context};
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
-use ring_core_fs::Error;
+use ring_core_fs::{Filesystem, FsError};
 use ring_core_units::{DetectUnit, Unit};
 use ring_module_json::json_language;
 use ring_module_yaml::yaml_language;
@@ -17,13 +16,13 @@ use tracing::{debug, instrument, warn};
 #[derive(Clone)]
 pub struct NpmPackageDetector {
     cache: RefCell<HashMap<PathBuf, Option<Rc<NpmPackage>>>>,
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl NpmPackageDetector {
     /// Creates a new instance of NpmPackageDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         NpmPackageDetector {
             cache: RefCell::new(HashMap::new()),
             filesystem,
@@ -162,9 +161,12 @@ impl NpmPackageDetector {
             return Ok(crt.clone());
         }
 
-        match self.filesystem.abs_open(&manifest_path) {
-            Ok(mut file) => {
-                let manifest = serde_json::from_reader(file.abs_reader())
+        match self.filesystem.locate_path(&manifest_path) {
+            Ok(mut location) => {
+                let file = location.read()
+                    .context(format!("Could not read {}", manifest_path.display()))?;
+                
+                let manifest = serde_json::from_reader(file)
                     .context(format!("Failed to parse {}", manifest_path.display()))?;
 
                 let pkg = Some(Rc::new(NpmPackage::new(manifest, path.to_path_buf())));
@@ -174,7 +176,7 @@ impl NpmPackageDetector {
 
                 Ok(pkg)
             },
-            Err(Error::NotFound(_)) => {
+            Err(FsError::NotFound(_)) => {
                 debug!(key = %manifest_path.display(), "npm package miss cached");
                 self.cache.borrow_mut().insert(manifest_path, None);
 
@@ -269,14 +271,16 @@ impl QualifyPath for NpmPackageDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_package_json() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("package.json", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("package.json", "{}")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_manifest(Path::new("package.json")));
         assert_eq!(detector.detect_language(Path::new("package.json")), Some(json_language()));
@@ -285,10 +289,12 @@ mod tests {
 
     #[test]
     fn it_should_detect_npm_configuration() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(".npmrc", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file(".npmrc", "{}")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_npm_configuration(Path::new(".npmrc")));
         assert_eq!(detector.detect_language(Path::new(".npmrc")), None);
@@ -300,11 +306,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_npm_lockfile() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", "{}");
-        virtual_fs.add_file("/package-lock.json", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/package.json", "{}")
+                .with_file("/package-lock.json", "{}")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_lockfile(Path::new("/package-lock.json")));
         assert!(detector.is_npm_lockfile(Path::new("/package-lock.json")));
@@ -317,11 +325,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_pnpm_lockfile() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", "{}");
-        virtual_fs.add_file("/pnpm-lock.yaml", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/package.json", "{}")
+                .with_file("/pnpm-lock.yaml", "{}")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_lockfile(Path::new("/pnpm-lock.yaml")));
         assert!(detector.is_pnpm_lockfile(Path::new("/pnpm-lock.yaml")));
@@ -334,10 +344,12 @@ mod tests {
 
     #[test]
     fn it_should_detect_yarn_configuration() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file(".yarnrc.yml", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file(".yarnrc.yml", "")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_yarn_configuration(Path::new(".yarnrc.yml")));
         assert_eq!(detector.detect_language(Path::new(".yarnrc.yml")), Some(yaml_language()));
@@ -349,11 +361,13 @@ mod tests {
 
     #[test]
     fn it_should_detect_yarn_lockfile() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", "{}");
-        virtual_fs.add_file("/yarn.lock", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/package.json", "{}")
+                .with_file("/yarn.lock", "")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_lockfile(Path::new("/yarn.lock")));
         assert!(detector.is_yarn_lockfile(Path::new("/yarn.lock")));
@@ -366,11 +380,13 @@ mod tests {
 
     #[test]
     fn it_should_load_package_unit() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", r#"{ "name": "test" }"#);
-        virtual_fs.add_file("/src/main.js", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/package.json", r#"{ "name": "test" }"#)
+                .with_file("/src/main.js", "")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_package(Path::new("/")));
 
@@ -385,12 +401,14 @@ mod tests {
 
     #[test]
     fn it_should_qualify_yarn_pnp_files() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("/package.json", "{}");
-        virtual_fs.add_file("/.pnp.cjs", "{}");
-        virtual_fs.add_file("/.pnp.loader.mjs", "{}");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("/package.json", "{}")
+                .with_file("/.pnp.cjs", "{}")
+                .with_file("/.pnp.loader.mjs", "{}")
+        );
 
-        let detector = NpmPackageDetector::new(Rc::new(virtual_fs));
+        let detector = NpmPackageDetector::new(Rc::new(filesystem));
 
         assert_eq!(
             detector.qualify_path(Path::new("/.pnp.cjs")),

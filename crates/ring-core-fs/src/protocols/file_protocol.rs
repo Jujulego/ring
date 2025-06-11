@@ -1,0 +1,73 @@
+use crate::middlewares::ZipOrigin;
+use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
+use crate::{FsError, LocationType};
+use std::path::Path;
+use tracing::trace;
+
+/// Interacts with local filesystem
+#[derive(Debug, Default)]
+pub struct FileProtocol;
+
+impl FileProtocol {
+    /// Creates a new instance of local filesystem
+    #[inline]
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
+impl LocationMetadata for FileProtocol {
+    #[inline]
+    fn location_type(&self, path: &Path) -> Result<LocationType, FsError> {
+        trace!(protocol = "file", "metadata {}", path.display());
+        Ok(path.metadata()?.file_type().into())
+    }
+}
+
+impl FilesystemProtocol for FileProtocol {
+    #[inline]
+    fn locate_path(&self, path: &Path) -> Result<Box<dyn Location>, FsError> {
+        trace!(protocol = "file", "canonicalize {}", path.display());
+        path.canonicalize()
+            .map(|p| Box::new(p) as _)
+            .map_err(FsError::from)
+    }
+}
+
+impl ZipOrigin for FileProtocol {
+    type File = std::fs::File;
+
+    #[inline]
+    fn open_zip(&self, path: &Path) -> Result<Self::File, FsError> {
+        trace!(protocol = "file", "open {}", path.display());
+        std::fs::File::open(path).map_err(FsError::from)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_dir_should_detect_directories() {
+        assert!(FileProtocol.is_dir(Path::new("assets")));
+
+        assert!(!FileProtocol.is_dir(Path::new("assets/foo.txt")));
+        assert!(!FileProtocol.is_dir(Path::new("assets/do-no-exists")));
+    }
+
+    #[test]
+    fn is_file_should_detect_files() {
+        assert!(FileProtocol.is_file(Path::new("assets/foo.txt")));
+
+        assert!(!FileProtocol.is_file(Path::new("assets")));
+        assert!(!FileProtocol.is_file(Path::new("assets/do-no-exists")));
+    }
+
+    #[test]
+    fn open_should_allow_read_file() {
+        let mut location = FileProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
+        
+        assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
+    }
+}

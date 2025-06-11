@@ -1,6 +1,6 @@
 use crate::toml_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TomlFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl TomlFileDetector {
     /// Creates a new instance of TomlFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> TomlFileDetector {
+    pub fn new(filesystem: Rc<Filesystem>) -> TomlFileDetector {
         TomlFileDetector {
             filesystem
         }
@@ -46,14 +46,16 @@ impl DetectLanguage for TomlFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_toml_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.toml", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.toml", "")
+        );
 
-        let detector = TomlFileDetector::new(Rc::new(virtual_fs));
+        let detector = TomlFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_toml_file(Path::new("test.toml")));
 
@@ -62,10 +64,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_toml_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = TomlFileDetector::new(Rc::new(virtual_fs));
+        let detector = TomlFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_toml_file(Path::new("does-not-exists.toml")));
         assert!(!detector.is_toml_file(Path::new("src/lib.rs")));

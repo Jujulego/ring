@@ -1,6 +1,6 @@
 use crate::powershell_language;
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::rc::Rc;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct PowershellFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl PowershellFileDetector {
     /// Creates a new instance of PowershellFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem
         }
@@ -56,14 +56,16 @@ impl QualifyPath for PowershellFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_powershell_script() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.ps1", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.ps1", "")
+        );
 
-        let detector = PowershellFileDetector::new(Rc::new(virtual_fs));
+        let detector = PowershellFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_powershell_script(Path::new("test.ps1")));
 
@@ -77,10 +79,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_powershell_script() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = PowershellFileDetector::new(Rc::new(virtual_fs));
+        let detector = PowershellFileDetector::new(Rc::new(filesystem));
         
         assert!(!detector.is_powershell_script(Path::new("do-not-exists.ps1")));
         assert!(!detector.is_powershell_script(Path::new("src/lib.rs")));

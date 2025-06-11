@@ -122,7 +122,7 @@ impl<T> Drop for PoolRef<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn borrow_should_return_none_on_empty_pool() {
         let pool: Pool<&str> = Pool::new();

@@ -1,21 +1,21 @@
 use crate::javascript_language;
 use ring_core_content::{DetectLanguage, Language};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use std::ffi::OsStr;
-use std::io::{BufRead, BufReader};
+use std::io::BufRead;
 use std::path::Path;
 use std::rc::Rc;
 use tracing::instrument;
 
 #[derive(Clone)]
 pub struct JavascriptFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl JavascriptFileDetector {
     /// Creates a new instance of JavascriptFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem,
         }
@@ -37,9 +37,9 @@ impl JavascriptFileDetector {
         }
 
         // Shebangs
-        let Ok(mut file) = self.filesystem.abs_open(path) else { return false };
+        let Ok(mut location) = self.filesystem.locate_path(path) else { return false };
+        let Ok(reader) = location.buf_read() else { return false };
 
-        let reader = BufReader::new(file.abs_reader());
         let shebang = reader.lines()
             .map_while(Result::ok)
             .next();
@@ -62,17 +62,19 @@ impl DetectLanguage for JavascriptFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_javascript_language_using_extensions() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test.js", "");
-        virtual_fs.add_file("test.jsx", "");
-        virtual_fs.add_file("test.cjs", "");
-        virtual_fs.add_file("test.mjs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test.js", "")
+                .with_file("test.jsx", "")
+                .with_file("test.cjs", "")
+                .with_file("test.mjs", "")
+        );
 
-        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+        let detector = JavascriptFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_javascript_file(Path::new("test.js")));
         assert!(detector.is_javascript_file(Path::new("test.jsx")));
@@ -87,10 +89,12 @@ mod tests {
 
     #[test]
     fn it_should_detect_javascript_language_using_shebang() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("test", "#!/usr/bin/env node");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("test", "#!/usr/bin/env node")
+        );
 
-        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+        let detector = JavascriptFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_javascript_file(Path::new("test")));
 
@@ -99,10 +103,12 @@ mod tests {
 
     #[test]
     fn it_should_not_detect_javascript_language() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = JavascriptFileDetector::new(Rc::new(virtual_fs));
+        let detector = JavascriptFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_javascript_file(Path::new("do-not-exists.js")));
         assert!(!detector.is_javascript_file(Path::new("do-not-exists.jsx")));

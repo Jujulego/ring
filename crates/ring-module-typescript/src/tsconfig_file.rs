@@ -1,5 +1,5 @@
 use ring_core_content::{DetectLanguage, Language, PathContent, QualifyPath};
-use ring_core_fs::traits::AbsFilesystem;
+use ring_core_fs::Filesystem;
 use ring_module_json::json_language;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -8,13 +8,13 @@ use tracing::instrument;
 
 #[derive(Clone)]
 pub struct TsconfigFileDetector {
-    filesystem: Rc<dyn AbsFilesystem>,
+    filesystem: Rc<Filesystem>,
 }
 
 impl TsconfigFileDetector {
     /// Creates a new instance of TsconfigFileDetector
     #[inline]
-    pub fn new(filesystem: Rc<dyn AbsFilesystem>) -> Self {
+    pub fn new(filesystem: Rc<Filesystem>) -> Self {
         Self {
             filesystem
         }
@@ -62,15 +62,17 @@ impl QualifyPath for TsconfigFileDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ring_core_fs::filesystem::VirtualFilesystem;
+    use ring_core_fs::protocols::MemoryProtocol;
 
     #[test]
     fn it_should_detect_tsconfig_file() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("tsconfig.json", "");
-        virtual_fs.add_file("tsconfig.suffix.json", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("tsconfig.json", "")
+                .with_file("tsconfig.suffix.json", "")
+        );
 
-        let detector = TsconfigFileDetector::new(Rc::new(virtual_fs));
+        let detector = TsconfigFileDetector::new(Rc::new(filesystem));
 
         assert!(detector.is_tsconfig(Path::new("tsconfig.json")));
         assert!(detector.is_tsconfig(Path::new("tsconfig.suffix.json")));
@@ -84,10 +86,12 @@ mod tests {
     
     #[test]
     fn it_should_not_detect_tsconfig_file() {
-        let mut virtual_fs = VirtualFilesystem::new();
-        virtual_fs.add_file("src/lib.rs", "");
+        let filesystem = Filesystem::memory(
+            MemoryProtocol::new()
+                .with_file("src/lib.rs", "")
+        );
 
-        let detector = TsconfigFileDetector::new(Rc::new(virtual_fs));
+        let detector = TsconfigFileDetector::new(Rc::new(filesystem));
 
         assert!(!detector.is_tsconfig(Path::new("tsconfig.json")));
         assert!(!detector.is_tsconfig(Path::new("tsconfig.do-not-exists.json")));

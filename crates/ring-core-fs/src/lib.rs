@@ -1,10 +1,10 @@
-mod augmented_filesystem;
+mod filesystem;
 mod error;
-pub mod filesystem;
-pub mod middlewares;
-pub mod traits;
 mod location_type;
+pub mod middlewares;
+pub mod protocols;
+pub mod traits;
 
-pub use crate::augmented_filesystem::AugmentedFilesystem;
-pub use crate::error::Error;
+pub use crate::error::FsError;
+pub use crate::filesystem::Filesystem;
 pub use crate::location_type::LocationType;

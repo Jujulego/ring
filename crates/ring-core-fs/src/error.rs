@@ -4,9 +4,11 @@ use zip::result::ZipError;
 
 #[derive(Error, Debug)]
 #[non_exhaustive]
-pub enum Error {
+pub enum FsError {
     #[error("NotFound: {0}")]
     NotFound(&'static str),
+    #[error("NotAFile: {0}")]
+    NotAFile(&'static str),
 
     #[error("IoError: {0}")]
     IoError(#[source] io::Error),
@@ -14,22 +16,24 @@ pub enum Error {
     ZipError(#[source] ZipError),
 }
 
-impl From<io::Error> for Error {
+impl From<io::Error> for FsError {
     fn from(err: io::Error) -> Self {
         if err.kind() == io::ErrorKind::NotFound {
-            Error::NotFound("Path not found")
+            FsError::NotFound("Path not found")
+        } else if err.kind() == io::ErrorKind::IsADirectory {
+            FsError::NotAFile("Path is not a file")
         } else {
-            Error::IoError(err)
+            FsError::IoError(err)
         }
     }
 }
 
-impl From<ZipError> for Error {
+impl From<ZipError> for FsError {
     fn from(value: ZipError) -> Self {
         match value {
             ZipError::Io(err) => err.into(),
-            ZipError::FileNotFound => Error::NotFound("File not found in archive"),
-            err => Error::ZipError(err)
+            ZipError::FileNotFound => FsError::NotFound("File not found in archive"),
+            err => FsError::ZipError(err)
         }
     }
 }
