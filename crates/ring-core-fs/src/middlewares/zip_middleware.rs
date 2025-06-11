@@ -18,29 +18,29 @@ pub trait ZipOrigin {
 
 /// Allow access to file stored in zip archives.
 /// Supports yarn virtual paths.
-pub struct ZipMiddleware<P: ZipOrigin> {
-    protocol: Rc<P>,
-    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<P::File>>>>,
+pub struct ZipMiddleware<O: ZipOrigin> {
+    origin: Rc<O>,
+    archives: RefCell<HashMap<PathBuf, Pool<ZipArchive<O::File>>>>,
 }
 
-impl<P: ZipOrigin> ZipMiddleware<P> {
+impl<O: ZipOrigin> ZipMiddleware<O> {
     #[inline]
-    pub fn new(protocol: Rc<P>) -> Self {
+    pub fn new(origin: Rc<O>) -> Self {
         Self {
-            protocol,
+            origin,
             archives: RefCell::new(HashMap::new()),
         }
     }
 }
 
-impl<P: ZipOrigin> ZipMiddleware<P> {
-    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<P::File>>, FsError> {
+impl<O: ZipOrigin> ZipMiddleware<O> {
+    pub fn open_archive(&self, path: &Path) -> Result<PoolRef<ZipArchive<O::File>>, FsError> {
         let mut archives = self.archives.borrow_mut();
 
         archives.entry(std::path::absolute(path)?).or_default()
             .try_borrow_or_build(|| {
                 trace!(middleware = "zip", "open archive {}", path.display());
-                let file = self.protocol.open_zip(path)?;
+                let file = self.origin.open_zip(path)?;
 
                 Ok(ZipArchive::new(file)?)
             })
@@ -51,7 +51,7 @@ impl<P: ZipOrigin> ZipMiddleware<P> {
     }
 }
 
-impl<P: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<P> {
+impl<O: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<O> {
     fn maybe_location_type(&self, path: &Path) -> Option<Result<LocationType, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
@@ -82,7 +82,7 @@ impl<P: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<P> {
     }
 }
 
-impl<P: ZipOrigin> FilesystemMiddleware for ZipMiddleware<P> {
+impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
     fn maybe_locate_path(&self, path: &Path) -> Option<Result<Box<dyn Location + '_>, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
