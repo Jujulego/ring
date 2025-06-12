@@ -95,13 +95,13 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
         if let Some(file_index) = archive.index_for_name(&inner_path) {
-            return Some(Ok(Box::new(ZippedLocation::new_file(archive, file_index))));
+            return Some(Ok(Box::new(ZippedLocation::new_file(archive, path, file_index))));
         }
 
         inner_path += "/";
 
         if archive.file_names().any(|name| name.starts_with(&inner_path)) {
-            Some(Ok(Box::new(ZippedLocation::new_directory(archive))))
+            Some(Ok(Box::new(ZippedLocation::new_directory(archive, path))))
         } else {
             Some(Err(FsError::NotFound("Location not found in archive")))
         }
@@ -112,25 +112,31 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
 pub struct ZippedLocation<F> {
     archive: PoolRef<ZipArchive<F>>,
     file_index: Option<usize>,
+    path: PathBuf,
 }
 
 impl<F> ZippedLocation<F> {
-    pub fn new_directory(archive: PoolRef<ZipArchive<F>>) -> Self {
+    pub fn new_directory(archive: PoolRef<ZipArchive<F>>, path: PathBuf) -> Self {
         Self {
-            archive,
+            archive, path,
             file_index: None,
         }
     }
 
-    pub fn new_file(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
+    pub fn new_file(archive: PoolRef<ZipArchive<F>>, path: PathBuf, file_index: usize) -> Self {
         Self {
-            archive,
+            archive, path,
             file_index: Some(file_index),
         }
     }
 }
 
 impl<F: Read + Seek> Location for ZippedLocation<F> {
+    #[inline]
+    fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+    
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         if let Some(file_index) = self.file_index {
             self.archive.by_index(file_index)

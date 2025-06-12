@@ -64,7 +64,7 @@ impl FilesystemProtocol for MemoryProtocol {
         let path = Path::new("/").join(path);
 
         match self.content.get(&path) {
-            Some(content) => Ok(Box::new(content.clone()) as _),
+            Some(content) => Ok(Box::new(VirtualLocation::new(path, content.clone())) as _),
             None => Err(FsError::NotFound("File not found or is not a file"))
         }
     }
@@ -91,10 +91,29 @@ impl From<&VirtualContent> for LocationType {
     }
 }
 
-impl Location for VirtualContent {
+/// Virtual filesystem location
+#[derive(Debug)]
+pub struct VirtualLocation {
+    path: PathBuf,
+    content: VirtualContent,
+}
+
+impl VirtualLocation {
+    #[inline]
+    fn new(path: PathBuf, content: VirtualContent) -> Self {
+        Self { path, content }
+    }
+}
+
+impl Location for VirtualLocation {
+    #[inline]
+    fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+
     #[inline]
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
-        match self {
+        match &self.content {
             VirtualContent::File(content) => Ok(Box::new(content.as_bytes()) as _),
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
