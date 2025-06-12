@@ -1,4 +1,4 @@
-use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -67,6 +67,10 @@ impl FilesystemProtocol for MemoryProtocol {
             Some(content) => Ok(Box::new(content.clone()) as _),
             None => Err(FsError::NotFound("File not found or is not a file"))
         }
+    }
+
+    fn read_dir(&self, path: &Path) -> Result<LocationIterator, FsError> {
+        todo!()
     }
 }
 

@@ -1,3 +1,4 @@
+use std::fs::DirEntry;
 use crate::FsError;
 use std::io::{BufReader, Read};
 use std::path::PathBuf;
@@ -23,6 +24,17 @@ impl Location for PathBuf {
     fn read(&mut self) -> Result<Box<dyn Read>, FsError> {
         trace!(protocol = "file", "open {}", self.display());
         std::fs::File::open(self)
+            .map(|file| Box::new(file) as _)
+            .map_err(FsError::from)
+    }
+}
+
+impl Location for DirEntry {
+    fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
+        let path = self.path();
+
+        trace!(protocol = "file", "open {}", path.display());
+        std::fs::File::open(path)
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
     }

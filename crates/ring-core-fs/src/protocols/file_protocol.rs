@@ -1,5 +1,6 @@
+use std::fs::{read_dir, ReadDir};
 use crate::middlewares::ZipOrigin;
-use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::path::Path;
 use tracing::trace;
@@ -32,6 +33,14 @@ impl FilesystemProtocol for FileProtocol {
             .map(|p| Box::new(p) as _)
             .map_err(FsError::from)
     }
+
+    #[inline]
+    fn read_dir(&self, path: &Path) -> Result<LocationIterator, FsError> {
+        trace!(protocol = "file", "read_dir {}", path.display());
+        read_dir(path)
+            .map(|iter| Box::new(FileIterator::new(iter)) as _)
+            .map_err(FsError::from)
+    }
 }
 
 impl ZipOrigin for FileProtocol {
@@ -41,6 +50,34 @@ impl ZipOrigin for FileProtocol {
     fn open_zip(&self, path: &Path) -> Result<Self::File, FsError> {
         trace!(protocol = "file", "open {}", path.display());
         std::fs::File::open(path).map_err(FsError::from)
+    }
+}
+
+#[derive(Debug)]
+struct FileIterator(Option<ReadDir>);
+
+impl FileIterator {
+    #[inline]
+    fn new(iter: ReadDir) -> FileIterator {
+        FileIterator(Some(iter))
+    }
+}
+
+impl Iterator for FileIterator {
+    type Item = Result<Box<dyn Location>, FsError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut inner = self.0.take()?;
+        
+        if let Some(entry) = inner.next() {
+            self.0 = Some(inner);
+            
+            Some(entry
+                .map(|entry| Box::new(entry) as _)
+                .map_err(FsError::from))
+        } else {
+            None
+        }
     }
 }
 

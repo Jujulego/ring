@@ -5,6 +5,8 @@ use zip::result::ZipError;
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum FsError {
+    #[error("NotADirectory: {0}")]
+    NotADirectory(&'static str),
     #[error("NotFound: {0}")]
     NotFound(&'static str),
     #[error("NotAFile: {0}")]
@@ -22,6 +24,8 @@ impl From<io::Error> for FsError {
             FsError::NotFound("Path not found")
         } else if err.kind() == io::ErrorKind::IsADirectory {
             FsError::NotAFile("Path is not a file")
+        } else if err.kind() == io::ErrorKind::NotADirectory {
+            FsError::NotADirectory("Path is not a directory")
         } else {
             FsError::IoError(err)
         }
