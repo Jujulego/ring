@@ -1,7 +1,7 @@
-use std::fs::{read_dir, ReadDir};
 use crate::middlewares::ZipOrigin;
 use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
+use std::fs::{read_dir, ReadDir};
 use std::path::Path;
 use tracing::trace;
 
@@ -92,8 +92,8 @@ impl Iterator for FileIterator {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn is_dir_should_detect_directories() {

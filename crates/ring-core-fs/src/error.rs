@@ -7,10 +7,10 @@ use zip::result::ZipError;
 pub enum FsError {
     #[error("NotADirectory: {0}")]
     NotADirectory(&'static str),
-    #[error("NotFound: {0}")]
-    NotFound(&'static str),
     #[error("NotAFile: {0}")]
     NotAFile(&'static str),
+    #[error("NotFound: {0}")]
+    NotFound(&'static str),
 
     #[error("IoError: {0}")]
     IoError(#[source] io::Error),
