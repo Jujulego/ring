@@ -79,6 +79,15 @@ impl Iterator for FileIterator {
             None
         }
     }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if let Some(inner) = self.0.as_ref() {
+            inner.size_hint()
+        } else {
+            (0, Some(0))
+        }
+    }
 }
 
 #[cfg(test)]
