@@ -252,8 +252,8 @@ mod tests {
         assert!(zip_middleware.maybe_locate_path(Path::new("assets/foo.txt")).is_none());
     }
 
-    #[cfg(target_os = "windows")]
     #[test]
+    #[cfg(target_os = "windows")]
     fn test_parse_yarn_virtual_path() {
         let virtual_path = Path::new(r"C:\Users\toto\project\.yarn\__virtual__\cool-virtual-hash\2\AppData\Local\Yarn\Berry\cache\cool-hash.zip\node_modules\cool\cool.js");
 
@@ -263,8 +263,8 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
+    #[cfg(not(target_os = "windows"))]
     fn test_parse_yarn_virtual_path() {
         let virtual_path = Path::new("/home/toto/project/.yarn/__virtual__/cool-virtual-hash/2/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js");
 

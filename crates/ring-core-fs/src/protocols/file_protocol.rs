@@ -83,6 +83,7 @@ impl Iterator for FileIterator {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use super::*;
 
     #[test]
@@ -102,9 +103,29 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read_file() {
+    fn protocol_should_allow_read_file() {
         let mut location = FileProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
         
         assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn protocol_should_allow_read_directory_content() {
+        let locations = FileProtocol.read_dir(Path::new("assets")).unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        assert_eq!(locations, vec![PathBuf::from(r"assets\foo.txt"), PathBuf::from(r"assets\yarn-archive.zip")]);
+    }
+
+    #[test]
+    #[cfg(not(target_os = "windows"))]
+    fn protocol_should_allow_read_directory_content() {
+        let locations = FileProtocol.read_dir(Path::new("assets")).unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        assert_eq!(locations, vec![PathBuf::from("assets/foo.txt"), PathBuf::from("assets/yarn-archive.zip")]);
     }
 }
