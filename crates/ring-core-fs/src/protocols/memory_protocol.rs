@@ -82,7 +82,8 @@ impl FilesystemProtocol for MemoryProtocol {
                     .zip(path.components().rev())
                     .all(|(c, p)| c == p)
             })
-            .map(|(key, content)| Ok::<Box<dyn Location>, FsError>(Box::new(VirtualLocation::new(key.clone(), content.clone())) as _));
+            .map(|(key, content)| Box::new(VirtualLocation::new(key.clone(), content.clone())))
+            .map(|location| Ok::<Box<dyn Location>, FsError>(location));
 
         Ok(Box::new(iter) as _)
     }
