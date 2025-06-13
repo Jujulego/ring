@@ -74,13 +74,16 @@ impl FilesystemProtocol for MemoryProtocol {
 
         let iter = self.content.iter()
             .filter(move |(key, _)| {
-                if key.as_os_str().len() < path.as_os_str().len() {
-                    return false;
-                }
+                let mut path = path.components();
+                let mut key = key.components();
 
-                key.components().rev().skip(1)
-                    .zip(path.components().rev())
-                    .all(|(c, p)| c == p)
+                loop {
+                    match (path.next(), key.next()) {
+                        (Some(p), Some(k)) if p == k => continue,
+                        (None, Some(_)) => break path.next().is_none() && key.next().is_none(),
+                        (_, _) => break false,
+                    }
+                }
             })
             .map(|(key, content)| Box::new(VirtualLocation::new(key.clone(), content.clone())))
             .map(|location| Ok::<Box<dyn Location>, FsError>(location));
