@@ -69,8 +69,22 @@ impl FilesystemProtocol for MemoryProtocol {
         }
     }
 
-    fn read_dir(&self, path: &Path) -> Result<LocationIterator, FsError> {
-        todo!()
+    fn read_dir(&self, path: &Path) -> Result<LocationIterator<'_>, FsError> {
+        let path = Path::new("/").join(path);
+
+        let iter = self.content.iter()
+            .filter(move |(key, _)| {
+                if key.as_os_str().len() < path.as_os_str().len() {
+                    return false;
+                }
+
+                key.components().rev().skip(1)
+                    .zip(path.components().rev())
+                    .all(|(c, p)| c == p)
+            })
+            .map(|(key, content)| Ok::<Box<dyn Location>, FsError>(Box::new(VirtualLocation::new(key.clone(), content.clone())) as _));
+
+        Ok(Box::new(iter) as _)
     }
 }
 
@@ -136,7 +150,7 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_to_read_given_content() {
+    fn protocol_should_allow_to_read_given_content() {
         let memory = MemoryProtocol::new()
             .with_file("/foo/bar/baz", "baz");
 
@@ -152,5 +166,20 @@ mod tests {
 
         // Not existing path
         assert!(matches!(memory.locate_path(Path::new("/foo/toto")), Err(FsError::NotFound(_))));
+    }
+
+    #[test]
+    fn protocol_should_allow_to_read_directory() {
+        let memory = MemoryProtocol::new()
+            .with_file("/foo/toto", "toto")
+            .with_file("/foo/bar/baz", "baz");
+
+        let mut locations = memory.read_dir(Path::new("/foo")).unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![PathBuf::from("/foo/bar"), PathBuf::from("/foo/toto")]);
     }
 }
