@@ -31,7 +31,7 @@
     "@jujulego/vite-plugin-swc": "1.2.0",
     "@rollup/plugin-node-resolve": "16.0.1",
     "@swc/core": "1.12.1",
-    "@types/node": "22.15.31",
+    "@types/node": "22.15.32",
     "@types/yargs": "17.0.33",
     "rollup": "4.43.0",
     "typescript": "5.8.3"
