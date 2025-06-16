@@ -191,6 +191,7 @@ pub struct ZippedIterator<'a, O: ZipOrigin> {
 }
 
 impl<'a, O: ZipOrigin> ZippedIterator<'a, O> {
+    #[inline]
     pub fn new(zip_middleware: &'a ZipMiddleware<O>, archive_path: PathBuf,children: VecDeque<String>) -> Self {
         Self {
             zip_middleware,
@@ -212,6 +213,11 @@ impl<'a, O: ZipOrigin> Iterator for ZippedIterator<'a, O> {
 
         let location = ZippedLocation::new(archive, self.archive_path.clone(), next);
         Some(Ok(Box::new(location)))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.children.len()))
     }
 }
 
