@@ -35,7 +35,7 @@ impl FilesystemProtocol for FileProtocol {
     }
 
     #[inline]
-    fn read_dir(&self, path: &Path) -> Result<LocationIterator, FsError> {
+    fn list_content(&self, path: &Path) -> Result<LocationIterator, FsError> {
         trace!(protocol = "file", "read_dir {}", path.display());
         read_dir(path)
             .map(|iter| Box::new(FileIterator::new(iter)) as _)
@@ -121,7 +121,7 @@ mod tests {
     #[test]
     #[cfg(target_os = "windows")]
     fn protocol_should_allow_read_directory_content() {
-        let mut locations = FileProtocol.read_dir(Path::new("assets")).unwrap()
+        let mut locations = FileProtocol.list_content(Path::new("assets")).unwrap()
             .map(|location| location.unwrap().path())
             .collect::<Vec<_>>();
 
@@ -133,7 +133,7 @@ mod tests {
     #[test]
     #[cfg(not(target_os = "windows"))]
     fn protocol_should_allow_read_directory_content() {
-        let mut locations = FileProtocol.read_dir(Path::new("assets")).unwrap()
+        let mut locations = FileProtocol.list_content(Path::new("assets")).unwrap()
             .map(|location| location.unwrap().path())
             .collect::<Vec<_>>();
 

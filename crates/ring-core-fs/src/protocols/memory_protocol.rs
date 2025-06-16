@@ -69,7 +69,7 @@ impl FilesystemProtocol for MemoryProtocol {
         }
     }
 
-    fn read_dir(&self, path: &Path) -> Result<LocationIterator<'_>, FsError> {
+    fn list_content(&self, path: &Path) -> Result<LocationIterator<'_>, FsError> {
         let path = Path::new("/").join(path);
 
         let iter = self.content.iter()
@@ -178,7 +178,7 @@ mod tests {
             .with_file("/foo/toto", "toto")
             .with_file("/foo/bar/baz", "baz");
 
-        let mut locations = memory.read_dir(Path::new("/foo")).unwrap()
+        let mut locations = memory.list_content(Path::new("/foo")).unwrap()
             .map(|location| location.unwrap().path())
             .collect::<Vec<_>>();
 

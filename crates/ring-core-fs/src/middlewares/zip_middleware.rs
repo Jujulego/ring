@@ -122,7 +122,7 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
         }
     }
 
-    fn maybe_read_dir(&self, path: &Path) -> Option<Result<LocationIterator<'_>, FsError>> {
+    fn maybe_list_content(&self, path: &Path) -> Option<Result<LocationIterator<'_>, FsError>> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
@@ -324,7 +324,7 @@ mod tests {
     fn protocol_should_allow_to_read_directory() {
         let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
-        let mut locations = zip_middleware.maybe_read_dir(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
+        let mut locations = zip_middleware.maybe_list_content(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
             .map(|location| location.unwrap().path())
             .collect::<Vec<_>>();
 
@@ -341,7 +341,7 @@ mod tests {
     fn protocol_should_allow_to_read_directory() {
         let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
-        let mut locations = zip_middleware.maybe_read_dir(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
+        let mut locations = zip_middleware.maybe_list_content(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
             .map(|location| location.unwrap().path())
             .collect::<Vec<_>>();
 

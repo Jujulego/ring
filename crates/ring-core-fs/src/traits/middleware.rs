@@ -7,5 +7,5 @@ pub trait FilesystemMiddleware: MaybeLocationMetadata {
     fn maybe_locate_path(&self, path: &Path) -> Option<Result<Box<dyn Location + '_>, FsError>>;
 
     /// Returns an iterator over path child locations
-    fn maybe_read_dir(&self, path: &Path) -> Option<Result<LocationIterator<'_>, FsError>>;
+    fn maybe_list_content(&self, path: &Path) -> Option<Result<LocationIterator<'_>, FsError>>;
 }

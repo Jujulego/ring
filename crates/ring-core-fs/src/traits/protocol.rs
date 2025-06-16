@@ -9,5 +9,5 @@ pub trait FilesystemProtocol: LocationMetadata {
     fn locate_path(&self, path: &Path) -> Result<Box<dyn Location + '_>, FsError>;
 
     /// Returns an iterator over path child locations
-    fn read_dir(&self, path: &Path) -> Result<LocationIterator<'_>, FsError>;
+    fn list_content(&self, path: &Path) -> Result<LocationIterator<'_>, FsError>;
 }
