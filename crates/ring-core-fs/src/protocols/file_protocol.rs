@@ -1,6 +1,7 @@
 use crate::middlewares::ZipOrigin;
-use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
+use std::fs::{read_dir, ReadDir};
 use std::path::Path;
 use tracing::trace;
 
@@ -32,6 +33,14 @@ impl FilesystemProtocol for FileProtocol {
             .map(|p| Box::new(p) as _)
             .map_err(FsError::from)
     }
+
+    #[inline]
+    fn list_content(&self, path: &Path) -> Result<LocationIterator, FsError> {
+        trace!(protocol = "file", "read_dir {}", path.display());
+        read_dir(path)
+            .map(|iter| Box::new(FileIterator::new(iter)) as _)
+            .map_err(FsError::from)
+    }
 }
 
 impl ZipOrigin for FileProtocol {
@@ -44,9 +53,47 @@ impl ZipOrigin for FileProtocol {
     }
 }
 
+#[derive(Debug)]
+struct FileIterator(Option<ReadDir>);
+
+impl FileIterator {
+    #[inline]
+    fn new(iter: ReadDir) -> FileIterator {
+        FileIterator(Some(iter))
+    }
+}
+
+impl Iterator for FileIterator {
+    type Item = Result<Box<dyn Location>, FsError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut inner = self.0.take()?;
+        
+        if let Some(entry) = inner.next() {
+            self.0 = Some(inner);
+            
+            Some(entry
+                .map(|entry| Box::new(entry) as _)
+                .map_err(FsError::from))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if let Some(inner) = self.0.as_ref() {
+            inner.size_hint()
+        } else {
+            (0, Some(0))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn is_dir_should_detect_directories() {
@@ -65,9 +112,23 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read_file() {
+    fn protocol_should_allow_read_file() {
         let mut location = FileProtocol.locate_path(Path::new("assets/foo.txt")).unwrap();
         
         assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
+    }
+
+    #[test]
+    fn protocol_should_allow_read_directory_content() {
+        let mut locations = FileProtocol.list_content(Path::new("assets")).unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![
+            PathBuf::from("assets").join("foo.txt"),
+            PathBuf::from("assets").join("yarn-archive.zip")
+        ]);
     }
 }

@@ -1,6 +1,6 @@
 use crate::middlewares::ZipMiddleware;
 use crate::protocols::{FileProtocol, MemoryProtocol};
-use crate::traits::{FilesystemMiddleware, FilesystemProtocol, Location};
+use crate::traits::{FilesystemMiddleware, FilesystemProtocol, Location, LocationIterator};
 use crate::{FsError, LocationType};
 use std::path::Path;
 use std::rc::Rc;
@@ -75,10 +75,19 @@ impl Filesystem {
             .find_map(|m| m.maybe_locate_path(path.as_ref()))
             .unwrap_or_else(|| self.protocol.locate_path(path.as_ref()))
     }
+
+    /// Lists all locations contained withing given path
+    #[instrument(name="filesystem.list_content", skip_all)]
+    pub fn list_content<P: AsRef<Path>>(&self, path: P) -> Result<LocationIterator, FsError> {
+        self.middlewares.iter()
+            .find_map(|m| m.maybe_list_content(path.as_ref()))
+            .unwrap_or_else(|| self.protocol.list_content(path.as_ref()))
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
     use super::*;
 
     #[test]
@@ -110,15 +119,46 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read_file_in_and_out_archives() {
+    fn filesystem_should_allow_read_file_in_and_out_archives() {
         let filesystem = Filesystem::local();
 
+        // Outside of archive
         let mut location = filesystem.locate_path("assets/foo.txt").unwrap();
 
         assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
 
+        // Inside of archive
         let mut location = filesystem.locate_path("assets/yarn-archive.zip/node_modules/foo.txt").unwrap();
 
         assert_eq!(location.read_to_string().unwrap(), String::from("bar"));
+    }
+
+    #[test]
+    fn filesystem_should_allow_listing_content_in_and_out_archives() {
+        let filesystem = Filesystem::local();
+
+        // Outside of archive
+        let mut locations = filesystem.list_content("assets").unwrap()
+            .map(|l| l.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![
+            PathBuf::from("assets").join("foo.txt"),
+            PathBuf::from("assets").join("yarn-archive.zip"),
+        ]);
+
+        // Inside of archive
+        let mut locations = filesystem.list_content("assets/yarn-archive.zip/node_modules").unwrap()
+            .map(|l| l.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![
+            PathBuf::from(r"assets/yarn-archive.zip").join("node_modules/foo.txt"),
+            PathBuf::from(r"assets/yarn-archive.zip").join("node_modules/toto.txt")
+        ]);
     }
 }

@@ -1,4 +1,4 @@
-use crate::traits::{FilesystemProtocol, Location, LocationMetadata};
+use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -64,9 +64,31 @@ impl FilesystemProtocol for MemoryProtocol {
         let path = Path::new("/").join(path);
 
         match self.content.get(&path) {
-            Some(content) => Ok(Box::new(content.clone()) as _),
+            Some(content) => Ok(Box::new(VirtualLocation::new(path, content.clone())) as _),
             None => Err(FsError::NotFound("File not found or is not a file"))
         }
+    }
+
+    fn list_content(&self, path: &Path) -> Result<LocationIterator<'_>, FsError> {
+        let path = Path::new("/").join(path);
+
+        let iter = self.content.iter()
+            .filter(move |(key, _)| {
+                let mut path = path.components();
+                let mut key = key.components();
+
+                loop {
+                    match (path.next(), key.next()) {
+                        (Some(p), Some(k)) if p == k => continue,
+                        (None, Some(_)) => break path.next().is_none() && key.next().is_none(),
+                        (_, _) => break false,
+                    }
+                }
+            })
+            .map(|(key, content)| Box::new(VirtualLocation::new(key.clone(), content.clone())))
+            .map(|location| Ok::<Box<dyn Location>, FsError>(location));
+
+        Ok(Box::new(iter) as _)
     }
 }
 
@@ -87,10 +109,29 @@ impl From<&VirtualContent> for LocationType {
     }
 }
 
-impl Location for VirtualContent {
+/// Virtual filesystem location
+#[derive(Debug)]
+pub struct VirtualLocation {
+    path: PathBuf,
+    content: VirtualContent,
+}
+
+impl VirtualLocation {
+    #[inline]
+    fn new(path: PathBuf, content: VirtualContent) -> Self {
+        Self { path, content }
+    }
+}
+
+impl Location for VirtualLocation {
+    #[inline]
+    fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+
     #[inline]
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
-        match self {
+        match &self.content {
             VirtualContent::File(content) => Ok(Box::new(content.as_bytes()) as _),
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
@@ -113,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_to_read_given_content() {
+    fn protocol_should_allow_to_read_given_content() {
         let memory = MemoryProtocol::new()
             .with_file("/foo/bar/baz", "baz");
 
@@ -129,5 +170,20 @@ mod tests {
 
         // Not existing path
         assert!(matches!(memory.locate_path(Path::new("/foo/toto")), Err(FsError::NotFound(_))));
+    }
+
+    #[test]
+    fn protocol_should_allow_to_read_directory() {
+        let memory = MemoryProtocol::new()
+            .with_file("/foo/toto", "toto")
+            .with_file("/foo/bar/baz", "baz");
+
+        let mut locations = memory.list_content(Path::new("/foo")).unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![PathBuf::from("/foo/bar"), PathBuf::from("/foo/toto")]);
     }
 }

@@ -1,8 +1,8 @@
-use crate::traits::{FilesystemMiddleware, Location, MaybeLocationMetadata};
+use crate::traits::{FilesystemMiddleware, Location, LocationIterator, MaybeLocationMetadata};
 use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::ffi::OsStr;
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
@@ -11,7 +11,7 @@ use tracing::{debug, trace, warn};
 use zip::ZipArchive;
 
 pub trait ZipOrigin {
-    type File: Read + Seek;
+    type File: Read + Seek + 'static;
     
     fn open_zip(&self, path: &Path) -> Result<Self::File, FsError>;
 }
@@ -56,15 +56,23 @@ impl<O: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<O> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
-        let archive = match self.open_archive(archive_path) {
+        let mut archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
             Err(err) => return Some(Err(err))
         };
 
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
-        if archive.index_for_name(&inner_path).is_some() {
-            return Some(Ok(LocationType::File));
+        if let Ok(file) = archive.by_name(&inner_path) {
+            let t = if file.is_dir() {
+                LocationType::Directory
+            } else if file.is_symlink() {
+                LocationType::Symlink
+            } else {
+                LocationType::File
+            };
+
+            return Some(Ok(t));
         }
 
         inner_path += "/";
@@ -74,11 +82,6 @@ impl<O: ZipOrigin> MaybeLocationMetadata for ZipMiddleware<O> {
         } else {
             Some(Err(FsError::NotFound("Location not found in archive")))
         }
-    }
-
-    fn maybe_is_symlink(&self, path: &Path) -> Option<bool> {
-        let path = parse_yarn_virtual_path(path);
-        split_archive_path(&path).map(|_| false)
     }
 }
 
@@ -94,51 +97,127 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
 
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
-        if let Some(file_index) = archive.index_for_name(&inner_path) {
-            return Some(Ok(Box::new(ZippedLocation::new_file(archive, file_index))));
+        if archive.index_for_name(&inner_path).is_some() {
+            let location = ZippedLocation::new(
+                archive,
+                archive_path.to_path_buf(),
+                inner_path
+            );
+
+            return Some(Ok(Box::new(location)));
         }
 
         inner_path += "/";
 
         if archive.file_names().any(|name| name.starts_with(&inner_path)) {
-            Some(Ok(Box::new(ZippedLocation::new_directory(archive))))
+            let location = ZippedLocation::new(
+                archive,
+                archive_path.to_path_buf(),
+                inner_path
+            );
+
+            Some(Ok(Box::new(location)))
         } else {
             Some(Err(FsError::NotFound("Location not found in archive")))
         }
+    }
+
+    fn maybe_list_content(&self, path: &Path) -> Option<Result<LocationIterator<'_>, FsError>> {
+        let path = parse_yarn_virtual_path(path);
+        let (archive_path, inner_path) = split_archive_path(&path)?;
+
+        let archive = match self.open_archive(archive_path) {
+            Ok(archive) => archive,
+            Err(err) => return Some(Err(err))
+        };
+
+        let base = inner_path.components()
+            .filter_map(|component| component.as_os_str().to_str())
+            .collect::<Vec<_>>();
+
+        let children = archive.file_names()
+            .map(|file| file
+                .split('/')
+                .take(base.len() + 1)
+                .filter(|part| !part.is_empty())
+                .collect::<Vec<_>>()
+            )
+            .filter(|file| file.len() > base.len() && file.starts_with(&base))
+            .map(|file| file.join("/"))
+            .collect::<HashSet<_>>();
+
+        let iterator = ZippedIterator::new(self, archive_path.to_path_buf(), children.into_iter().collect());
+        Some(Ok(Box::new(iterator) as _))
     }
 }
 
 /// Zipped location
 pub struct ZippedLocation<F> {
     archive: PoolRef<ZipArchive<F>>,
-    file_index: Option<usize>,
+    archive_path: PathBuf,
+    inner_path: String,
 }
 
 impl<F> ZippedLocation<F> {
-    pub fn new_directory(archive: PoolRef<ZipArchive<F>>) -> Self {
+    pub fn new(archive: PoolRef<ZipArchive<F>>, archive_path: PathBuf, inner_path: String) -> Self {
         Self {
             archive,
-            file_index: None,
-        }
-    }
-
-    pub fn new_file(archive: PoolRef<ZipArchive<F>>, file_index: usize) -> Self {
-        Self {
-            archive,
-            file_index: Some(file_index),
+            archive_path,
+            inner_path,
         }
     }
 }
 
 impl<F: Read + Seek> Location for ZippedLocation<F> {
+    #[inline]
+    fn path(&self) -> PathBuf {
+        self.archive_path.join(&self.inner_path)
+    }
+    
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
-        if let Some(file_index) = self.file_index {
-            self.archive.by_index(file_index)
-                .map(|file| Box::new(file) as _)
-                .map_err(FsError::from)
-        } else {
-            Err(FsError::NotAFile("Zipped location is not a file"))
+        match self.archive.by_name(&self.inner_path) {
+            Ok(file) if file.is_file() => Ok(Box::new(file)),
+            Ok(_) => Err(FsError::NotAFile("Zipped location is not a file")),
+            Err(err) => Err(err.into()),
         }
+    }
+}
+
+/// Iterator on zipped location
+pub struct ZippedIterator<'a, O: ZipOrigin> {
+    zip_middleware: &'a ZipMiddleware<O>,
+    archive_path: PathBuf,
+    children: VecDeque<String>,
+}
+
+impl<'a, O: ZipOrigin> ZippedIterator<'a, O> {
+    #[inline]
+    pub fn new(zip_middleware: &'a ZipMiddleware<O>, archive_path: PathBuf,children: VecDeque<String>) -> Self {
+        Self {
+            zip_middleware,
+            archive_path,
+            children
+        }
+    }
+}
+
+impl<'a, O: ZipOrigin> Iterator for ZippedIterator<'a, O> {
+    type Item = Result<Box<dyn Location>, FsError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next = self.children.pop_front()?;
+        let archive = match self.zip_middleware.open_archive(&self.archive_path) {
+            Ok(archive) => archive,
+            Err(err) => return Some(Err(err))
+        };
+
+        let location = ZippedLocation::new(archive, self.archive_path.clone(), next);
+        Some(Ok(Box::new(location)))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.children.len()))
     }
 }
 
@@ -226,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn open_should_allow_read_file_in_archive() {
+    fn protocol_should_allow_read_file_in_archive() {
         let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
         // Existing file in an archive
@@ -246,8 +325,24 @@ mod tests {
         assert!(zip_middleware.maybe_locate_path(Path::new("assets/foo.txt")).is_none());
     }
 
-    #[cfg(target_os = "windows")]
     #[test]
+    fn protocol_should_allow_to_read_directory() {
+        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
+
+        let mut locations = zip_middleware.maybe_list_content(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
+            .map(|location| location.unwrap().path())
+            .collect::<Vec<_>>();
+
+        locations.sort();
+
+        assert_eq!(locations, vec![
+            PathBuf::from("assets/yarn-archive.zip").join("node_modules/foo.txt"),
+            PathBuf::from("assets/yarn-archive.zip").join("node_modules/toto.txt")
+        ]);
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
     fn test_parse_yarn_virtual_path() {
         let virtual_path = Path::new(r"C:\Users\toto\project\.yarn\__virtual__\cool-virtual-hash\2\AppData\Local\Yarn\Berry\cache\cool-hash.zip\node_modules\cool\cool.js");
 
@@ -257,8 +352,8 @@ mod tests {
         );
     }
 
-    #[cfg(not(target_os = "windows"))]
     #[test]
+    #[cfg(not(target_os = "windows"))]
     fn test_parse_yarn_virtual_path() {
         let virtual_path = Path::new("/home/toto/project/.yarn/__virtual__/cool-virtual-hash/2/.Yarn/Berry/cache/cool-hash.zip/node_modules/cool/cool.js");
 

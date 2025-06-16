@@ -1,9 +1,11 @@
 use crate::FsError;
+use std::fs::DirEntry;
 use std::io::{BufReader, Read};
 use std::path::PathBuf;
 use tracing::trace;
 
 pub trait Location {
+    fn path(&self) -> PathBuf;
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError>;
 
     #[inline]
@@ -20,9 +22,31 @@ pub trait Location {
 
 impl Location for PathBuf {
     #[inline]
+    fn path(&self) -> PathBuf {
+        self.clone()
+    }
+
+    #[inline]
     fn read(&mut self) -> Result<Box<dyn Read>, FsError> {
         trace!(protocol = "file", "open {}", self.display());
         std::fs::File::open(self)
+            .map(|file| Box::new(file) as _)
+            .map_err(FsError::from)
+    }
+}
+
+impl Location for DirEntry {
+    #[inline]
+    fn path(&self) -> PathBuf {
+        self.path()
+    }
+
+    #[inline]
+    fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
+        let path = self.path();
+
+        trace!(protocol = "file", "open {}", path.display());
+        std::fs::File::open(path)
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
     }
