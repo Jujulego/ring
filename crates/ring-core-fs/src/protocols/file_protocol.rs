@@ -119,7 +119,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_os = "windows")]
     fn protocol_should_allow_read_directory_content() {
         let mut locations = FileProtocol.list_content(Path::new("assets")).unwrap()
             .map(|location| location.unwrap().path())
@@ -127,18 +126,9 @@ mod tests {
 
         locations.sort();
 
-        assert_eq!(locations, vec![PathBuf::from(r"assets\foo.txt"), PathBuf::from(r"assets\yarn-archive.zip")]);
-    }
-
-    #[test]
-    #[cfg(not(target_os = "windows"))]
-    fn protocol_should_allow_read_directory_content() {
-        let mut locations = FileProtocol.list_content(Path::new("assets")).unwrap()
-            .map(|location| location.unwrap().path())
-            .collect::<Vec<_>>();
-
-        locations.sort();
-
-        assert_eq!(locations, vec![PathBuf::from("assets/foo.txt"), PathBuf::from("assets/yarn-archive.zip")]);
+        assert_eq!(locations, vec![
+            PathBuf::from("assets").join("foo.txt"),
+            PathBuf::from("assets").join("yarn-archive.zip")
+        ]);
     }
 }

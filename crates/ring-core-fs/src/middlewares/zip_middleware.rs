@@ -320,7 +320,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_os = "windows")]
     fn protocol_should_allow_to_read_directory() {
         let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
 
@@ -331,25 +330,8 @@ mod tests {
         locations.sort();
 
         assert_eq!(locations, vec![
-            PathBuf::from(r"assets/yarn-archive.zip\\node_modules/foo.txt"),
-            PathBuf::from(r"assets/yarn-archive.zip\\node_modules/toto.txt")
-        ]);
-    }
-
-    #[test]
-    #[cfg(not(target_os = "windows"))]
-    fn protocol_should_allow_to_read_directory() {
-        let zip_middleware = ZipMiddleware::new(Rc::new(FileProtocol));
-
-        let mut locations = zip_middleware.maybe_list_content(Path::new("assets/yarn-archive.zip/node_modules")).unwrap().unwrap()
-            .map(|location| location.unwrap().path())
-            .collect::<Vec<_>>();
-
-        locations.sort();
-
-        assert_eq!(locations, vec![
-            PathBuf::from(r"assets/yarn-archive.zip/node_modules/foo.txt"),
-            PathBuf::from(r"assets/yarn-archive.zip/node_modules/toto.txt")
+            PathBuf::from("assets/yarn-archive.zip").join("node_modules/foo.txt"),
+            PathBuf::from("assets/yarn-archive.zip").join("node_modules/toto.txt")
         ]);
     }
 
