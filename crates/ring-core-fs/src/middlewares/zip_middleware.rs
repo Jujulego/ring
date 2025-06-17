@@ -4,6 +4,7 @@ use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::ffi::OsStr;
+use std::fs::Metadata;
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -173,13 +174,19 @@ impl<F: Read + Seek> Location for ZippedLocation<F> {
     fn path(&self) -> PathBuf {
         self.archive_path.join(&self.inner_path)
     }
-    
+
+    #[inline]
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         match self.archive.by_name(&self.inner_path) {
             Ok(file) if file.is_file() => Ok(Box::new(file)),
             Ok(_) => Err(FsError::NotAFile("Zipped location is not a file")),
             Err(err) => Err(err.into()),
         }
+    }
+
+    #[inline]
+    fn metadata(&self) -> Option<Result<Metadata, FsError>> {
+        None
     }
 }
 
