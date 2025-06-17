@@ -2,7 +2,6 @@ use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMeta
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::fs::Metadata;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -136,11 +135,6 @@ impl Location for VirtualLocation {
             VirtualContent::File(content) => Ok(Box::new(content.as_bytes()) as _),
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
-    }
-
-    #[inline]
-    fn metadata(&self) -> Option<Result<Metadata, FsError>> {
-        None
     }
 }
 

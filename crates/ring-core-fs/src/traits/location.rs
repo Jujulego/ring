@@ -1,5 +1,5 @@
 use crate::FsError;
-use std::fs::{DirEntry, Metadata};
+use std::fs::DirEntry;
 use std::io::{BufReader, Read};
 use std::path::PathBuf;
 use tracing::trace;
@@ -7,7 +7,6 @@ use tracing::trace;
 pub trait Location {
     fn path(&self) -> PathBuf;
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError>;
-    fn metadata(&self) -> Option<Result<Metadata, FsError>>;
 
     #[inline]
     fn buf_read(&mut self) -> Result<BufReader<Box<dyn Read + '_>>, FsError> {
@@ -34,12 +33,6 @@ impl Location for PathBuf {
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
     }
-
-    #[inline]
-    fn metadata(&self) -> Option<Result<std::fs::Metadata, FsError>> {
-        trace!(protocol = "file", "metadata {}", self.display());
-        Some(std::fs::metadata(self).map_err(FsError::from))
-    }
 }
 
 impl Location for DirEntry {
@@ -56,10 +49,5 @@ impl Location for DirEntry {
         std::fs::File::open(path)
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
-    }
-
-    #[inline]
-    fn metadata(&self) -> Option<Result<Metadata, FsError>> {
-        self.path().metadata()
     }
 }
