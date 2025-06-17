@@ -7,6 +7,13 @@ pub enum LocationType {
     Symlink,
 }
 
+impl LocationType {
+    #[inline]
+    pub fn is_dir(&self) -> bool {
+        matches!(self, LocationType::Directory)
+    }
+}
+
 impl From<FileType> for LocationType {
     fn from(file_type: FileType) -> Self {
         if file_type.is_file() {

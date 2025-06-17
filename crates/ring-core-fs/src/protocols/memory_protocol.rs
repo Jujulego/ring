@@ -137,7 +137,13 @@ impl Location for VirtualLocation {
         }
     }
 
+    #[inline]
+    fn location_type(&self) -> Result<LocationType, FsError> {
+        Ok((&self.content).into())
+    }
+
     #[cfg(feature = "lscolors")]
+    #[inline]
     fn indicator(&self) -> lscolors::Indicator {
         match &self.content {
             VirtualContent::Directory => lscolors::Indicator::Directory,

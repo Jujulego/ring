@@ -1685,7 +1685,6 @@ dependencies = [
  "crossterm 0.29.0",
  "itertools",
  "lscolors",
- "ring-cli-fs",
  "ring-cli-list",
  "ring-cli-tree",
  "ring-core",
@@ -1694,14 +1693,6 @@ dependencies = [
  "sysinfo",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "ring-cli-fs"
-version = "0.1.0"
-dependencies = [
- "lscolors",
- "tracing",
 ]
 
 [[package]]

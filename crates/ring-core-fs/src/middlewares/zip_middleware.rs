@@ -178,12 +178,28 @@ impl<F: Read + Seek> Location for ZippedLocation<F> {
     fn path(&self) -> PathBuf {
         self.archive_path.join(&self.inner_path)
     }
-    
+
+    #[inline]
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError> {
         match self.archive.by_name(&self.inner_path) {
             Ok(file) if file.is_file() => Ok(Box::new(file)),
             Ok(_) => Err(FsError::NotAFile("Zipped location is not a file")),
             Err(err) => Err(err.into()),
+        }
+    }
+
+    #[inline]
+    fn location_type(&self) -> Result<LocationType, FsError> {
+        Ok(self.location_type)
+    }
+
+    #[cfg(feature = "lscolors")]
+    #[inline]
+    fn indicator(&self) -> lscolors::Indicator {
+        match self.location_type {
+            LocationType::File => lscolors::Indicator::RegularFile,
+            LocationType::Directory => lscolors::Indicator::Directory,
+            LocationType::Symlink => lscolors::Indicator::SymbolicLink,
         }
     }
 }
@@ -215,7 +231,7 @@ impl<'a, O: ZipOrigin> Iterator for ZippedIterator<'a, O> {
             Ok(archive) => archive,
             Err(err) => return Some(Err(err))
         };
-        
+
         let location_type = archive.by_name(&next)
             .map(zip_location_type)
             .unwrap_or(LocationType::Directory);
@@ -226,7 +242,7 @@ impl<'a, O: ZipOrigin> Iterator for ZippedIterator<'a, O> {
             next,
             location_type
         );
-        
+
         Some(Ok(Box::new(location)))
     }
 
