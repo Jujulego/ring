@@ -13,6 +13,7 @@ default = [
     "ring-core/toml",
     "ring-core/typescript",
     "ring-core/yaml",
+    "ring-core/lscolors",
 ]
 
 [dependencies]

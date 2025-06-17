@@ -9,6 +9,9 @@ crossterm = [
     "ring-core-tasks/crossterm",
     "ring-core-units/crossterm",
 ]
+lscolors = [
+    "ring-core-fs/lscolors"
+]
 
 javascript = ["dep:ring-module-javascript"]
 json = ["dep:ring-module-json"]

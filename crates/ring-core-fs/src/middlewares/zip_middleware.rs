@@ -8,6 +8,7 @@ use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing::{debug, trace, warn};
+use zip::read::ZipFile;
 use zip::ZipArchive;
 
 pub trait ZipOrigin {
@@ -90,18 +91,19 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
         let path = parse_yarn_virtual_path(path);
         let (archive_path, inner_path) = split_archive_path(&path)?;
 
-        let archive = match self.open_archive(archive_path) {
+        let mut archive = match self.open_archive(archive_path) {
             Ok(archive) => archive,
             Err(err) => return Some(Err(err))
         };
 
         let mut inner_path = zip::unstable::path_to_string(inner_path).to_string();
 
-        if archive.index_for_name(&inner_path).is_some() {
+        if let Ok(location_type) = archive.by_name(&inner_path).map(zip_location_type) {
             let location = ZippedLocation::new(
                 archive,
                 archive_path.to_path_buf(),
-                inner_path
+                inner_path,
+                location_type
             );
 
             return Some(Ok(Box::new(location)));
@@ -113,7 +115,8 @@ impl<O: ZipOrigin> FilesystemMiddleware for ZipMiddleware<O> {
             let location = ZippedLocation::new(
                 archive,
                 archive_path.to_path_buf(),
-                inner_path
+                inner_path,
+                LocationType::Directory
             );
 
             Some(Ok(Box::new(location)))
@@ -156,14 +159,16 @@ pub struct ZippedLocation<F> {
     archive: PoolRef<ZipArchive<F>>,
     archive_path: PathBuf,
     inner_path: String,
+    location_type: LocationType,
 }
 
 impl<F> ZippedLocation<F> {
-    pub fn new(archive: PoolRef<ZipArchive<F>>, archive_path: PathBuf, inner_path: String) -> Self {
+    pub fn new(archive: PoolRef<ZipArchive<F>>, archive_path: PathBuf, inner_path: String, location_type: LocationType) -> Self {
         Self {
             archive,
             archive_path,
             inner_path,
+            location_type
         }
     }
 }
@@ -192,7 +197,7 @@ pub struct ZippedIterator<'a, O: ZipOrigin> {
 
 impl<'a, O: ZipOrigin> ZippedIterator<'a, O> {
     #[inline]
-    pub fn new(zip_middleware: &'a ZipMiddleware<O>, archive_path: PathBuf,children: VecDeque<String>) -> Self {
+    pub fn new(zip_middleware: &'a ZipMiddleware<O>, archive_path: PathBuf, children: VecDeque<String>) -> Self {
         Self {
             zip_middleware,
             archive_path,
@@ -206,12 +211,22 @@ impl<'a, O: ZipOrigin> Iterator for ZippedIterator<'a, O> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let next = self.children.pop_front()?;
-        let archive = match self.zip_middleware.open_archive(&self.archive_path) {
+        let mut archive = match self.zip_middleware.open_archive(&self.archive_path) {
             Ok(archive) => archive,
             Err(err) => return Some(Err(err))
         };
+        
+        let location_type = archive.by_name(&next)
+            .map(zip_location_type)
+            .unwrap_or(LocationType::Directory);
 
-        let location = ZippedLocation::new(archive, self.archive_path.clone(), next);
+        let location = ZippedLocation::new(
+            archive,
+            self.archive_path.clone(),
+            next,
+            location_type
+        );
+        
         Some(Ok(Box::new(location)))
     }
 
@@ -257,6 +272,16 @@ pub fn parse_yarn_virtual_path(path: &Path) -> PathBuf {
     }
 
     base.join(rest)
+}
+
+fn zip_location_type<F: Read>(file: ZipFile<F>) -> LocationType {
+    if file.is_dir() {
+        LocationType::Directory
+    } else if file.is_symlink() {
+        LocationType::Symlink
+    } else {
+        LocationType::File
+    }
 }
 
 #[cfg(test)]

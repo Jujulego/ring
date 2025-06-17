@@ -136,6 +136,14 @@ impl Location for VirtualLocation {
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
         }
     }
+
+    #[cfg(feature = "lscolors")]
+    fn indicator(&self) -> lscolors::Indicator {
+        match &self.content {
+            VirtualContent::Directory => lscolors::Indicator::Directory,
+            VirtualContent::File(_) => lscolors::Indicator::RegularFile,
+        }
+    }
 }
 
 #[cfg(test)]

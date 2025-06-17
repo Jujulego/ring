@@ -8,6 +8,11 @@ pub trait Location {
     fn path(&self) -> PathBuf;
     fn read(&mut self) -> Result<Box<dyn Read + '_>, FsError>;
 
+    #[cfg(feature = "lscolors")]
+    fn indicator(&self) -> lscolors::Indicator {
+        lscolors::Indicator::RegularFile
+    }
+
     #[inline]
     fn buf_read(&mut self) -> Result<BufReader<Box<dyn Read + '_>>, FsError> {
         self.read().map(BufReader::new)
@@ -33,6 +38,33 @@ impl Location for PathBuf {
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
     }
+
+    #[cfg(feature = "lscolors")]
+    fn indicator(&self) -> lscolors::Indicator {
+        trace!(protocol = "file", "metadata {}", self.display());
+        let metadata = match self.metadata() {
+            Ok(metadata) => metadata,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                return lscolors::Indicator::MissingFile
+            },
+            Err(_) => return lscolors::Indicator::RegularFile,
+        };
+
+        if metadata.is_file() {
+            lscolors::Indicator::RegularFile
+        } else if metadata.is_dir() {
+            lscolors::Indicator::Directory
+        } else if metadata.is_symlink() {
+            trace!(protocol = "file", "exists {}", self.display());
+            if matches!(std::fs::exists(self), Ok(true)) {
+                lscolors::Indicator::SymbolicLink
+            } else {
+                lscolors::Indicator::OrphanedSymbolicLink
+            }
+        } else {
+            lscolors::Indicator::RegularFile
+        }
+    }
 }
 
 impl Location for DirEntry {
@@ -49,5 +81,11 @@ impl Location for DirEntry {
         std::fs::File::open(path)
             .map(|file| Box::new(file) as _)
             .map_err(FsError::from)
+    }
+
+    #[cfg(feature = "lscolors")]
+    #[inline]
+    fn indicator(&self) -> lscolors::Indicator {
+        self.path().indicator()
     }
 }
