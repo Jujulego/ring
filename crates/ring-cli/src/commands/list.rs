@@ -50,8 +50,7 @@ fn format_file(core: &Core, location: Box<dyn Location>, ls_colors: &LsColors) -
     let path = location.path();
     let language = core.detect_language(&path);
 
-    let file_name = path.file_name()
-        .and_then(|s| s.to_str())
+    let file_name = location.location_name().to_str()
         .unwrap_or_default()
         .to_owned();
 
@@ -72,7 +71,7 @@ fn format_file(core: &Core, location: Box<dyn Location>, ls_colors: &LsColors) -
         vec![
             file_style.apply(file_name).to_string(),
             if is_dir {
-                let units = core.detect_units_at(location.path()).iter()
+                let units = core.detect_units_at(&path).iter()
                     .map(|unit| unit.style().apply(unit.kind()).to_string())
                     .join("/");
                 
@@ -86,7 +85,7 @@ fn format_file(core: &Core, location: Box<dyn Location>, ls_colors: &LsColors) -
                     .map(|language| language_style.apply(language).to_string())
                     .unwrap_or_else(|| "unknown".dark_grey().to_string())
             },
-            core.qualify_path(location.path())
+            core.qualify_path(&path)
                 .map(|content| content.style().apply(if is_dir {
                     format!("{content:#}")
                 } else {
@@ -99,7 +98,7 @@ fn format_file(core: &Core, location: Box<dyn Location>, ls_colors: &LsColors) -
         vec![
             file_name,
             if is_dir {
-                let units = core.detect_units_at(location.path()).iter()
+                let units = core.detect_units_at(&path).iter()
                     .map(|unit| unit.kind().to_string())
                     .join("/");
 
@@ -113,7 +112,7 @@ fn format_file(core: &Core, location: Box<dyn Location>, ls_colors: &LsColors) -
                     .map(|language| language.to_string())
                     .unwrap_or_else(|| "unknown".to_string())
             },
-            core.qualify_path(location.path())
+            core.qualify_path(&path)
                 .map(|content| if is_dir {
                     format!("{content:#}")
                 } else {

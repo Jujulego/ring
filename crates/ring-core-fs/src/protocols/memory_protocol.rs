@@ -1,6 +1,7 @@
 use crate::traits::{FilesystemProtocol, Location, LocationIterator, LocationMetadata};
 use crate::{FsError, LocationType};
 use std::collections::HashMap;
+use std::ffi::OsString;
 use std::fmt::Display;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -124,6 +125,25 @@ impl VirtualLocation {
 }
 
 impl Location for VirtualLocation {
+    #[cfg(feature = "lscolors")]
+    #[inline]
+    fn indicator(&self) -> lscolors::Indicator {
+        match &self.content {
+            VirtualContent::Directory => lscolors::Indicator::Directory,
+            VirtualContent::File(_) => lscolors::Indicator::RegularFile,
+        }
+    }
+
+    #[inline]
+    fn location_name(&self) -> OsString {
+        self.path.location_name()
+    }
+
+    #[inline]
+    fn location_type(&self) -> Result<LocationType, FsError> {
+        Ok((&self.content).into())
+    }
+
     #[inline]
     fn path(&self) -> PathBuf {
         self.path.clone()
@@ -134,20 +154,6 @@ impl Location for VirtualLocation {
         match &self.content {
             VirtualContent::File(content) => Ok(Box::new(content.as_bytes()) as _),
             VirtualContent::Directory => Err(FsError::NotAFile("This virtual content is not a file")),
-        }
-    }
-
-    #[inline]
-    fn location_type(&self) -> Result<LocationType, FsError> {
-        Ok((&self.content).into())
-    }
-
-    #[cfg(feature = "lscolors")]
-    #[inline]
-    fn indicator(&self) -> lscolors::Indicator {
-        match &self.content {
-            VirtualContent::Directory => lscolors::Indicator::Directory,
-            VirtualContent::File(_) => lscolors::Indicator::RegularFile,
         }
     }
 }

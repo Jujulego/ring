@@ -3,7 +3,7 @@ use crate::{FsError, LocationType};
 use ring_core_utils::{Pool, PoolRef};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -174,6 +174,26 @@ impl<F> ZippedLocation<F> {
 }
 
 impl<F: Read + Seek> Location for ZippedLocation<F> {
+    #[cfg(feature = "lscolors")]
+    #[inline]
+    fn indicator(&self) -> lscolors::Indicator {
+        match self.location_type {
+            LocationType::File => lscolors::Indicator::RegularFile,
+            LocationType::Directory => lscolors::Indicator::Directory,
+            LocationType::Symlink => lscolors::Indicator::SymbolicLink,
+        }
+    }
+
+    #[inline]
+    fn location_name(&self) -> OsString {
+        Path::new(&self.inner_path).location_name()
+    }
+
+    #[inline]
+    fn location_type(&self) -> Result<LocationType, FsError> {
+        Ok(self.location_type)
+    }
+
     #[inline]
     fn path(&self) -> PathBuf {
         self.archive_path.join(&self.inner_path)
@@ -185,21 +205,6 @@ impl<F: Read + Seek> Location for ZippedLocation<F> {
             Ok(file) if file.is_file() => Ok(Box::new(file)),
             Ok(_) => Err(FsError::NotAFile("Zipped location is not a file")),
             Err(err) => Err(err.into()),
-        }
-    }
-
-    #[inline]
-    fn location_type(&self) -> Result<LocationType, FsError> {
-        Ok(self.location_type)
-    }
-
-    #[cfg(feature = "lscolors")]
-    #[inline]
-    fn indicator(&self) -> lscolors::Indicator {
-        match self.location_type {
-            LocationType::File => lscolors::Indicator::RegularFile,
-            LocationType::Directory => lscolors::Indicator::Directory,
-            LocationType::Symlink => lscolors::Indicator::SymbolicLink,
         }
     }
 }
