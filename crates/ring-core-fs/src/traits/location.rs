@@ -1,5 +1,5 @@
-use std::ffi::{OsStr, OsString};
 use crate::{FsError, LocationType};
+use std::ffi::OsString;
 use std::fs::DirEntry;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -65,7 +65,7 @@ pub trait Location {
 impl Location for &Path {
     #[cfg(feature = "lscolors")]
     fn indicator(&self) -> lscolors::Indicator {
-        trace!(protocol = "file", "symlink_metadata {}", self.display());
+        trace!(protocol = "file", "metadata {}", self.display());
         let metadata = match std::fs::symlink_metadata(self) {
             Ok(metadata) => metadata,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
