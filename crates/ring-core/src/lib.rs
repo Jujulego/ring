@@ -2,7 +2,7 @@ mod task_cache;
 
 pub use crate::task_cache::TaskCache;
 pub use ring_core_content::*;
-pub use ring_core_fs::Filesystem;
+pub use ring_core_fs::*;
 pub use ring_core_modules::*;
 pub use ring_core_tasks::*;
 pub use ring_core_units::*;
@@ -46,8 +46,8 @@ impl Core {
     }
 
     #[inline]
-    pub fn filesystem_tools(&self) -> Rc<Filesystem> {
-        self.filesystem.clone()
+    pub fn filesystem(&self) -> &Filesystem {
+        self.filesystem.as_ref()
     }
 }
 

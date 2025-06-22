@@ -3,9 +3,14 @@ name = "ring-core-fs"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+lscolors = ["dep:lscolors"]
+
 [dependencies]
 thiserror = "2.0.12"
 tracing = "0.1.41"
 zip = "4.0.0"
+
+lscolors = { version = "0.20.0", default-features = false, optional = true }
 
 ring-core-utils = { path = "../ring-core-utils" }
