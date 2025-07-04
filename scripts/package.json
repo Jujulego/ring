@@ -33,7 +33,7 @@
     "@swc/core": "1.12.9",
     "@types/node": "22.16.0",
     "@types/yargs": "17.0.33",
-    "rollup": "4.44.1",
+    "rollup": "4.44.2",
     "typescript": "5.8.3"
   }
 }
