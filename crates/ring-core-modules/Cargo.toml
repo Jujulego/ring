@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sysinfo = "0.35.0"
+sysinfo = "0.36.0"
 
 ring-core-content = { path = "../ring-core-content" }
 ring-core-tasks = { path = "../ring-core-tasks" }
