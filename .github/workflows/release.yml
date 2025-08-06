@@ -117,7 +117,7 @@ jobs:
           cache: yarn
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
 
       - name: Add native artifacts
         run: |
@@ -164,7 +164,7 @@ jobs:
           echo version=`echo $tag | cut -d _ -f 2` >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
 
       - name: Release
         uses: softprops/action-gh-release@v2
