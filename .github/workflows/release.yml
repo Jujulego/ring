@@ -40,7 +40,7 @@ jobs:
             binary_format: ring-{0}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read tag
         id: info
@@ -101,7 +101,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Read tag
         id: info
