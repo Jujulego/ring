@@ -23,7 +23,7 @@ typescript = ["dep:ring-module-typescript"]
 yaml = ["dep:ring-module-yaml"]
 
 [dependencies]
-sysinfo = "0.36.0"
+sysinfo = "0.37.0"
 tracing = "0.1.41"
 
 ring-core-content = { path = "../ring-core-content" }

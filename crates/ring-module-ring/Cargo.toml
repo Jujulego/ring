@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 rgb = { version = "0.8.50", features = ["serde"] }
-sysinfo = "0.36.0"
+sysinfo = "0.37.0"
 tracing = "0.1.41"
 
 ring-core-modules = { path = "../ring-core-modules" }
