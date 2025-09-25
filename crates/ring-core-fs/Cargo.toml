@@ -9,7 +9,7 @@ lscolors = ["dep:lscolors"]
 [dependencies]
 thiserror = "2.0.12"
 tracing = "0.1.41"
-zip = "4.0.0"
+zip = "5.0.0"
 
 lscolors = { version = "0.20.0", default-features = false, optional = true }
 
