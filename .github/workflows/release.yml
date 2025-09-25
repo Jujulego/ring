@@ -110,7 +110,7 @@ jobs:
           echo version=`echo $tag | cut -d _ -f 2` >> $GITHUB_OUTPUT
 
       - name: Setup Node.js 20.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
